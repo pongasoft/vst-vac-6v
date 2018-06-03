@@ -37,6 +37,22 @@ tresult VAC6Controller::initialize(FUnknown *context)
     return result;
   }
 
+  // Max Level Value
+  parameters.addParameter(STR16 ("Max Level Value"), // title
+                          nullptr, // units
+                          0, // stepCount (continuous)
+                          0, // defaultNormalizedValue
+                          ParameterInfo::kIsReadOnly, // flags
+                          EVAC6ParamID ::kMaxLevelValue); // tag
+
+  // Max Level State (0 = ok, 1 = soft clipping, 2 = hard clipping) for Max Level Value
+  parameters.addParameter(STR16 ("Max Level State"), // title
+                          nullptr, // units
+                          2, // stepCount = 2 => 3 values
+                          0, // defaultNormalizedValue
+                          ParameterInfo::kIsReadOnly, // flags
+                          EVAC6ParamID ::kMaxLevelState); // tag
+
   return result;
 }
 
@@ -76,7 +92,7 @@ CView *VAC6Controller::verifyView(CView *view,
     switch(te->getTag())
     {
       // TODO
-      
+
       default:
         // nothing to do in this case
         break;
@@ -101,7 +117,7 @@ tresult VAC6Controller::setComponentState(IBStream *state)
   // TODO
 
   DLOG_F(INFO, "VAC6Controller::setComponentState => ");
-  
+
   return kResultOk;
 }
 
@@ -116,7 +132,7 @@ tresult VAC6Controller::setState(IBStream *state)
   DLOG_F(INFO, "VAC6Controller::setState()");
 
   IBStreamer streamer(state, kLittleEndian);
-  
+
   // TODO
 
   return kResultOk;

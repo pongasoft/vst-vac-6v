@@ -55,10 +55,17 @@ protected:
 
   /**
    * Processes inputs (step 2 always called after processing the parameters)
-   *
-   * @param inputParameterChanges
    */
   tresult processInputs(ProcessData &data);
+
+  /**
+   * Processes inputs (step 2 always called after processing the parameters)
+   */
+  template<typename SampleType>
+  tresult genericProcessInputs(ProcessData &data);
+
+  template<typename SampleType>
+  inline ParamValue toMaxLevelState(SampleType value);
 
 private:
 };

@@ -1,13 +1,18 @@
 #include <base/source/fstreamer.h>
 #include <public.sdk/source/vst/vstaudioprocessoralgo.h>
 
+#include "AudioBuffer.h"
 #include "VAC6Processor.h"
-#include "VAC6Utils.h"
 #include "VAC6CIDs.h"
 #include "logging/loguru.hpp"
+#include "VAC6Constants.h"
 
 namespace pongasoft {
 namespace VST {
+
+using namespace Common;
+using namespace VAC6;
+
 
 ///////////////////////////////////////////
 // VAC6Processor::VAC6Processor
@@ -103,6 +108,57 @@ tresult PLUGIN_API VAC6Processor::process(ProcessData &data)
   return res;
 }
 
+/////////////////////////////////////////
+// VAC6Processor::genericProcessInputs
+/////////////////////////////////////////
+template<typename SampleType>
+tresult VAC6Processor::genericProcessInputs(ProcessData &data)
+{
+  AudioBuffers<SampleType> in(data.inputs[0], data.numSamples);
+  AudioBuffers<SampleType> out(data.outputs[0], data.numSamples);
+
+  tresult res = out.copyFrom(in);
+
+  auto maxLevelValue = out.absoluteMax();
+  auto maxLevelState = toMaxLevelState(maxLevelValue);
+
+  if(res == kResultOk)
+  {
+    IParameterChanges *outParamChanges = data.outputParameterChanges;
+    if(outParamChanges != nullptr)
+    {
+      // maxLevelValue
+      {
+        if(maxLevelValue > 1.0)
+          maxLevelValue = 1.0 / maxLevelValue;
+
+        int32 index = 0;
+        auto paramQueue = outParamChanges->addParameterData(kMaxLevelValue, index);
+        if(paramQueue != nullptr)
+        {
+          int32 index2 = 0;
+          paramQueue->addPoint(0, maxLevelValue, index2);
+        }
+      }
+
+      // maxLevelState
+      {
+        int32 index = 0;
+        auto paramQueue = outParamChanges->addParameterData(kMaxLevelState, index);
+        if(paramQueue != nullptr)
+        {
+          int32 index2 = 0;
+          paramQueue->addPoint(0, maxLevelState, index2);
+        }
+      }
+    }
+  }
+
+  out.adjustSilenceFlags();
+
+  return kResultOk;
+}
+
 ///////////////////////////////////////////
 // VAC6Processor::processInputs
 ///////////////////////////////////////////
@@ -115,7 +171,10 @@ tresult VAC6Processor::processInputs(ProcessData &data)
     return kResultOk;
   }
 
-  return kResultOk;
+  if(data.symbolicSampleSize == kSample32)
+    return genericProcessInputs<Sample32>(data);
+  else
+    return genericProcessInputs<Sample64>(data);
 }
 
 ///////////////////////////////////////////
@@ -156,7 +215,7 @@ void VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
         switch(paramQueue->getParameterId())
         {
           // TODO
-          
+
           default:
             // shouldn't happen?
             break;
@@ -200,6 +259,27 @@ tresult VAC6Processor::getState(IBStream *state)
   // TODO
 
   return kResultOk;
+}
+
+///////////////////////////////////
+// VAC6Processor::toMaxLevelState
+///////////////////////////////////
+template<typename SampleType>
+ParamValue VAC6Processor::toMaxLevelState(SampleType value)
+{
+  if(value < MIN_AUDIO_SAMPLE)
+    return 0;
+
+  // hard clipping
+  if(value > 1.0)
+    return 1.0;
+
+  // soft clipping TODO (currently set to -6dB => 10^(-6/20) = 0.5012)
+  if(value > 0.5012)
+    return 0.5;
+
+  return 0;
+
 }
 
 }
