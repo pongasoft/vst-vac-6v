@@ -1,14 +1,17 @@
 #pragma once
 
 #include <public.sdk/source/vst/vstaudioeffect.h>
-
-using namespace Steinberg;
-using namespace Steinberg::Vst;
+#include "VAC6Constants.h"
+#include <base/source/timer.h>
 
 namespace pongasoft {
 namespace VST {
 
-class VAC6Processor : public AudioEffect
+using namespace Steinberg;
+using namespace Steinberg::Vst;
+using namespace VAC6;
+
+class VAC6Processor : public AudioEffect, ITimerCallback
 {
 public:
   VAC6Processor();
@@ -65,9 +68,14 @@ protected:
   tresult genericProcessInputs(ProcessData &data);
 
   template<typename SampleType>
-  inline ParamValue toMaxLevelState(SampleType value);
+  inline EMaxLevelState toMaxLevelState(SampleType value);
+
+  // from ITimerCallback
+  void onTimer(Timer *timer) override;
 
 private:
+  Timer *fTimer;
+  MaxLevel fMaxLevel;
 };
 
 }

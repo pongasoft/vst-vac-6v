@@ -1,17 +1,20 @@
 #include <vstgui4/vstgui/plugin-bindings/vst3editor.h>
 #include <base/source/fstreamer.h>
-#include "logging/loguru.hpp"
+#include "../logging/loguru.hpp"
 #include "VAC6Controller.h"
-#include "VAC6CIDs.h"
+#include "../VAC6CIDs.h"
+#include "../VAC6Constants.h"
 
 namespace pongasoft {
 namespace VST {
+
+using namespace VAC6;
 
 ///////////////////////////////////////////
 // VAC6Controller::VAC6Controller
 ///////////////////////////////////////////
 VAC6Controller::VAC6Controller() : EditController(),
-  fXmlFile("VAC6.uidesc")
+  fXmlFile("VAC6.uidesc"), fControlManager{}
 {
   DLOG_F(INFO, "VAC6Controller::VAC6Controller()");
 }
@@ -36,22 +39,6 @@ tresult VAC6Controller::initialize(FUnknown *context)
   {
     return result;
   }
-
-  // Max Level Value
-  parameters.addParameter(STR16 ("Max Level Value"), // title
-                          nullptr, // units
-                          0, // stepCount (continuous)
-                          0, // defaultNormalizedValue
-                          ParameterInfo::kIsReadOnly, // flags
-                          EVAC6ParamID ::kMaxLevelValue); // tag
-
-  // Max Level State (0 = ok, 1 = soft clipping, 2 = hard clipping) for Max Level Value
-  parameters.addParameter(STR16 ("Max Level State"), // title
-                          nullptr, // units
-                          2, // stepCount = 2 => 3 values
-                          0, // defaultNormalizedValue
-                          ParameterInfo::kIsReadOnly, // flags
-                          EVAC6ParamID ::kMaxLevelState); // tag
 
   return result;
 }
@@ -86,17 +73,11 @@ CView *VAC6Controller::verifyView(CView *view,
 {
   DLOG_F(INFO, "VAC6Controller::verifyView()");
 
-  auto te = dynamic_cast<CTextEdit *>(view);
-  if(te != nullptr)
+  auto control = dynamic_cast<CControl *>(view);
+  if(control != nullptr)
   {
-    switch(te->getTag())
-    {
-      // TODO
-
-      default:
-        // nothing to do in this case
-        break;
-    }
+    if(control->getTag() > 0)
+      fControlManager.registerControl(control);
   }
 
   return view;
@@ -155,6 +136,60 @@ tresult VAC6Controller::getState(IBStream *state)
   return kResultOk;
 }
 
+///////////////////////////////////
+// VAC6Controller::notify
+///////////////////////////////////
+tresult VAC6Controller::notify(IMessage *message)
+{
+  if(!message)
+    return kInvalidArgument;
+
+  if(!strcmp(message->getMessageID(), "MaxLevel"))
+  {
+    MaxLevel maxLevel{};
+
+    int64 state;
+
+    message->getAttributes()->getFloat("Value", maxLevel.fValue);
+    message->getAttributes()->getInt("State", state);
+
+    maxLevel.fState = static_cast<EMaxLevelState>(state);
+
+    DLOG_F(INFO, "VAC6Controller::notify(%f, %d)", maxLevel.fValue, maxLevel.fState);
+
+    auto maxLevelLabel = fControlManager.findControl<CTextLabel*>(kMaxLevelValue);
+
+    if(maxLevelLabel != nullptr)
+    {
+      char text[256];
+      sprintf(text, "%.2f / %d", maxLevel.fValue, maxLevel.fState);
+      maxLevelLabel->setText(text);
+
+      switch(maxLevel.fState)
+      {
+        case kStateOk:
+          maxLevelLabel->setFontColor(CColor{0, 255, 0});
+          break;
+
+        case kStateSoftClipping:
+          maxLevelLabel->setFontColor(CColor{248, 122, 0});
+          break;
+
+        case kStateHardClipping:
+          maxLevelLabel->setFontColor(CColor{255, 0, 0});
+          break;
+
+        default:
+          // should not be here
+          break;
+      }
+    }
+
+    return kResultOk;
+  }
+
+  return kResultFalse;
+}
 
 }
 }

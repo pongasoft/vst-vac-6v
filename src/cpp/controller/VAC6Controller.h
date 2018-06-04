@@ -2,12 +2,15 @@
 
 #include <public.sdk/source/vst/vsteditcontroller.h>
 #include <vstgui4/vstgui/plugin-bindings/vst3editor.h>
+#include "ControlManager.h"
 
-using namespace Steinberg;
-using namespace Steinberg::Vst;
 
 namespace pongasoft {
 namespace VST {
+
+using namespace Steinberg;
+using namespace Steinberg::Vst;
+using namespace Common;
 
 /**
  * Represents the controller part of the plugin. Manages the UI.
@@ -44,6 +47,9 @@ public:
                     const IUIDescription *description,
                     VST3Editor *editor) override;
 
+  /** From ComponentBase to receive messages */
+  tresult PLUGIN_API notify(IMessage *message) SMTG_OVERRIDE;
+
   //--- ---------------------------------------------------------------------
   // create function required for Plug-in factory,
   // it will be called to create new instances of this controller
@@ -53,9 +59,13 @@ public:
     return (IEditController *) new VAC6Controller();
   }
 
+
 private:
   // the name of the xml file (relative) which contains the ui description
   char const *const fXmlFile;
+
+  // manage the views and controls
+  ControlManager fControlManager;
 };
 
 }

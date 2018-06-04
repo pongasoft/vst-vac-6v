@@ -8,7 +8,7 @@
 
 #include "version.h"
 #include "VAC6Processor.h"
-#include "VAC6Controller.h"
+#include "controller/VAC6Controller.h"
 
 using namespace Steinberg::Vst;
 

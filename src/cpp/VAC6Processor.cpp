@@ -5,7 +5,6 @@
 #include "VAC6Processor.h"
 #include "VAC6CIDs.h"
 #include "logging/loguru.hpp"
-#include "VAC6Constants.h"
 
 namespace pongasoft {
 namespace VST {
@@ -13,11 +12,10 @@ namespace VST {
 using namespace Common;
 using namespace VAC6;
 
-
 ///////////////////////////////////////////
 // VAC6Processor::VAC6Processor
 ///////////////////////////////////////////
-VAC6Processor::VAC6Processor() : AudioEffect()
+VAC6Processor::VAC6Processor() : AudioEffect(), fTimer{nullptr}, fMaxLevel{0, kStateOk}
 {
   setControllerClass(VAC6ControllerUID);
   DLOG_F(INFO, "VAC6Processor::VAC6Processor()");
@@ -87,6 +85,18 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
 tresult PLUGIN_API VAC6Processor::setActive(TBool state)
 {
   DLOG_F(INFO, "VAC6Processor::setActive(%s)", state ? "true" : "false");
+
+  if(fTimer != nullptr)
+  {
+    fTimer->release();
+    fTimer = nullptr;
+  }
+
+  if(state != 0)
+  {
+    fTimer = Timer::create(this, 1000);
+  }
+
   return AudioEffect::setActive(state);
 }
 
@@ -119,44 +129,21 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
 
   tresult res = out.copyFrom(in);
 
-  auto maxLevelValue = out.absoluteMax();
+  auto maxLevelValue = std::max(static_cast<Sample64>(out.absoluteMax()), fMaxLevel.fValue);
   auto maxLevelState = toMaxLevelState(maxLevelValue);
 
-  if(res == kResultOk)
-  {
-    IParameterChanges *outParamChanges = data.outputParameterChanges;
-    if(outParamChanges != nullptr)
-    {
-      // maxLevelValue
-      {
-        if(maxLevelValue > 1.0)
-          maxLevelValue = 1.0 / maxLevelValue;
+  // TODO HIGH: NOT THREAD SAFE!!!!!
+  // TODO HIGH: NOT THREAD SAFE!!!!!
+  // TODO HIGH: NOT THREAD SAFE!!!!!
+  // TODO HIGH: NOT THREAD SAFE!!!!!
+  // TODO HIGH: NOT THREAD SAFE!!!!!
 
-        int32 index = 0;
-        auto paramQueue = outParamChanges->addParameterData(kMaxLevelValue, index);
-        if(paramQueue != nullptr)
-        {
-          int32 index2 = 0;
-          paramQueue->addPoint(0, maxLevelValue, index2);
-        }
-      }
-
-      // maxLevelState
-      {
-        int32 index = 0;
-        auto paramQueue = outParamChanges->addParameterData(kMaxLevelState, index);
-        if(paramQueue != nullptr)
-        {
-          int32 index2 = 0;
-          paramQueue->addPoint(0, maxLevelState, index2);
-        }
-      }
-    }
-  }
+  fMaxLevel.fValue = maxLevelValue;
+  fMaxLevel.fState = maxLevelState;
 
   out.adjustSilenceFlags();
 
-  return kResultOk;
+  return res;
 }
 
 ///////////////////////////////////////////
@@ -265,22 +252,48 @@ tresult VAC6Processor::getState(IBStream *state)
 // VAC6Processor::toMaxLevelState
 ///////////////////////////////////
 template<typename SampleType>
-ParamValue VAC6Processor::toMaxLevelState(SampleType value)
+EMaxLevelState VAC6Processor::toMaxLevelState(SampleType value)
 {
   if(value < MIN_AUDIO_SAMPLE)
-    return 0;
+    return kStateOk;
 
   // hard clipping
   if(value > 1.0)
-    return 1.0;
+    return kStateHardClipping;
 
   // soft clipping TODO (currently set to -6dB => 10^(-6/20) = 0.5012)
   if(value > 0.5012)
-    return 0.5;
+    return kStateSoftClipping;
 
-  return 0;
+  return kStateOk;
 
 }
+
+///////////////////////////////////////////
+// VAC6Processor::onTimer
+///////////////////////////////////////////
+void VAC6Processor::onTimer(Timer * /* timer */)
+{
+  DLOG_F(INFO, "VAC6Processor::onTimer()");
+
+  IMessage *message = allocateMessage();
+  if(!message)
+    return;
+
+  OPtr<IMessage> msgReleaser = message;
+
+  // TODO HIGH: NOT THREAD SAFE!!!!!
+  // TODO HIGH: NOT THREAD SAFE!!!!!
+  // TODO HIGH: NOT THREAD SAFE!!!!!
+  // TODO HIGH: NOT THREAD SAFE!!!!!
+  // TODO HIGH: NOT THREAD SAFE!!!!!
+
+  message->setMessageID("MaxLevel");
+  message->getAttributes()->setFloat("Value", fMaxLevel.fValue);
+  message->getAttributes()->setInt("State", fMaxLevel.fState);
+  sendMessage(message);
+}
+
 
 }
 }

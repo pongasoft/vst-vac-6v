@@ -53,12 +53,15 @@ if (SMTG_CREATE_VST2_VERSION)
 endif()
 
 set(vst_sources
+		${CPP_SOURCES}/controller/VAC6Controller.h
+		${CPP_SOURCES}/controller/VAC6Controller.cpp
+		${CPP_SOURCES}/controller/VAC6Controller.h
+		${CPP_SOURCES}/controller/ControlManager.h
+		${CPP_SOURCES}/controller/ControlManager.cpp
 		${CPP_SOURCES}/AudioBuffer.h
 		${CPP_SOURCES}/AudioUtils.h
 		${CPP_SOURCES}/VAC6CIDs.h
 		${CPP_SOURCES}/VAC6Constants.h
-		${CPP_SOURCES}/VAC6Controller.h
-		${CPP_SOURCES}/VAC6Controller.cpp
 		${CPP_SOURCES}/VAC6Processor.h
 		${CPP_SOURCES}/VAC6Processor.cpp
 		${CPP_SOURCES}/VAC6VST3.cpp
