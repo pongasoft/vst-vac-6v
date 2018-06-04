@@ -3,18 +3,17 @@
 #include "../logging/loguru.hpp"
 #include "VAC6Controller.h"
 #include "../VAC6CIDs.h"
-#include "../VAC6Constants.h"
 
 namespace pongasoft {
 namespace VST {
-
-using namespace VAC6;
+namespace VAC6 {
 
 ///////////////////////////////////////////
 // VAC6Controller::VAC6Controller
 ///////////////////////////////////////////
 VAC6Controller::VAC6Controller() : EditController(),
-  fXmlFile("VAC6.uidesc"), fControlManager{}
+  fXmlFile("VAC6.uidesc"),
+  fMaxLevelView{}
 {
   DLOG_F(INFO, "VAC6Controller::VAC6Controller()");
 }
@@ -76,8 +75,17 @@ CView *VAC6Controller::verifyView(CView *view,
   auto control = dynamic_cast<CControl *>(view);
   if(control != nullptr)
   {
-    if(control->getTag() > 0)
-      fControlManager.registerControl(control);
+    switch(control->getTag())
+    {
+      case kMaxLevelValue:
+        fMaxLevelView.assign(dynamic_cast<CTextLabel *>(control));
+        break;
+
+      default:
+        // ignoring other
+        break;
+
+    }
   }
 
   return view;
@@ -157,33 +165,7 @@ tresult VAC6Controller::notify(IMessage *message)
 
     DLOG_F(INFO, "VAC6Controller::notify(%f, %d)", maxLevel.fValue, maxLevel.fState);
 
-    auto maxLevelLabel = fControlManager.findControl<CTextLabel*>(kMaxLevelValue);
-
-    if(maxLevelLabel != nullptr)
-    {
-      char text[256];
-      sprintf(text, "%.2f / %d", maxLevel.fValue, maxLevel.fState);
-      maxLevelLabel->setText(text);
-
-      switch(maxLevel.fState)
-      {
-        case kStateOk:
-          maxLevelLabel->setFontColor(CColor{0, 255, 0});
-          break;
-
-        case kStateSoftClipping:
-          maxLevelLabel->setFontColor(CColor{248, 122, 0});
-          break;
-
-        case kStateHardClipping:
-          maxLevelLabel->setFontColor(CColor{255, 0, 0});
-          break;
-
-        default:
-          // should not be here
-          break;
-      }
-    }
+    fMaxLevelView.setMaxLevel(maxLevel);
 
     return kResultOk;
   }
@@ -191,5 +173,6 @@ tresult VAC6Controller::notify(IMessage *message)
   return kResultFalse;
 }
 
+}
 }
 }

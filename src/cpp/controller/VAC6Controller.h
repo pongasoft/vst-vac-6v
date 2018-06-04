@@ -2,11 +2,13 @@
 
 #include <public.sdk/source/vst/vsteditcontroller.h>
 #include <vstgui4/vstgui/plugin-bindings/vst3editor.h>
-#include "ControlManager.h"
+#include "VSTView.h"
+#include "VAC6Views.h"
 
 
 namespace pongasoft {
 namespace VST {
+namespace VAC6 {
 
 using namespace Steinberg;
 using namespace Steinberg::Vst;
@@ -64,9 +66,10 @@ private:
   // the name of the xml file (relative) which contains the ui description
   char const *const fXmlFile;
 
-  // manage the views and controls
-  ControlManager fControlManager;
+  // view for max level
+  MaxLevelView fMaxLevelView;
 };
 
+}
 }
 }
