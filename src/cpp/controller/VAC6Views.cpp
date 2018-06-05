@@ -11,17 +11,26 @@ MaxLevelView::MaxLevelView() : VSTView{}, fMaxLevel{0, kStateOk}
 {
 }
 
+///////////////////////////////////////////
+// MaxLevelView::afterAssign
+///////////////////////////////////////////
 void MaxLevelView::afterAssign()
 {
   updateView();
 }
 
+///////////////////////////////////////////
+// MaxLevelView::setMaxLevel
+///////////////////////////////////////////
 void MaxLevelView::setMaxLevel(MaxLevel const &maxLevel)
 {
   fMaxLevel = maxLevel;
   updateView();
 }
 
+///////////////////////////////////////////
+// MaxLevelView::updateView
+///////////////////////////////////////////
 void MaxLevelView::updateView() const
 {
   if(fView != nullptr)
@@ -49,6 +58,21 @@ void MaxLevelView::updateView() const
         break;
     }
   }
+}
+
+///////////////////////////////////////////
+// MaxLevelView::onMessage
+///////////////////////////////////////////
+void MaxLevelView::onMessage(Message const &message)
+{
+  MaxLevel maxLevel{
+    message.getFloat("Value", 0),
+    static_cast<EMaxLevelState>(message.getInt("State", 0))
+  };
+
+  DLOG_F(INFO, "MaxLevelView::onMessage(%f, %d)", maxLevel.fValue, maxLevel.fState);
+
+  setMaxLevel(maxLevel);
 }
 
 }

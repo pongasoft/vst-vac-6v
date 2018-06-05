@@ -2,8 +2,11 @@
 #include <public.sdk/source/vst/vstaudioprocessoralgo.h>
 
 #include "AudioBuffer.h"
+#include "Messaging.h"
+
 #include "VAC6Processor.h"
 #include "VAC6CIDs.h"
+
 #include "logging/loguru.hpp"
 
 namespace pongasoft {
@@ -288,9 +291,12 @@ void VAC6Processor::onTimer(Timer * /* timer */)
   // TODO HIGH: NOT THREAD SAFE!!!!!
   // TODO HIGH: NOT THREAD SAFE!!!!!
 
-  message->setMessageID("MaxLevel");
-  message->getAttributes()->setFloat("Value", fMaxLevel.fValue);
-  message->getAttributes()->setInt("State", fMaxLevel.fState);
+  Message m{message};
+
+  m.setMessageID(kMaxLevel_MID);
+  m.setFloat("Value", fMaxLevel.fValue);
+  m.setInt("State", fMaxLevel.fState);
+
   sendMessage(message);
 }
 

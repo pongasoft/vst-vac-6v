@@ -152,25 +152,22 @@ tresult VAC6Controller::notify(IMessage *message)
   if(!message)
     return kInvalidArgument;
 
-  if(!strcmp(message->getMessageID(), "MaxLevel"))
+  Message m{message};
+
+  switch(static_cast<EVAC6MessageID>(m.getMessageID()))
   {
-    MaxLevel maxLevel{};
+    case kMaxLevel_MID:
+    {
+      fMaxLevelView.onMessage(m);
+      break;
+    }
 
-    int64 state;
-
-    message->getAttributes()->getFloat("Value", maxLevel.fValue);
-    message->getAttributes()->getInt("State", state);
-
-    maxLevel.fState = static_cast<EMaxLevelState>(state);
-
-    DLOG_F(INFO, "VAC6Controller::notify(%f, %d)", maxLevel.fValue, maxLevel.fState);
-
-    fMaxLevelView.setMaxLevel(maxLevel);
-
-    return kResultOk;
+    default:
+      DLOG_F(WARNING, "VAC6Controller::notify / unhandled message id %d", m.getMessageID());
+      return kResultFalse;
   }
 
-  return kResultFalse;
+  return kResultOk;
 }
 
 }

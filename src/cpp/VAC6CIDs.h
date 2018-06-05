@@ -17,6 +17,11 @@ enum EVAC6ParamID : Steinberg::Vst::ParamID {
   kMaxLevelValue = 1000
 };
 
+enum EVAC6MessageID
+{
+  kMaxLevel_MID = 100
+};
+
 //------------------------------------------------------------------------
 } // namespace VST
 } // namespace pongasoft
