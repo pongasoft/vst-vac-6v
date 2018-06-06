@@ -70,8 +70,6 @@ void MaxLevelView::onMessage(Message const &message)
     static_cast<EMaxLevelState>(message.getInt("State", 0))
   };
 
-  DLOG_F(INFO, "MaxLevelView::onMessage(%f, %d)", maxLevel.fValue, maxLevel.fState);
-
   setMaxLevel(maxLevel);
 }
 

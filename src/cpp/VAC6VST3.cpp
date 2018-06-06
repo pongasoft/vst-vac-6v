@@ -50,7 +50,7 @@ BEGIN_FACTORY_DEF ("pongasoft",
                 "Fx",          // Subcategory for this Plug-in (to be changed)
                 FULL_VERSION_STR,    // Plug-in version (to be changed)
                 kVstVersionString,    // the VST 3 SDK version (do not changed this, use always this define)
-                pongasoft::VST::VAC6Processor::createInstance)  // function pointer called when this component should be instantiated
+                pongasoft::VST::VAC6::VAC6Processor::createInstance)  // function pointer called when this component should be instantiated
 
     // VAC6Controller controller
     DEF_CLASS2 (INLINE_UID_FROM_FUID(::pongasoft::VST::VAC6ControllerUID),
@@ -62,6 +62,6 @@ BEGIN_FACTORY_DEF ("pongasoft",
                 "",            // not used here
                 FULL_VERSION_STR,    // Plug-in version (to be changed)
                 kVstVersionString,    // the VST 3 SDK version (do not changed this, use always this define)
-                pongasoft::VST::VAC6Controller::createInstance)// function pointer called when this component should be instantiated
+                pongasoft::VST::VAC6::VAC6Controller::createInstance)// function pointer called when this component should be instantiated
 
 END_FACTORY

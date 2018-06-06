@@ -7,8 +7,6 @@
 #include "VAC6Processor.h"
 #include "VAC6CIDs.h"
 
-#include "logging/loguru.hpp"
-
 namespace pongasoft {
 namespace VST {
 
@@ -18,7 +16,7 @@ using namespace VAC6;
 ///////////////////////////////////////////
 // VAC6Processor::VAC6Processor
 ///////////////////////////////////////////
-VAC6Processor::VAC6Processor() : AudioEffect(), fTimer{nullptr}, fMaxLevel{0, kStateOk}
+VAC6Processor::VAC6Processor() : AudioEffect(), fMaxLevel{0, kStateOk}, fTimer{nullptr}
 {
   setControllerClass(VAC6ControllerUID);
   DLOG_F(INFO, "VAC6Processor::VAC6Processor()");
@@ -79,6 +77,8 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
          setup.maxSamplesPerBlock,
          setup.sampleRate);
 
+  fRateLimiter.init(setup.sampleRate, UI_FRAME_RATE_MS);
+
   return result;
 }
 
@@ -97,7 +97,7 @@ tresult PLUGIN_API VAC6Processor::setActive(TBool state)
 
   if(state != 0)
   {
-    fTimer = Timer::create(this, 1000);
+    fTimer = Timer::create(this, UI_FRAME_RATE_MS);
   }
 
   return AudioEffect::setActive(state);
@@ -135,16 +135,18 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   auto maxLevelValue = std::max(static_cast<Sample64>(out.absoluteMax()), fMaxLevel.fValue);
   auto maxLevelState = toMaxLevelState(maxLevelValue);
 
-  // TODO HIGH: NOT THREAD SAFE!!!!!
-  // TODO HIGH: NOT THREAD SAFE!!!!!
-  // TODO HIGH: NOT THREAD SAFE!!!!!
-  // TODO HIGH: NOT THREAD SAFE!!!!!
-  // TODO HIGH: NOT THREAD SAFE!!!!!
-
   fMaxLevel.fValue = maxLevelValue;
   fMaxLevel.fState = maxLevelState;
 
   out.adjustSilenceFlags();
+
+  if(fRateLimiter.shouldUpdate(data.numSamples))
+  {
+    fMaxLevelValue.save(fMaxLevel);
+
+    fMaxLevel.fValue = 0;
+    fMaxLevel.fState = kStateOk;
+  }
 
   return res;
 }
@@ -277,27 +279,23 @@ EMaxLevelState VAC6Processor::toMaxLevelState(SampleType value)
 ///////////////////////////////////////////
 void VAC6Processor::onTimer(Timer * /* timer */)
 {
-  DLOG_F(INFO, "VAC6Processor::onTimer()");
+  MaxLevel maxLevel{};
+  if(fMaxLevelValue.load(maxLevel))
+  {
+    IMessage *message = allocateMessage();
+    if(!message)
+      return;
 
-  IMessage *message = allocateMessage();
-  if(!message)
-    return;
+    OPtr<IMessage> msgReleaser = message;
 
-  OPtr<IMessage> msgReleaser = message;
+    Message m{message};
 
-  // TODO HIGH: NOT THREAD SAFE!!!!!
-  // TODO HIGH: NOT THREAD SAFE!!!!!
-  // TODO HIGH: NOT THREAD SAFE!!!!!
-  // TODO HIGH: NOT THREAD SAFE!!!!!
-  // TODO HIGH: NOT THREAD SAFE!!!!!
+    m.setMessageID(kMaxLevel_MID);
+    m.setFloat("Value", maxLevel.fValue);
+    m.setInt("State", maxLevel.fState);
 
-  Message m{message};
-
-  m.setMessageID(kMaxLevel_MID);
-  m.setFloat("Value", fMaxLevel.fValue);
-  m.setInt("State", fMaxLevel.fState);
-
-  sendMessage(message);
+    sendMessage(message);
+  }
 }
 
 
