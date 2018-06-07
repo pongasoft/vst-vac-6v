@@ -145,6 +145,7 @@ protected:
 
 private:
   MaxLevel fMaxLevel;
+  Sample64 fSoftClippingLevel;
 
   Timer *fTimer;
   RateLimiter fRateLimiter;

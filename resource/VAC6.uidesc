@@ -8,21 +8,28 @@
 		<color name="LevelStateSoftClipping" rgba="#f87a00ff"/>
 	</colors>
 	<template background-color="~ GreyCColor" background-color-draw-style="filled and stroked" class="CViewContainer" mouse-enabled="true" name="view" opacity="1" origin="0, 0" size="300, 300" transparent="false" wants-focus="false">
-		<view back-color="~ BlackCColor" background-offset="0, 0" class="CTextLabel" control-tag="Param_MaxLevelValue" default-value="0" font="~ NormalFont" font-antialias="true" font-color="LevelStateOk" frame-color="~ BlackCColor" frame-width="1" max-value="1" min-value="0" mouse-enabled="false" opacity="1" origin="0, 60" round-rect-radius="6" shadow-color="~ RedCColor" size="100, 20" style-3D-in="false" style-3D-out="false" style-no-draw="false" style-no-frame="false" style-no-text="false" style-round-rect="false" style-shadow-text="false" text-alignment="center" text-inset="0, 0" text-rotation="0" text-shadow-offset="1, 1" title="--.000" transparent="false" value-precision="2" wants-focus="false" wheel-inc-value="0.1"/>
+		<view back-color="~ BlackCColor" background-offset="0, 0" class="CTextLabel" control-tag="Param_MaxLevelValue" default-value="0" font="~ NormalFont" font-antialias="true" font-color="LevelStateOk" frame-color="~ BlackCColor" frame-width="1" max-value="1" min-value="0" mouse-enabled="false" opacity="1" origin="40, 40" round-rect-radius="6" shadow-color="~ RedCColor" size="100, 20" style-3D-in="false" style-3D-out="false" style-no-draw="false" style-no-frame="false" style-no-text="false" style-round-rect="false" style-shadow-text="false" text-alignment="center" text-inset="0, 0" text-rotation="0" text-shadow-offset="1, 1" title="0.00 / 0" transparent="false" value-precision="2" wants-focus="false" wheel-inc-value="0.1"/>
+		<view angle-range="300" angle-start="135" background-offset="0, 0" bitmap="Knob" circle-drawing="false" class="CAnimKnob" control-tag="Param_SoftClippingLevel" corona-color="~ WhiteCColor" corona-dash-dot="false" corona-drawing="false" corona-from-center="false" corona-inset="0" corona-inverted="false" corona-line-cap-butt="false" corona-outline="false" corona-outline-width-add="2" default-value="0.75" handle-color="~ WhiteCColor" handle-line-width="1" handle-shadow-color="~ GreyCColor" height-of-one-image="75" inverse-bitmap="false" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="160, 10" size="75, 75" skip-handle-drawing="true" sub-pixmaps="64" transparent="false" value-inset="0" wants-focus="true" wheel-inc-value="0.1" zoom-factor="1.5"/>
 	</template>
 	<custom>
 		<attributes name="FocusDrawing"/>
 		<attributes Path="/Volumes/Development/github/org.pongasoft/vst-vac-6/resource/VAC6.uidesc" name="VST3Editor"/>
 		<attributes name="UIGridController"/>
 		<attributes SelectedTemplate="view" name="UITemplateController"/>
-		<attributes EditViewScale="1" EditorSize="0, 0, 1161, 760" SplitViewSize_0_0="0.8240866035182679016912743463763035833836" SplitViewSize_0_1="0.1488497970230040490235978722921572625637" SplitViewSize_1_0="0.4952638700947226135795631307701114565134" SplitViewSize_1_1="0.4979702300405953740991549238970037549734" SplitViewSize_2_0="0.6520241171403962088248817963176406919956" SplitViewSize_2_1="0.3436692506459948504016210790723562240601" TabSwitchValue="0" Version="1" name="UIEditController"/>
+		<attributes EditViewScale="1" EditorSize="0, 0, 1161, 760" SplitViewSize_0_0="0.8240866035182679016912743463763035833836" SplitViewSize_0_1="0.1488497970230040490235978722921572625637" SplitViewSize_1_0="0.4952638700947226135795631307701114565134" SplitViewSize_1_1="0.4979702300405953740991549238970037549734" SplitViewSize_2_0="0.6520241171403962088248817963176406919956" SplitViewSize_2_1="0.3436692506459948504016210790723562240601" TabSwitchValue="1" Version="1" name="UIEditController"/>
 		<attributes name="UIAttributesController"/>
-		<attributes SelectedRow="8" name="UIViewCreatorDataSource"/>
-		<attributes SelectedRow="0" name="UITagsDataSource"/>
+		<attributes SelectedRow="0" name="UIViewCreatorDataSource"/>
+		<attributes SelectedRow="1" name="UITagsDataSource"/>
 		<attributes SelectedRow="0" name="UIColorsDataSource"/>
+		<attributes SelectedRow="0" name="UIBitmapsDataSource"/>
+		<attributes SelectedRow="-1" name="UIGradientsDataSource"/>
 	</custom>
 	<control-tags>
 		<control-tag name="Param_MaxLevelValue" tag="1000"/>
+		<control-tag name="Param_SoftClippingLevel" tag="2000"/>
 	</control-tags>
-	<bitmaps/>
+	<bitmaps>
+		<bitmap name="Knob" path="Knob.png"/>
+	</bitmaps>
+	<gradients/>
 </vstgui-ui-description>

@@ -39,6 +39,16 @@ tresult VAC6Controller::initialize(FUnknown *context)
     return result;
   }
 
+  // the knob that changes the soft clipping level
+  parameters.addParameter(STR16 ("Soft Clipping Level"), // title
+                          nullptr, // units
+                          0, // stepCount => continuous
+                          0.75, // defaultNormalizedValue
+                          Vst::ParameterInfo::kCanAutomate, // flags
+                          EVAC6ParamID::kSoftClippingLevel, // tag
+                          kRootUnitId, // unitID => not using units at this stage
+                          STR16 ("Sft Clp Lvl")); // shortTitle
+
   return result;
 }
 
@@ -103,9 +113,14 @@ tresult VAC6Controller::setComponentState(IBStream *state)
   // using helper to read the stream
   IBStreamer streamer(state, kLittleEndian);
 
-  // TODO
+  // EVAC6ParamID::kSoftClippingLevel
+  double savedParamSoftLevelClipping = 0.f;
+  if(!streamer.readDouble(savedParamSoftLevelClipping))
+    return kResultFalse;
+  setParamNormalized(EVAC6ParamID::kSoftClippingLevel, fromSoftLevelClipping(savedParamSoftLevelClipping));
 
-  DLOG_F(INFO, "VAC6Controller::setComponentState => ");
+  DLOG_F(INFO, "VAC6Controller::setComponentState => kSoftClippingLevel=%f",
+         savedParamSoftLevelClipping);
 
   return kResultOk;
 }
@@ -138,8 +153,6 @@ tresult VAC6Controller::getState(IBStream *state)
   DLOG_F(INFO, "VAC6Controller::getState()");
 
   IBStreamer streamer(state, kLittleEndian);
-
-  // TODO
 
   return kResultOk;
 }

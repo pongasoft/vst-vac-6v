@@ -16,7 +16,11 @@ using namespace VAC6;
 ///////////////////////////////////////////
 // VAC6Processor::VAC6Processor
 ///////////////////////////////////////////
-VAC6Processor::VAC6Processor() : AudioEffect(), fMaxLevel{0, kStateOk}, fTimer{nullptr}
+VAC6Processor::VAC6Processor() :
+  AudioEffect(),
+  fMaxLevel{0, kStateOk},
+  fSoftClippingLevel{toSoftClippingLevel(0.75)},
+  fTimer{nullptr}
 {
   setControllerClass(VAC6ControllerUID);
   DLOG_F(INFO, "VAC6Processor::VAC6Processor()");
@@ -206,7 +210,9 @@ void VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
       {
         switch(paramQueue->getParameterId())
         {
-          // TODO
+          case kSoftClippingLevel:
+            fSoftClippingLevel = toSoftClippingLevel(value);
+            break;
 
           default:
             // shouldn't happen?
@@ -225,13 +231,15 @@ tresult VAC6Processor::setState(IBStream *state)
   if(state == nullptr)
     return kResultFalse;
 
-  DLOG_F(INFO, "VAC6Processor::setState()");
-
   IBStreamer streamer(state, kLittleEndian);
 
-  DLOG_F(INFO, "VAC6Processor::setState => ");
+  double savedParam = 0;
+  if(!streamer.readDouble(savedParam))
+    return kResultFalse;
 
-  // TODO
+  fSoftClippingLevel = savedParam;
+
+  DLOG_F(INFO, "VAC6Processor::setState => fSoftClippingLevel=%f", savedParam);
 
   return kResultOk;
 }
@@ -244,11 +252,11 @@ tresult VAC6Processor::getState(IBStream *state)
   if(state == nullptr)
     return kResultFalse;
 
-  DLOG_F(INFO, "VAC6Processor::getState()");
-
   IBStreamer streamer(state, kLittleEndian);
 
-  // TODO
+  streamer.writeDouble(fSoftClippingLevel);
+
+  DLOG_F(INFO, "VAC6Processor::getState => fSoftClippingLevel=%f", fSoftClippingLevel);
 
   return kResultOk;
 }
@@ -266,8 +274,8 @@ EMaxLevelState VAC6Processor::toMaxLevelState(SampleType value)
   if(value > 1.0)
     return kStateHardClipping;
 
-  // soft clipping TODO (currently set to -6dB => 10^(-6/20) = 0.5012)
-  if(value > 0.5012)
+  // soft clipping
+  if(value > fSoftClippingLevel)
     return kStateSoftClipping;
 
   return kStateOk;

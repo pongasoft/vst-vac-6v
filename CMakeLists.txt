@@ -85,6 +85,7 @@ target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
 target_link_libraries(${target} PRIVATE base sdk vstgui_support)
 
 smtg_add_vst3_resource(${target} "resource/VAC6.uidesc")
+smtg_add_vst3_resource(${target} "resource/Knob.png")
 
 if(MAC)
 	smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/mac/Info.plist" PREPROCESS)
