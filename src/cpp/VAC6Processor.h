@@ -4,6 +4,7 @@
 #include "VAC6Constants.h"
 #include "CircularFIFO.h"
 #include "logging/loguru.hpp"
+#include "VAC6Model.h"
 #include <base/source/timer.h>
 
 namespace pongasoft {
@@ -145,7 +146,7 @@ protected:
 
 private:
   MaxLevel fMaxLevel;
-  Sample64 fSoftClippingLevel;
+  SoftClippingLevel fSoftClippingLevel;
 
   Timer *fTimer;
   RateLimiter fRateLimiter;

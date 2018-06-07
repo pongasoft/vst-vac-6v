@@ -3,6 +3,7 @@
 #include "../logging/loguru.hpp"
 #include "VAC6Controller.h"
 #include "../VAC6CIDs.h"
+#include "../VAC6Model.h"
 
 namespace pongasoft {
 namespace VST {
@@ -117,7 +118,7 @@ tresult VAC6Controller::setComponentState(IBStream *state)
   double savedParamSoftLevelClipping = 0.f;
   if(!streamer.readDouble(savedParamSoftLevelClipping))
     return kResultFalse;
-  setParamNormalized(EVAC6ParamID::kSoftClippingLevel, fromSoftLevelClipping(savedParamSoftLevelClipping));
+  setParamNormalized(EVAC6ParamID::kSoftClippingLevel, SoftClippingLevel{savedParamSoftLevelClipping}.getNormalizedParam());
 
   DLOG_F(INFO, "VAC6Controller::setComponentState => kSoftClippingLevel=%f",
          savedParamSoftLevelClipping);

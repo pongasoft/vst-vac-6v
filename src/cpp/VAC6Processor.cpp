@@ -19,7 +19,7 @@ using namespace VAC6;
 VAC6Processor::VAC6Processor() :
   AudioEffect(),
   fMaxLevel{0, kStateOk},
-  fSoftClippingLevel{toSoftClippingLevel(0.75)},
+  fSoftClippingLevel{},
   fTimer{nullptr}
 {
   setControllerClass(VAC6ControllerUID);
@@ -211,7 +211,7 @@ void VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
         switch(paramQueue->getParameterId())
         {
           case kSoftClippingLevel:
-            fSoftClippingLevel = toSoftClippingLevel(value);
+            fSoftClippingLevel = SoftClippingLevel::fromNormalizedParam(value);
             break;
 
           default:
@@ -254,9 +254,9 @@ tresult VAC6Processor::getState(IBStream *state)
 
   IBStreamer streamer(state, kLittleEndian);
 
-  streamer.writeDouble(fSoftClippingLevel);
+  streamer.writeDouble(fSoftClippingLevel.getValueInSample());
 
-  DLOG_F(INFO, "VAC6Processor::getState => fSoftClippingLevel=%f", fSoftClippingLevel);
+  DLOG_F(INFO, "VAC6Processor::getState => fSoftClippingLevel=%f", fSoftClippingLevel.getValueInSample());
 
   return kResultOk;
 }
@@ -275,7 +275,7 @@ EMaxLevelState VAC6Processor::toMaxLevelState(SampleType value)
     return kStateHardClipping;
 
   // soft clipping
-  if(value > fSoftClippingLevel)
+  if(value > fSoftClippingLevel.getValueInSample())
     return kStateSoftClipping;
 
   return kStateOk;
