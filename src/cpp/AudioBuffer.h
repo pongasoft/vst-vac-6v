@@ -82,11 +82,15 @@ public:
    */
   tresult copyFrom(class_type const &fromBuffer)
   {
-    int32 numChannels = std::min(getNumChannels(), fromBuffer.getNumChannels());
-    int32 numSamples = std::min(getNumSamples(), fromBuffer.getNumSamples());
-
     SampleType **fromSamples = fromBuffer.getBuffer();
     SampleType **toSamples = getBuffer();
+
+    // there are cases when the 2 buffers could be identical.. no need to copy
+    if(fromSamples == toSamples)
+      return kResultOk;
+
+    int32 numChannels = std::min(getNumChannels(), fromBuffer.getNumChannels());
+    int32 numSamples = std::min(getNumSamples(), fromBuffer.getNumSamples());
 
     for(int32 channel = 0; channel < numChannels; channel++)
     {

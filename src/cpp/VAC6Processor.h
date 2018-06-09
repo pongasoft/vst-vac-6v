@@ -5,6 +5,8 @@
 #include "CircularFIFO.h"
 #include "logging/loguru.hpp"
 #include "VAC6Model.h"
+#include "CircularBuffer.h"
+#include "ZoomWindow.h"
 #include <base/source/timer.h>
 
 namespace pongasoft {
@@ -14,13 +16,16 @@ namespace VAC6 {
 using namespace Steinberg;
 using namespace Steinberg::Vst;
 
+using namespace Common;
+
 /**
  * Keeps track of the time in number of samples processed vs sample rate
  */
 class RateLimiter
 {
 public:
-  RateLimiter() : fRateLimitInSamples{0}, fSampleCount{0} {}
+  RateLimiter() : fRateLimitInSamples{0}, fSampleCount{0}
+  {}
 
   void init(SampleRate sampleRate, long rateLimitInMillis)
   {
@@ -72,7 +77,8 @@ public:
     // if we were able to pop 1 item, we continue to pop until there is no more to pop => last one will be returned
     if(res)
     {
-      while(fMessageQueue.pop(item)) { }
+      while(fMessageQueue.pop(item))
+      {}
     }
 
     return res;
@@ -148,9 +154,13 @@ private:
   MaxLevel fMaxLevel;
   SoftClippingLevel fSoftClippingLevel;
 
+  CircularBuffer<TSample> *fMaxBuffer;
+  ZoomWindow *fZoomWindow;
+
   Timer *fTimer;
   RateLimiter fRateLimiter;
-  LockFreeValue<MaxLevel, 3> fMaxLevelValue;
+  LockFreeValue<MaxLevel, 3> fMaxLevelUpdate;
+  LockFreeValue<LCDData, 3> fLCDDataUpdate;
 };
 
 }

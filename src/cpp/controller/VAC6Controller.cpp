@@ -176,6 +176,17 @@ tresult VAC6Controller::notify(IMessage *message)
       break;
     }
 
+    case kLCDData_MID:
+    {
+      LCDData lcdData{};
+      if(m.getBinary("Value", lcdData.fSamples, MAX_ARRAY_SIZE) == MAX_ARRAY_SIZE)
+      {
+        DLOG_F(INFO, "VAC6Controller::notify(LCDData[%d] = [%f, %f, ..., %f])", MAX_ARRAY_SIZE, lcdData.fSamples[0], lcdData.fSamples[1], lcdData.fSamples[MAX_ARRAY_SIZE - 1]);
+      }
+
+      break;
+    }
+
     default:
       DLOG_F(WARNING, "VAC6Controller::notify / unhandled message id %d", m.getMessageID());
       return kResultFalse;

@@ -29,6 +29,29 @@ inline bool isSilent(Sample64 value)
   return value <= Sample64SilentThreshold;
 }
 
+template <typename T>
+inline static const T& clamp(const T &value, const T &lower, const T &upper)
+{
+  return value < lower ? lower : (value > upper ? upper : value);
+}
+
+/**
+ * Equals with 5 digits precision */
+template <typename T>
+inline static bool equals5DP(T const &v1, T const &v2)
+{
+  return std::fabs(v1 - v2) < 1e-5;
+}
+
+class ClockSample
+{
+public:
+  ClockSample(SampleRate iSampleRate) : fSampleRate(iSampleRate) {}
+
+private:
+  SampleRate fSampleRate;
+};
+
 //// returns true if the buffer is silent (meaning all channels are silent => set to 1)
 //inline bool isSilent(AudioBusBuffers &buffer)
 //{

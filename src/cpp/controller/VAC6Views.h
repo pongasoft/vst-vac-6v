@@ -5,6 +5,7 @@
 #include "VSTView.h"
 #include "../VAC6Constants.h"
 #include "../Messaging.h"
+#include "../VAC6Model.h"
 
 namespace pongasoft {
 namespace VST {

@@ -28,7 +28,16 @@ inline double sampleToDb(SampleType valueInSample)
   return 20.0 * std::log(valueInSample) / std::log(10.0);
 }
 
-const Sample64 DEFAULT_SOFT_CLIPPING_LEVEL = dbToSample<Sample64>(-6.0);
+/**
+ * Encapsulates the concept of max level
+ */
+struct MaxLevel
+{
+  TSample fValue;
+  EMaxLevelState fState;
+};
+
+const TSample DEFAULT_SOFT_CLIPPING_LEVEL = dbToSample<TSample>(-6.0);
 constexpr double MIN_SOFT_CLIPPING_LEVEL_DB = -24;
 
 ///////////////////////////////////
@@ -37,10 +46,10 @@ constexpr double MIN_SOFT_CLIPPING_LEVEL_DB = -24;
 class SoftClippingLevel
 {
 public:
-  SoftClippingLevel(Sample64 valueInSample = DEFAULT_SOFT_CLIPPING_LEVEL) : fValueInSample(valueInSample)
+  SoftClippingLevel(TSample valueInSample = DEFAULT_SOFT_CLIPPING_LEVEL) : fValueInSample(valueInSample)
   {}
 
-  inline Sample64 getValueInSample()
+  inline TSample getValueInSample()
   { return fValueInSample; }
 
   inline double getValueInDb()
@@ -60,11 +69,19 @@ public:
   static SoftClippingLevel fromNormalizedParam(ParamValue value)
   {
     double sclIndB = -MIN_SOFT_CLIPPING_LEVEL_DB * value + MIN_SOFT_CLIPPING_LEVEL_DB;
-    return SoftClippingLevel {dbToSample<Sample64>(sclIndB)};
+    return SoftClippingLevel {dbToSample<TSample>(sclIndB)};
   }
 
 private:
   Sample64 fValueInSample;
+};
+
+///////////////////////////////////
+// LCDData
+///////////////////////////////////
+struct LCDData
+{
+  TSample fSamples[MAX_ARRAY_SIZE];
 };
 
 }

@@ -20,7 +20,8 @@ enum EVAC6ParamID : Steinberg::Vst::ParamID {
 
 enum EVAC6MessageID
 {
-  kMaxLevel_MID = 100
+  kMaxLevel_MID = 100,
+  kLCDData_MID = 200
 };
 
 //------------------------------------------------------------------------

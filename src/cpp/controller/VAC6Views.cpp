@@ -1,4 +1,5 @@
 #include "VAC6Views.h"
+#include "../VAC6Model.h"
 
 namespace pongasoft {
 namespace VST {

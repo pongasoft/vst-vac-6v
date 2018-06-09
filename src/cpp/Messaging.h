@@ -18,7 +18,7 @@ static const auto ATTR_MSG_ID = "ATTR_MSG_ID";
 class Message
 {
 public:
-  Message(IMessage *message) : fMessage(message) {}
+  explicit Message(IMessage *message) : fMessage(message) {}
 
   inline int getMessageID() const
   {
@@ -54,6 +54,39 @@ public:
   inline void setFloat(IAttributeList::AttrID id, double value)
   {
     fMessage->getAttributes()->setFloat(id, value);
+  }
+
+  /**
+   * Sets a binary message.
+   * @param iSize the number of elements in iData array (NOT the size in bytes!)
+   */
+  template<typename T>
+  inline void setBinary(IAttributeList::AttrID id, const T *iData, uint32 iSize)
+  {
+    fMessage->getAttributes()->setBinary(id, iData, iSize * sizeof(T));
+  }
+
+  /**
+   * Gets a binary message.
+   * @param iData the array into which the binary data will be copied
+   * @param iSize the number of elements in iData array (NOT the size in bytes!)
+   * @return -1 if cannot ready binary otherwise number of elements read (always <= iSize)
+   */
+  template<typename T>
+  inline int32 getBinary(IAttributeList::AttrID id, T *iData, uint32 iSize)
+  {
+    const void *data;
+    uint32 size;
+
+    if(fMessage->getAttributes()->getBinary(id, data, size) != kResultOk)
+      return -1;
+
+    uint32 oSize = size / sizeof(T);
+    oSize = std::min(iSize, oSize);
+
+    memcpy(iData, data, oSize * sizeof(T));
+
+    return oSize;
   }
 
 private:

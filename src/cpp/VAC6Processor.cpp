@@ -20,6 +20,8 @@ VAC6Processor::VAC6Processor() :
   AudioEffect(),
   fMaxLevel{0, kStateOk},
   fSoftClippingLevel{},
+  fMaxBuffer{nullptr},
+  fZoomWindow{nullptr},
   fTimer{nullptr}
 {
   setControllerClass(VAC6ControllerUID);
@@ -32,6 +34,9 @@ VAC6Processor::VAC6Processor() :
 VAC6Processor::~VAC6Processor()
 {
   DLOG_F(INFO, "VAC6Processor::~VAC6Processor()");
+
+  delete fZoomWindow;
+  delete fMaxBuffer;
 }
 
 
@@ -82,6 +87,14 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
          setup.sampleRate);
 
   fRateLimiter.init(setup.sampleRate, UI_FRAME_RATE_MS);
+
+  // since this method is called multiple times, we make sure that there is no leak...
+  delete fZoomWindow;
+  delete fMaxBuffer;
+
+  fMaxBuffer = new CircularBuffer<TSample>(1000);
+  fMaxBuffer->init(0);
+  fZoomWindow = new ZoomWindow(MAX_ARRAY_SIZE, *fMaxBuffer);
 
   return result;
 }
@@ -136,7 +149,15 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
 
   tresult res = out.copyFrom(in);
 
-  auto maxLevelValue = std::max(static_cast<Sample64>(out.absoluteMax()), fMaxLevel.fValue);
+  // TODO
+  // TODO should not assume data.numSamples is of fixed amount... use BATCH_SIZE_IN_MS instead
+  // TODO
+  auto max = out.absoluteMax();
+
+  // we store the value in the buffer
+  fMaxBuffer->setAt(0, max);
+
+  auto maxLevelValue = std::max(static_cast<TSample>(max), fMaxLevel.fValue);
   auto maxLevelState = toMaxLevelState(maxLevelValue);
 
   fMaxLevel.fValue = maxLevelValue;
@@ -146,11 +167,18 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
 
   if(fRateLimiter.shouldUpdate(data.numSamples))
   {
-    fMaxLevelValue.save(fMaxLevel);
+    LCDData lcdData{};
+    fZoomWindow->computeZoomWindow(lcdData.fSamples);
+
+    fMaxLevelUpdate.save(fMaxLevel);
+    fLCDDataUpdate.save(lcdData);
 
     fMaxLevel.fValue = 0;
     fMaxLevel.fState = kStateOk;
   }
+
+  // we move the buffer head
+  fMaxBuffer->incrementHead();
 
   return res;
 }
@@ -288,21 +316,32 @@ EMaxLevelState VAC6Processor::toMaxLevelState(SampleType value)
 void VAC6Processor::onTimer(Timer * /* timer */)
 {
   MaxLevel maxLevel{};
-  if(fMaxLevelValue.load(maxLevel))
+  if(fMaxLevelUpdate.load(maxLevel))
   {
-    IMessage *message = allocateMessage();
-    if(!message)
-      return;
+    if(auto message = owned(allocateMessage()))
+    {
+      Message m{message};
 
-    OPtr<IMessage> msgReleaser = message;
+      m.setMessageID(kMaxLevel_MID);
+      m.setFloat("Value", maxLevel.fValue);
+      m.setInt("State", maxLevel.fState);
 
-    Message m{message};
+      sendMessage(message);
+    }
+  }
 
-    m.setMessageID(kMaxLevel_MID);
-    m.setFloat("Value", maxLevel.fValue);
-    m.setInt("State", maxLevel.fState);
+  LCDData lcdData{};
+  if(fLCDDataUpdate.load(lcdData))
+  {
+    if(auto message = owned(allocateMessage()))
+    {
+      Message m{message};
 
-    sendMessage(message);
+      m.setMessageID(kLCDData_MID);
+      m.setBinary("Value", lcdData.fSamples, MAX_ARRAY_SIZE);
+
+      sendMessage(message);
+    }
   }
 }
 

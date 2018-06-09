@@ -63,6 +63,7 @@ set(vst_sources
 		${CPP_SOURCES}/controller/VSTView.h
 		${CPP_SOURCES}/AudioBuffer.h
 		${CPP_SOURCES}/AudioUtils.h
+		${CPP_SOURCES}/CircularBuffer.h
 		${CPP_SOURCES}/CircularFIFO.h
 		${CPP_SOURCES}/Messaging.h
 		${CPP_SOURCES}/VAC6CIDs.h
@@ -71,6 +72,8 @@ set(vst_sources
 		${CPP_SOURCES}/VAC6Processor.h
 		${CPP_SOURCES}/VAC6Processor.cpp
 		${CPP_SOURCES}/VAC6VST3.cpp
+		${CPP_SOURCES}/ZoomWindow.h
+		${CPP_SOURCES}/ZoomWindow.cpp
 		${CPP_SOURCES}/logging/loguru.hpp
 		${CPP_SOURCES}/logging/logging.cpp
 		)
