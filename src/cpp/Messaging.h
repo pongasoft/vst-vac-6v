@@ -73,7 +73,7 @@ public:
    * @return -1 if cannot ready binary otherwise number of elements read (always <= iSize)
    */
   template<typename T>
-  inline int32 getBinary(IAttributeList::AttrID id, T *iData, uint32 iSize)
+  inline int32 getBinary(IAttributeList::AttrID id, T *iData, uint32 iSize) const
   {
     const void *data;
     uint32 size;

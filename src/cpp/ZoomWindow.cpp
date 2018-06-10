@@ -117,7 +117,8 @@ void ZoomWindow::setZoomFactor(TSample iZoomFactorPercent)
   {
     fMinWindowOffset = -fBuffer.getSize() + fVisibleWindowSize - 1;
     fPointsSizeInSamples = MAX_ZOOM_POINTS;
-  } else
+  }
+  else
   {
     int percent = FLOAT_TO_INT_FACTOR;
     int offset = 0;
@@ -141,7 +142,8 @@ void ZoomWindow::setZoomFactor(TSample iZoomFactorPercent)
       if(percent != 0)
       {
         percent = FLOAT_TO_INT_FACTOR - percent;
-      } else
+      }
+      else
       {
         percent = FLOAT_TO_INT_FACTOR;
       }

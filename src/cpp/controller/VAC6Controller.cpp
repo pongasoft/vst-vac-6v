@@ -3,7 +3,6 @@
 #include "../logging/loguru.hpp"
 #include "VAC6Controller.h"
 #include "../VAC6CIDs.h"
-#include "../VAC6Model.h"
 
 namespace pongasoft {
 namespace VST {
@@ -13,8 +12,9 @@ namespace VAC6 {
 // VAC6Controller::VAC6Controller
 ///////////////////////////////////////////
 VAC6Controller::VAC6Controller() : EditController(),
-  fXmlFile("VAC6.uidesc"),
-  fMaxLevelView{}
+                                   fXmlFile("VAC6.uidesc"),
+                                   fMaxLevelView{},
+                                   fLCDView{}
 {
   DLOG_F(INFO, "VAC6Controller::VAC6Controller()");
 }
@@ -90,6 +90,10 @@ CView *VAC6Controller::verifyView(CView *view,
     {
       case kMaxLevelValue:
         fMaxLevelView.assign(dynamic_cast<CTextLabel *>(control));
+        break;
+
+      case kLCD:
+        fLCDView.assign(dynamic_cast<CustomDisplayView *>(control));
         break;
 
       default:
@@ -178,12 +182,7 @@ tresult VAC6Controller::notify(IMessage *message)
 
     case kLCDData_MID:
     {
-      LCDData lcdData{};
-      if(m.getBinary("Value", lcdData.fSamples, MAX_ARRAY_SIZE) == MAX_ARRAY_SIZE)
-      {
-        DLOG_F(INFO, "VAC6Controller::notify(LCDData[%d] = [%f, %f, ..., %f])", MAX_ARRAY_SIZE, lcdData.fSamples[0], lcdData.fSamples[1], lcdData.fSamples[MAX_ARRAY_SIZE - 1]);
-      }
-
+      fLCDView.onMessage(m);
       break;
     }
 

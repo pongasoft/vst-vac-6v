@@ -68,6 +68,9 @@ private:
 
   // view for max level
   MaxLevelView fMaxLevelView;
+
+  // view for LCD
+  LCDView fLCDView;
 };
 
 }

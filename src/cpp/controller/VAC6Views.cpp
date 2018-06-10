@@ -6,21 +6,6 @@ namespace VST {
 namespace VAC6 {
 
 ///////////////////////////////////////////
-// MaxLevelView::MaxLevelView
-///////////////////////////////////////////
-MaxLevelView::MaxLevelView() : VSTView{}, fMaxLevel{0, kStateOk}
-{
-}
-
-///////////////////////////////////////////
-// MaxLevelView::afterAssign
-///////////////////////////////////////////
-void MaxLevelView::afterAssign()
-{
-  updateView();
-}
-
-///////////////////////////////////////////
 // MaxLevelView::setMaxLevel
 ///////////////////////////////////////////
 void MaxLevelView::setMaxLevel(MaxLevel const &maxLevel)
@@ -73,6 +58,31 @@ void MaxLevelView::onMessage(Message const &message)
 
   setMaxLevel(maxLevel);
 }
+
+///////////////////////////////////////////
+// LCDView::onMessage
+///////////////////////////////////////////
+void LCDView::onMessage(Message const &message)
+{
+  if(message.getBinary("Value", fLCDData.fSamples, MAX_ARRAY_SIZE) == MAX_ARRAY_SIZE)
+  {
+    updateView();
+  }
+}
+
+///////////////////////////////////////////
+// LCDView::onMessage
+///////////////////////////////////////////
+void LCDView::updateView() const
+{
+  if(fView != nullptr)
+  {
+    fView->setBackColor(CColor{static_cast<uint8_t>(fLCDData.fSamples[0] * 255),
+                               static_cast<uint8_t>(fLCDData.fSamples[0] * 255),
+                               static_cast<uint8_t>(fLCDData.fSamples[0] * 255)});
+  }
+}
+
 
 }
 }

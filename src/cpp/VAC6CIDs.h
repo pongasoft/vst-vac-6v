@@ -15,7 +15,9 @@ enum EVAC6ParamID : Steinberg::Vst::ParamID {
 
   kMaxLevelValue = 1000,
 
-  kSoftClippingLevel = 2000
+  kSoftClippingLevel = 2000,
+
+  kLCD = 3000,
 };
 
 enum EVAC6MessageID
