@@ -28,6 +28,9 @@ inline double sampleToDb(SampleType valueInSample)
   return std::log10(valueInSample) * 20.0;
 }
 
+constexpr IAttributeList::AttrID MAX_LEVEL_VALUE_ATTR = "Value";
+constexpr IAttributeList::AttrID MAX_LEVEL_STATE_ATTR = "State";
+
 /**
  * Encapsulates the concept of max level
  */
@@ -38,6 +41,7 @@ struct MaxLevel
 };
 
 constexpr TSample DEFAULT_SOFT_CLIPPING_LEVEL = 0.50118723362; // dbToSample<TSample>(-6.0);
+constexpr TSample HARD_CLIPPING_LEVEL = 1.0;
 constexpr double MIN_SOFT_CLIPPING_LEVEL_DB = -24;
 constexpr double MIN_VOLUME_DB = -60; // -60dB
 constexpr TSample MIN_AUDIO_SAMPLE = 0.001; // dbToSample<TSample>(-60.0)
@@ -71,11 +75,9 @@ public:
   explicit SoftClippingLevel(TSample valueInSample = DEFAULT_SOFT_CLIPPING_LEVEL) : fValueInSample(valueInSample)
   {}
 
-  inline TSample getValueInSample()
-  { return fValueInSample; }
+  inline TSample getValueInSample() const { return fValueInSample; }
 
-  inline double getValueInDb()
-  { return sampleToDb(getValueInSample()); }
+  inline double getValueInDb() const { return sampleToDb(getValueInSample()); }
 
 // convert a soft clipping level [0,1.0] into a soft clipping volume level
 // 1.0  =>  0dB  => (10^0/20   => 1.0 sample value)
@@ -101,9 +103,13 @@ private:
 ///////////////////////////////////
 // LCDData
 ///////////////////////////////////
+constexpr IAttributeList::AttrID LCDDATA_SOFT_CLIPPING_LEVEL_ATTR = "SCL";
+constexpr IAttributeList::AttrID LCDDATA_SAMPLES_ATTR = "Samples";
+
 struct LCDData
 {
-  TSample fSamples[MAX_ARRAY_SIZE];
+  SoftClippingLevel fSoftClippingLevel{};
+  TSample fSamples[MAX_ARRAY_SIZE]{};
 };
 
 }

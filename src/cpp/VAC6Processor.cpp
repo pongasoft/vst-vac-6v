@@ -184,6 +184,7 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   {
     LCDData lcdData{};
     fZoomWindow->computeZoomWindow(lcdData.fSamples);
+    lcdData.fSoftClippingLevel = fSoftClippingLevel;
 
     fMaxLevelUpdate.save(fMaxLevel);
     fLCDDataUpdate.save(lcdData);
@@ -315,7 +316,7 @@ EMaxLevelState VAC6Processor::toMaxLevelState(SampleType value)
     return kStateOk;
 
   // hard clipping
-  if(value > 1.0)
+  if(value > HARD_CLIPPING_LEVEL)
     return kStateHardClipping;
 
   // soft clipping
@@ -339,8 +340,8 @@ void VAC6Processor::onTimer(Timer * /* timer */)
       Message m{message};
 
       m.setMessageID(kMaxLevel_MID);
-      m.setFloat("Value", maxLevel.fValue);
-      m.setInt("State", maxLevel.fState);
+      m.setFloat(MAX_LEVEL_VALUE_ATTR, maxLevel.fValue);
+      m.setInt(MAX_LEVEL_STATE_ATTR, maxLevel.fState);
 
       sendMessage(message);
     }
@@ -354,7 +355,8 @@ void VAC6Processor::onTimer(Timer * /* timer */)
       Message m{message};
 
       m.setMessageID(kLCDData_MID);
-      m.setBinary("Value", lcdData.fSamples, MAX_ARRAY_SIZE);
+      m.setBinary(LCDDATA_SAMPLES_ATTR, lcdData.fSamples, MAX_ARRAY_SIZE);
+      m.setFloat(LCDDATA_SOFT_CLIPPING_LEVEL_ATTR, fSoftClippingLevel.getValueInSample());
 
       sendMessage(message);
     }

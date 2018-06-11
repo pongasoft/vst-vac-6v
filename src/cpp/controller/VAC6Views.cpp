@@ -53,22 +53,29 @@ void MaxLevelView::updateView() const
 void MaxLevelView::onMessage(Message const &message)
 {
   MaxLevel maxLevel{
-    message.getFloat("Value", 0),
-    static_cast<EMaxLevelState>(message.getInt("State", 0))
+    message.getFloat(MAX_LEVEL_VALUE_ATTR, 0),
+    static_cast<EMaxLevelState>(message.getInt(MAX_LEVEL_STATE_ATTR, 0))
   };
 
   setMaxLevel(maxLevel);
 }
+
+// TODO => how to read this from VAC6.uidesc?
+const CColor LCDView_LevelStateOk_Color{0, 255, 0};
+const CColor LCDView_LevelStateSoftClipping_Color{248, 122, 0};
+const CColor LCDView_LevelStateHardClipping_Color{255, 0, 0};
+const CColor LCDView_SoftClippingLevel_Color{200, 200, 200, 123};
 
 ///////////////////////////////////////////
 // LCDView::onMessage
 ///////////////////////////////////////////
 void LCDView::onMessage(Message const &message)
 {
-  if(message.getBinary("Value", fLCDData.fSamples, MAX_ARRAY_SIZE) == MAX_ARRAY_SIZE)
-  {
-    updateView();
-  }
+  fLCDData.fSoftClippingLevel = SoftClippingLevel{message.getFloat(LCDDATA_SOFT_CLIPPING_LEVEL_ATTR,
+                                                                   fLCDData.fSoftClippingLevel.getValueInSample())};
+  message.getBinary(LCDDATA_SAMPLES_ATTR, fLCDData.fSamples, MAX_ARRAY_SIZE);
+
+  updateView();
 }
 
 ///////////////////////////////////////////
@@ -111,6 +118,8 @@ void LCDView::draw(CDrawContext *iContext) const
 
   auto height = fView->getViewSize().getHeight();
   CCoord left = 0;
+
+  // display every sample in the array as a vertical line (from the bottom)
   for(TSample sample : fLCDData.fSamples)
   {
     double displayValue;
@@ -126,11 +135,23 @@ void LCDView::draw(CDrawContext *iContext) const
 
       auto top = height - displayValue;
 
-      rdc.drawLine(left, top, left, height, CColor{0,255,0});
+      // color of the sample depends on its level
+      CColor const &color =
+        sample > HARD_CLIPPING_LEVEL ? LCDView_LevelStateHardClipping_Color :
+        sample > fLCDData.fSoftClippingLevel.getValueInSample() ? LCDView_LevelStateSoftClipping_Color :
+        LCDView_LevelStateOk_Color;
+
+      rdc.drawLine(left, top, left, height, color);
     }
 
     left++;
   }
+
+  // display the soft clipping level line (which is controlled by a knob)
+  auto softClippingDisplayValue = toDisplayValue(fLCDData.fSoftClippingLevel.getValueInSample(), height);
+  auto top = height - softClippingDisplayValue;
+
+  rdc.drawLine(0, top, fView->getWidth(), top, LCDView_SoftClippingLevel_Color);
 }
 
 }
