@@ -58,6 +58,8 @@ set(vst_sources
 		${CPP_SOURCES}/controller/CustomDisplayView.h
 		${CPP_SOURCES}/controller/CustomDisplayView.cpp
 		${CPP_SOURCES}/controller/DrawContext.h
+		${CPP_SOURCES}/controller/MomentaryButton.h
+		${CPP_SOURCES}/controller/MomentaryButton.cpp
 		${CPP_SOURCES}/controller/VAC6Controller.h
 		${CPP_SOURCES}/controller/VAC6Controller.cpp
 		${CPP_SOURCES}/controller/VAC6Controller.h
@@ -91,6 +93,8 @@ smtg_add_vst3plugin(${target} ${VST3_SDK_ROOT} ${vst_sources})
 target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
 target_link_libraries(${target} PRIVATE base sdk vstgui_support)
 
+smtg_add_vst3_resource(${target} "resource/Button_mini_translucent_2frames.png")
+smtg_add_vst3_resource(${target} "resource/Button_mini_translucent_2frames_2x.png")
 smtg_add_vst3_resource(${target} "resource/VAC6.uidesc")
 smtg_add_vst3_resource(${target} "resource/Knob.png")
 

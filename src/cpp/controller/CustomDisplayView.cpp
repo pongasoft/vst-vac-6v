@@ -45,6 +45,8 @@ void CustomDisplayView::draw(CDrawContext *iContext)
 
   if(fDrawCallback != nullptr)
     fDrawCallback(this, iContext);
+
+  setDirty(false);
 }
 
 ///////////////////////////////////////////
@@ -75,7 +77,7 @@ void CustomDisplayView::drawStyleChanged()
 class CustomDisplayCreator : public ViewCreatorAdapter
 {
 public:
-  static constexpr IdStringPtr kCustomDisplay = "CustomDisplay";
+  static constexpr IdStringPtr kCustomDisplay = "pongasoft::CustomDisplay";
 
   CustomDisplayCreator()
   {

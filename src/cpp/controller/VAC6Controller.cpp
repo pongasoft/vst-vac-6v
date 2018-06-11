@@ -50,6 +50,16 @@ tresult VAC6Controller::initialize(FUnknown *context)
                           kRootUnitId, // unitID => not using units at this stage
                           STR16 ("Sft Clp Lvl")); // shortTitle
 
+  // the momentary button that resets the max level
+  parameters.addParameter(STR16 ("Max Level Reset"), // title
+                          nullptr, // units
+                          1, // stepCount => 1 means toggle
+                          0, // defaultNormalizedValue
+                          Vst::ParameterInfo::kCanAutomate, // flags
+                          EVAC6ParamID::kMaxLevelReset, // tag
+                          kRootUnitId, // unitID => not using units at this stage
+                          STR16 ("Max Lvl Rst")); // shortTitle
+
   return result;
 }
 

@@ -259,6 +259,9 @@ void VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
             fSoftClippingLevel = SoftClippingLevel::fromNormalizedParam(value);
             break;
 
+          case kMaxLevelReset:
+            DLOG_F(INFO, "VAC6Processor::processParameters => kMaxLevelReset=%f", value);
+
           default:
             // shouldn't happen?
             break;
