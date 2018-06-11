@@ -152,6 +152,7 @@ protected:
 
 private:
   MaxLevel fMaxLevel;
+  bool fMaxLevelResetRequested;
   SoftClippingLevel fSoftClippingLevel;
 
   CircularBuffer<TSample> *fMaxBuffer;

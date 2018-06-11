@@ -19,6 +19,7 @@ using namespace VAC6;
 VAC6Processor::VAC6Processor() :
   AudioEffect(),
   fMaxLevel{0, kStateOk},
+  fMaxLevelResetRequested{false},
   fSoftClippingLevel{},
   fMaxBuffer{nullptr},
   fZoomWindow{nullptr},
@@ -98,15 +99,16 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
 
   if(true)
   {
-    double expectedDisplayValues[] = {50.0, 60.0, 70.0, 80.0 };
-    for(auto expectedDisplayValue : expectedDisplayValues)
+    int expectedDisplayValue = 1;
+    for(int i = 0; i < 250; i++)
     {
-      for(int i = 0; i < 5; i++)
-      {
-        auto sample = fromDisplayValue(expectedDisplayValue, 118.0);
-        fMaxBuffer->setAt(0, sample);
-        fMaxBuffer->incrementHead();
-      }
+      auto sample = fromDisplayValue(expectedDisplayValue, 118.0);
+      fMaxBuffer->setAt(0, sample);
+      fMaxBuffer->incrementHead();
+
+      expectedDisplayValue++;
+      if(expectedDisplayValue == 119)
+        expectedDisplayValue = 1;
     }
   }
 
@@ -152,6 +154,8 @@ tresult PLUGIN_API VAC6Processor::process(ProcessData &data)
   return res;
 }
 
+int __displayValue{0};
+
 /////////////////////////////////////////
 // VAC6Processor::genericProcessInputs
 /////////////////////////////////////////
@@ -171,6 +175,16 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   // we store the value in the buffer
   // TODO uncomment
   // fMaxBuffer->setAt(0, max);
+  if(fMaxLevelResetRequested)
+  {
+    __displayValue++;
+    if(__displayValue == 119)
+      __displayValue = 0;
+    auto sample = fromDisplayValue(__displayValue, 118.0);
+    fMaxBuffer->setAt(0, sample);
+    fMaxBuffer->incrementHead();
+    fMaxLevelResetRequested = false;
+  }
 
   auto maxLevelValue = std::max(static_cast<TSample>(max), fMaxLevel.fValue);
   auto maxLevelState = toMaxLevelState(maxLevelValue);
@@ -261,6 +275,8 @@ void VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
 
           case kMaxLevelReset:
             DLOG_F(INFO, "VAC6Processor::processParameters => kMaxLevelReset=%f", value);
+            fMaxLevelResetRequested = value == 1.0;
+            break;
 
           default:
             // shouldn't happen?

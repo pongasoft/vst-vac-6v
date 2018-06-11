@@ -33,6 +33,8 @@ MomentaryButton::MomentaryButton(const MomentaryButton &momentaryButton)
 ///////////////////////////////////////////
 void MomentaryButton::draw(CDrawContext *fContext)
 {
+  DLOG_F(INFO, "MomentaryButton::draw(%f)", value);
+
   CPoint where(0, 0);
 
   CBitmap *background = getDrawBackground();
@@ -58,6 +60,9 @@ void MomentaryButton::updateValue(float fNewValue)
     beginEdit();
 
     value = fNewValue;
+
+    DLOG_F(INFO, "MomentaryButton::updateValue(%f)", value);
+
     invalid();
     valueChanged();
 
