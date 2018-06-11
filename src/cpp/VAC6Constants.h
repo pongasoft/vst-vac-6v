@@ -10,7 +10,6 @@ using namespace Steinberg::Vst;
 
 using TSample = Steinberg::Vst::Sample64;
 
-constexpr TSample MIN_AUDIO_SAMPLE = 0.001;
 //constexpr long UI_FRAME_RATE_MS = 40; // 40ms => 25 frames per seconds
 constexpr long UI_FRAME_RATE_MS = 250; // 4 per seconds for dev
 

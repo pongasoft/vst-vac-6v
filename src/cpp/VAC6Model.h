@@ -25,7 +25,7 @@ inline SampleType dbToSample(double valueInDb)
 template<typename SampleType>
 inline double sampleToDb(SampleType valueInSample)
 {
-  return 20.0 * std::log(valueInSample) / std::log(10.0);
+  return std::log10(valueInSample) * 20.0;
 }
 
 /**
@@ -37,8 +37,30 @@ struct MaxLevel
   EMaxLevelState fState;
 };
 
-const TSample DEFAULT_SOFT_CLIPPING_LEVEL = dbToSample<TSample>(-6.0);
+constexpr TSample DEFAULT_SOFT_CLIPPING_LEVEL = 0.50118723362; // dbToSample<TSample>(-6.0);
 constexpr double MIN_SOFT_CLIPPING_LEVEL_DB = -24;
+constexpr double MIN_VOLUME_DB = -60; // -60dB
+constexpr TSample MIN_AUDIO_SAMPLE = 0.001; // dbToSample<TSample>(-60.0)
+
+///////////////////////////////////////////
+// toDisplayValue
+///////////////////////////////////////////
+inline double toDisplayValue(TSample iSample, double iHeight)
+{
+  auto displayVolume = -((sampleToDb(iSample) / MIN_VOLUME_DB) - 1.0);
+  return displayVolume * iHeight;
+}
+
+#ifndef NDEBUG
+///////////////////////////////////////////
+// fromDisplayValue
+// inverse of toDisplayValue used for dev/debug only
+///////////////////////////////////////////
+inline TSample fromDisplayValue(double iDisplayValue, double iHeight)
+{
+  return dbToSample<double>((1.0 - (iDisplayValue / iHeight)) * MIN_VOLUME_DB);
+}
+#endif
 
 ///////////////////////////////////
 // SoftClippingLevel
@@ -46,7 +68,7 @@ constexpr double MIN_SOFT_CLIPPING_LEVEL_DB = -24;
 class SoftClippingLevel
 {
 public:
-  SoftClippingLevel(TSample valueInSample = DEFAULT_SOFT_CLIPPING_LEVEL) : fValueInSample(valueInSample)
+  explicit SoftClippingLevel(TSample valueInSample = DEFAULT_SOFT_CLIPPING_LEVEL) : fValueInSample(valueInSample)
   {}
 
   inline TSample getValueInSample()

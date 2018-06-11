@@ -1,5 +1,6 @@
 #include "VAC6Views.h"
-#include "../VAC6Model.h"
+#include "../AudioUtils.h"
+#include "DrawContext.h"
 
 namespace pongasoft {
 namespace VST {
@@ -77,12 +78,60 @@ void LCDView::updateView() const
 {
   if(fView != nullptr)
   {
-    fView->setBackColor(CColor{static_cast<uint8_t>(fLCDData.fSamples[0] * 255),
-                               static_cast<uint8_t>(fLCDData.fSamples[0] * 255),
-                               static_cast<uint8_t>(fLCDData.fSamples[0] * 255)});
+    fView->setDirty(true);
   }
 }
 
+///////////////////////////////////////////
+// LCDView::afterAssign
+///////////////////////////////////////////
+void LCDView::afterAssign()
+{
+  auto cb = [this](CustomDisplayView * /* view */, CDrawContext *iContext) -> void {
+    draw(iContext);
+  };
+  fView->setDrawCallback(cb);
+  updateView();
+}
+
+///////////////////////////////////////////
+// LCDView::beforeUnassign
+///////////////////////////////////////////
+void LCDView::beforeUnassign()
+{
+  fView->setDrawCallback(nullptr);
+}
+
+///////////////////////////////////////////
+// LCDView::draw
+///////////////////////////////////////////
+void LCDView::draw(CDrawContext *iContext) const
+{
+  auto rdc = GUI::RelativeDrawContext{fView, iContext};
+
+  auto height = fView->getViewSize().getHeight();
+  CCoord left = 0;
+  for(TSample sample : fLCDData.fSamples)
+  {
+    double displayValue;
+
+    if(sample >= Common::Sample64SilentThreshold)
+    {
+      if(sample < MIN_AUDIO_SAMPLE) // a single pixel for -60dB to silent
+        displayValue = 1;
+      else
+      {
+        displayValue = toDisplayValue(sample, height);
+      }
+
+      auto top = height - displayValue;
+
+      rdc.drawLine(left, top, left, height, CColor{0,255,0});
+    }
+
+    left++;
+  }
+}
 
 }
 }

@@ -57,6 +57,7 @@ set(vst_sources
 		${CPP_SOURCES}/controller/ControlManager.cpp
 		${CPP_SOURCES}/controller/CustomDisplayView.h
 		${CPP_SOURCES}/controller/CustomDisplayView.cpp
+		${CPP_SOURCES}/controller/DrawContext.h
 		${CPP_SOURCES}/controller/VAC6Controller.h
 		${CPP_SOURCES}/controller/VAC6Controller.cpp
 		${CPP_SOURCES}/controller/VAC6Controller.h

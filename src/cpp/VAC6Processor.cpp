@@ -96,6 +96,20 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
   fMaxBuffer->init(0);
   fZoomWindow = new ZoomWindow(MAX_ARRAY_SIZE, *fMaxBuffer);
 
+  if(true)
+  {
+    double expectedDisplayValues[] = {50.0, 60.0, 70.0, 80.0 };
+    for(auto expectedDisplayValue : expectedDisplayValues)
+    {
+      for(int i = 0; i < 5; i++)
+      {
+        auto sample = fromDisplayValue(expectedDisplayValue, 118.0);
+        fMaxBuffer->setAt(0, sample);
+        fMaxBuffer->incrementHead();
+      }
+    }
+  }
+
   return result;
 }
 
@@ -155,7 +169,8 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   auto max = out.absoluteMax();
 
   // we store the value in the buffer
-  fMaxBuffer->setAt(0, max);
+  // TODO uncomment
+  // fMaxBuffer->setAt(0, max);
 
   auto maxLevelValue = std::max(static_cast<TSample>(max), fMaxLevel.fValue);
   auto maxLevelState = toMaxLevelState(maxLevelValue);
@@ -178,7 +193,8 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   }
 
   // we move the buffer head
-  fMaxBuffer->incrementHead();
+  // TODO uncomment
+  // fMaxBuffer->incrementHead();
 
   return res;
 }
@@ -265,7 +281,7 @@ tresult VAC6Processor::setState(IBStream *state)
   if(!streamer.readDouble(savedParam))
     return kResultFalse;
 
-  fSoftClippingLevel = savedParam;
+  fSoftClippingLevel = SoftClippingLevel{savedParam};
 
   DLOG_F(INFO, "VAC6Processor::setState => fSoftClippingLevel=%f", savedParam);
 

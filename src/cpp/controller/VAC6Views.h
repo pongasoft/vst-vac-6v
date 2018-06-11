@@ -45,10 +45,14 @@ public:
 
   void onMessage(Message const &message);
 
-  void afterAssign() override { updateView(); };
+  void afterAssign() override;
+
+  void beforeUnassign() override;
 
 private:
   void updateView() const;
+
+  void draw(CDrawContext *iContext) const;
 
   LCDData fLCDData;
 };

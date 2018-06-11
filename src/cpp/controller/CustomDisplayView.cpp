@@ -19,7 +19,8 @@ using namespace VSTGUI;
 ///////////////////////////////////////////
 CustomDisplayView::CustomDisplayView(const CRect &size, IControlListener *listener, int32_t tag, CBitmap *pBackground)
   : CControl(size, listener, tag, pBackground),
-    fBackColor{0,255,0}
+    fDrawCallback{nullptr},
+    fBackColor{0,0,0}
 {
   DLOG_F(INFO, "CustomDisplayView::CustomDisplayView()");
   setWantsFocus(true);
@@ -37,10 +38,13 @@ CustomDisplayView::CustomDisplayView(const CustomDisplayView &c) : CControl(c)
 ///////////////////////////////////////////
 // CustomDisplayView::draw
 ///////////////////////////////////////////
-void CustomDisplayView::draw(CDrawContext *pContext)
+void CustomDisplayView::draw(CDrawContext *iContext)
 {
-  pContext->setFillColor(getBackColor());
-  pContext->drawRect(getViewSize(), kDrawFilled);
+  iContext->setFillColor(getBackColor());
+  iContext->drawRect(getViewSize(), kDrawFilled);
+
+  if(fDrawCallback != nullptr)
+    fDrawCallback(this, iContext);
 }
 
 ///////////////////////////////////////////
