@@ -21,6 +21,7 @@ VAC6Processor::VAC6Processor() :
   fMaxLevel{0, kStateOk},
   fMaxLevelResetRequested{false},
   fSoftClippingLevel{},
+  fZoomFactorX{0.75},
   fMaxBuffer{nullptr},
   fZoomWindow{nullptr},
   fTimer{nullptr}
@@ -96,6 +97,7 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
   fMaxBuffer = new CircularBuffer<TSample>(1000);
   fMaxBuffer->init(0);
   fZoomWindow = new ZoomWindow(MAX_ARRAY_SIZE, *fMaxBuffer);
+  fZoomWindow->setZoomFactor(fZoomFactorX);
 
   if(true)
   {
@@ -274,8 +276,13 @@ void VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
             break;
 
           case kMaxLevelReset:
-            DLOG_F(INFO, "VAC6Processor::processParameters => kMaxLevelReset=%f", value);
             fMaxLevelResetRequested = value == 1.0;
+            break;
+
+          case kLCDZoomFactorX:
+            fZoomFactorX = value;
+            // TODO move to State
+            fZoomWindow->setZoomFactor(fZoomFactorX, MAX_INPUT_PAGE_OFFSET);
             break;
 
           default:
@@ -298,10 +305,8 @@ tresult VAC6Processor::setState(IBStream *state)
   IBStreamer streamer(state, kLittleEndian);
 
   double savedParam = 0;
-  if(!streamer.readDouble(savedParam))
-    return kResultFalse;
-
-  fSoftClippingLevel = SoftClippingLevel{savedParam};
+  if(streamer.readDouble(savedParam))
+    fSoftClippingLevel = SoftClippingLevel{savedParam};
 
   DLOG_F(INFO, "VAC6Processor::setState => fSoftClippingLevel=%f", savedParam);
 

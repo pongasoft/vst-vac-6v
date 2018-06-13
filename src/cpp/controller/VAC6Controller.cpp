@@ -60,6 +60,16 @@ tresult VAC6Controller::initialize(FUnknown *context)
                           kRootUnitId, // unitID => not using units at this stage
                           STR16 ("Max Lvl Rst")); // shortTitle
 
+  // the momentary button that resets the max level
+  parameters.addParameter(STR16 ("Zoom Level"), // title
+                          nullptr, // units
+                          0, // stepCount => continuous
+                          0.5, // defaultNormalizedValue
+                          Vst::ParameterInfo::kCanAutomate, // flags
+                          EVAC6ParamID::kLCDZoomFactorX, // tag
+                          kRootUnitId, // unitID => not using units at this stage
+                          STR16 ("Zoom Lvl")); // shortTitle
+
   return result;
 }
 

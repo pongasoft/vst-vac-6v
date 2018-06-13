@@ -14,7 +14,7 @@ int const MAX_WINDOW_OFFSET = -1;
 
 int toIntZoomFactor(TSample iZoomFactor);
 
-int toIntZoomFactor(TSample iZoomFactor)
+int toIntZoomFactor(double iZoomFactor)
 {
   assert(iZoomFactor >= 1.0);
   return static_cast<int>(iZoomFactor * FLOAT_TO_INT_FACTOR);
@@ -28,12 +28,12 @@ Zoom::Zoom()
   setZoomFactor(1.0);
 }
 
-Zoom::Zoom(TSample iZoomFactor)
+Zoom::Zoom(double iZoomFactor)
 {
   setZoomFactor(iZoomFactor);
 }
 
-void Zoom::setZoomFactor(TSample iZoomFactor)
+void Zoom::setZoomFactor(double iZoomFactor)
 {
   fZoomFactor = toIntZoomFactor(iZoomFactor);
   reset();
@@ -102,14 +102,14 @@ ZoomWindow::ZoomWindow(int iVisibleWindowSize, CircularBuffer<TSample> const &iB
 
   fMaxZoomFactor = fBuffer.getSize() / iVisibleWindowSize;
 
-  setZoomFactor(1.0);
+  setZoomFactor(0.75);
 }
 
 ////////////////////////////////////////////////////////////
 // ZoomWindow::setZoomFactor
 // Recomputes the zoom points based on the factor
 ////////////////////////////////////////////////////////////
-void ZoomWindow::setZoomFactor(TSample iZoomFactorPercent)
+void ZoomWindow::setZoomFactor(double iZoomFactorPercent)
 {
   fZoom.setZoomFactor(iZoomFactorPercent * (1 - fMaxZoomFactor) + fMaxZoomFactor);
 
@@ -165,7 +165,7 @@ void ZoomWindow::setZoomFactor(TSample iZoomFactorPercent)
 // ZoomWindow::setZoomFactor
 // Recomputes the zoom points based on the factor and page offset
 ////////////////////////////////////////////////////////////
-int ZoomWindow::setZoomFactor(TSample iZoomFactorPercent, int iInputPageOffset)
+int ZoomWindow::setZoomFactor(double iZoomFactorPercent, int iInputPageOffset)
 {
   // index in the window
   int windowIdx = fWindowOffset - fVisibleWindowSize + 1 + iInputPageOffset;

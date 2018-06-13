@@ -69,12 +69,12 @@ class Zoom
 public:
   Zoom();
 
-  Zoom(TSample iZoomFactor);
+  Zoom(double iZoomFactor);
 
   /**
    * @param iZoomFactor zoom factor is 1.0 for min zoom. 2.0 for example means twice as big... etc...
    */
-  void setZoomFactor(TSample iZoomFactor);
+  void setZoomFactor(double iZoomFactor);
 
   inline bool isNoZoom() const
   { return fZoomFactor == FLOAT_TO_INT_FACTOR; }
@@ -111,13 +111,13 @@ public:
   /**
    * @param iZoomFactorPercent zoom factor between 0-1 (where 1 is min zoom, and 0 is max zoom)
    */
-  void setZoomFactor(TSample iZoomFactorPercent);
+  void setZoomFactor(double iZoomFactorPercent);
 
   /**
    * change the zoom factor while making sure it zooms "around" iInputPageOffset
    * @return the new iInputHistoryOffset
    */
-  int setZoomFactor(TSample iZoomFactorPercent, int iInputPageOffset);
+  int setZoomFactor(double iZoomFactorPercent, int iInputPageOffset);
 
   inline bool nextZoomedValue(TSample iSample, WindowPoint &oNextZoomedValue)
   {

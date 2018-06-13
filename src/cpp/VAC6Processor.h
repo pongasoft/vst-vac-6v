@@ -154,6 +154,8 @@ private:
   MaxLevel fMaxLevel;
   bool fMaxLevelResetRequested;
   SoftClippingLevel fSoftClippingLevel;
+  double fZoomFactorX;
+
 
   CircularBuffer<TSample> *fMaxBuffer;
   ZoomWindow *fZoomWindow;
