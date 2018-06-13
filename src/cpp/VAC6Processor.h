@@ -2,11 +2,11 @@
 
 #include <public.sdk/source/vst/vstaudioeffect.h>
 #include "VAC6Constants.h"
-#include "CircularFIFO.h"
 #include "logging/loguru.hpp"
 #include "VAC6Model.h"
 #include "CircularBuffer.h"
 #include "ZoomWindow.h"
+#include "Concurrent.h"
 #include <base/source/timer.h>
 
 namespace pongasoft {
@@ -16,7 +16,8 @@ namespace VAC6 {
 using namespace Steinberg;
 using namespace Steinberg::Vst;
 
-using namespace Common;
+using namespace VST::Common;
+using namespace pongasoft::Common;
 
 /**
  * Keeps track of the time in number of samples processed vs sample rate
@@ -47,45 +48,6 @@ public:
 private:
   long fRateLimitInSamples;
   long fSampleCount;
-};
-
-/**
- * Wraps a single value that can be saved by 1 thread and read by another without using any locks.
- * Uses a CircularFIFO (aka ring buffer) under the cover. The Size parameter type corresponds to the size of the
- * circular FIFO and can be tweaked to account for slow reads. If the reader is slightly slower than the writer,
- * it will be able to catch up because only the last write is returned. If the reader is way too slow, then the writer
- * will not be able to write anymore (in which case the Size parameter should be increased).
- */
-template<typename T, size_t Size>
-class LockFreeValue
-{
-  using MessageQueue = Common::MemorySequentialConsistent::CircularFIFO<T, Size>;
-
-public:
-  bool save(T const &value)
-  {
-    bool saved = fMessageQueue.push(value);
-    if(!saved)
-      DLOG_F(WARNING, "LockFreeValue - could not save value");
-    return saved;
-  }
-
-  bool load(T &item)
-  {
-    bool res = fMessageQueue.pop(item);
-
-    // if we were able to pop 1 item, we continue to pop until there is no more to pop => last one will be returned
-    if(res)
-    {
-      while(fMessageQueue.pop(item))
-      {}
-    }
-
-    return res;
-  }
-
-private:
-  MessageQueue fMessageQueue;
 };
 
 class VAC6Processor : public AudioEffect, ITimerCallback
@@ -131,7 +93,7 @@ protected:
    *
    * @param inputParameterChanges
    */
-  void processParameters(IParameterChanges &inputParameterChanges);
+  bool processParameters(IParameterChanges &inputParameterChanges);
 
   /**
    * Processes inputs (step 2 always called after processing the parameters)
@@ -151,19 +113,28 @@ protected:
   void onTimer(Timer *timer) override;
 
 private:
+  struct State
+  {
+    SoftClippingLevel fSoftClippingLevel{DEFAULT_SOFT_CLIPPING_LEVEL};
+    double fZoomFactorX{DEFAULT_ZOOM_FACTOR_X};
+  };
+
   MaxLevel fMaxLevel;
   bool fMaxLevelResetRequested;
-  SoftClippingLevel fSoftClippingLevel;
-  double fZoomFactorX;
 
+  State fState;
+  State fPreviousState;
+
+  SingleElementQueue<State> fStateUpdate;
+  AtomicValue<State> fLatestState;
 
   CircularBuffer<TSample> *fMaxBuffer;
   ZoomWindow *fZoomWindow;
 
   Timer *fTimer;
   RateLimiter fRateLimiter;
-  LockFreeValue<MaxLevel, 3> fMaxLevelUpdate;
-  LockFreeValue<LCDData, 3> fLCDDataUpdate;
+  SingleElementQueue<MaxLevel> fMaxLevelUpdate;
+  SingleElementQueue<LCDData> fLCDDataUpdate;
 };
 
 }

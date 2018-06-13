@@ -69,7 +69,7 @@ set(vst_sources
 		${CPP_SOURCES}/AudioBuffer.h
 		${CPP_SOURCES}/AudioUtils.h
 		${CPP_SOURCES}/CircularBuffer.h
-		${CPP_SOURCES}/CircularFIFO.h
+		${CPP_SOURCES}/Concurrent.h
 		${CPP_SOURCES}/Messaging.h
 		${CPP_SOURCES}/VAC6CIDs.h
 		${CPP_SOURCES}/VAC6Constants.h

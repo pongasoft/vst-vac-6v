@@ -20,11 +20,16 @@ VAC6Processor::VAC6Processor() :
   AudioEffect(),
   fMaxLevel{0, kStateOk},
   fMaxLevelResetRequested{false},
-  fSoftClippingLevel{},
-  fZoomFactorX{0.75},
+  fState{},
+  fPreviousState{fState},
+  fStateUpdate{},
+  fLatestState{fState},
   fMaxBuffer{nullptr},
   fZoomWindow{nullptr},
-  fTimer{nullptr}
+  fTimer{nullptr},
+  fRateLimiter{},
+  fMaxLevelUpdate{},
+  fLCDDataUpdate{}
 {
   setControllerClass(VAC6ControllerUID);
   DLOG_F(INFO, "VAC6Processor::VAC6Processor()");
@@ -97,7 +102,7 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
   fMaxBuffer = new CircularBuffer<TSample>(1000);
   fMaxBuffer->init(0);
   fZoomWindow = new ZoomWindow(MAX_ARRAY_SIZE, *fMaxBuffer);
-  fZoomWindow->setZoomFactor(fZoomFactorX);
+  fZoomWindow->setZoomFactor(DEFAULT_ZOOM_FACTOR_X);
 
   if(true)
   {
@@ -143,15 +148,18 @@ tresult PLUGIN_API VAC6Processor::setActive(TBool state)
 ///////////////////////////////////////////
 tresult PLUGIN_API VAC6Processor::process(ProcessData &data)
 {
-  // 1. process parameter changes
+  // 1. we check if there was any state update (UI calls setState)
+  fStateUpdate.pop(fState);
+
+  // 2. process parameter changes (this will override any update in step 1.)
   if(data.inputParameterChanges != nullptr)
     processParameters(*data.inputParameterChanges);
 
-  // 2. process inputs
+  // 3. process inputs
   tresult res = processInputs(data);
 
-  // 3. update the state
-  // TODO
+  // 4. update the previous state
+  fPreviousState = fState;
 
   return res;
 }
@@ -168,6 +176,9 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   AudioBuffers<SampleType> out(data.outputs[0], data.numSamples);
 
   tresult res = out.copyFrom(in);
+
+  if(fPreviousState.fZoomFactorX != fState.fZoomFactorX)
+    fZoomWindow->setZoomFactor(fState.fZoomFactorX, MAX_INPUT_PAGE_OFFSET);
 
   // TODO
   // TODO should not assume data.numSamples is of fixed amount... use BATCH_SIZE_IN_MS instead
@@ -200,10 +211,10 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   {
     LCDData lcdData{};
     fZoomWindow->computeZoomWindow(lcdData.fSamples);
-    lcdData.fSoftClippingLevel = fSoftClippingLevel;
+    lcdData.fSoftClippingLevel = fState.fSoftClippingLevel;
 
-    fMaxLevelUpdate.save(fMaxLevel);
-    fLCDDataUpdate.save(lcdData);
+    fMaxLevelUpdate.push(fMaxLevel);
+    fLCDDataUpdate.push(lcdData);
 
     fMaxLevel.fValue = 0;
     fMaxLevel.fState = kStateOk;
@@ -254,9 +265,15 @@ tresult VAC6Processor::canProcessSampleSize(int32 symbolicSampleSize)
 ///////////////////////////////////////////
 // VAC6Processor::processParameters
 ///////////////////////////////////////////
-void VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
+bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
 {
   int32 numParamsChanged = inputParameterChanges.getParameterCount();
+  if(numParamsChanged <= 0)
+    return false;
+
+  bool stateChanged = false;
+  State newState{fState};
+
   for(int i = 0; i < numParamsChanged; ++i)
   {
     IParamValueQueue *paramQueue = inputParameterChanges.getParameterData(i);
@@ -272,7 +289,8 @@ void VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
         switch(paramQueue->getParameterId())
         {
           case kSoftClippingLevel:
-            fSoftClippingLevel = SoftClippingLevel::fromNormalizedParam(value);
+            newState.fSoftClippingLevel = SoftClippingLevel::fromNormalizedParam(value);
+            stateChanged = true;
             break;
 
           case kMaxLevelReset:
@@ -280,9 +298,8 @@ void VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
             break;
 
           case kLCDZoomFactorX:
-            fZoomFactorX = value;
-            // TODO move to State
-            fZoomWindow->setZoomFactor(fZoomFactorX, MAX_INPUT_PAGE_OFFSET);
+            newState.fZoomFactorX = value;
+            stateChanged = true;
             break;
 
           default:
@@ -291,7 +308,16 @@ void VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
         }
       }
     }
+
   }
+
+  if(stateChanged)
+  {
+    fState = newState;
+    fLatestState.set(newState);
+  }
+
+  return stateChanged;
 }
 
 ///////////////////////////////////
@@ -302,13 +328,25 @@ tresult VAC6Processor::setState(IBStream *state)
   if(state == nullptr)
     return kResultFalse;
 
+  State newState{};
+
   IBStreamer streamer(state, kLittleEndian);
 
   double savedParam = 0;
-  if(streamer.readDouble(savedParam))
-    fSoftClippingLevel = SoftClippingLevel{savedParam};
+  if(!streamer.readDouble(savedParam))
+    savedParam = DEFAULT_SOFT_CLIPPING_LEVEL;
+  newState.fSoftClippingLevel = SoftClippingLevel{savedParam};
 
-  DLOG_F(INFO, "VAC6Processor::setState => fSoftClippingLevel=%f", savedParam);
+  savedParam = 0;
+  if(!streamer.readDouble(savedParam))
+    savedParam = DEFAULT_ZOOM_FACTOR_X;
+  newState.fZoomFactorX = savedParam;
+
+  fStateUpdate.push(newState);
+
+  DLOG_F(INFO, "VAC6Processor::setState => fSoftClippingLevel=%f, fZoomFactorX=%f",
+         newState.fSoftClippingLevel.getValueInSample(),
+         newState.fZoomFactorX);
 
   return kResultOk;
 }
@@ -321,11 +359,16 @@ tresult VAC6Processor::getState(IBStream *state)
   if(state == nullptr)
     return kResultFalse;
 
+  auto latestState = fLatestState.get();
+
   IBStreamer streamer(state, kLittleEndian);
 
-  streamer.writeDouble(fSoftClippingLevel.getValueInSample());
+  streamer.writeDouble(latestState.fSoftClippingLevel.getValueInSample());
+  streamer.writeDouble(latestState.fZoomFactorX);
 
-  DLOG_F(INFO, "VAC6Processor::getState => fSoftClippingLevel=%f", fSoftClippingLevel.getValueInSample());
+  DLOG_F(INFO, "VAC6Processor::getState => fSoftClippingLevel=%f, fZoomFactorX=%f",
+         latestState.fSoftClippingLevel.getValueInSample(),
+         latestState.fZoomFactorX);
 
   return kResultOk;
 }
@@ -344,7 +387,7 @@ EMaxLevelState VAC6Processor::toMaxLevelState(SampleType value)
     return kStateHardClipping;
 
   // soft clipping
-  if(value > fSoftClippingLevel.getValueInSample())
+  if(value > fState.fSoftClippingLevel.getValueInSample())
     return kStateSoftClipping;
 
   return kStateOk;
@@ -357,7 +400,7 @@ EMaxLevelState VAC6Processor::toMaxLevelState(SampleType value)
 void VAC6Processor::onTimer(Timer * /* timer */)
 {
   MaxLevel maxLevel{};
-  if(fMaxLevelUpdate.load(maxLevel))
+  if(fMaxLevelUpdate.pop(maxLevel))
   {
     if(auto message = owned(allocateMessage()))
     {
@@ -372,7 +415,7 @@ void VAC6Processor::onTimer(Timer * /* timer */)
   }
 
   LCDData lcdData{};
-  if(fLCDDataUpdate.load(lcdData))
+  if(fLCDDataUpdate.pop(lcdData))
   {
     if(auto message = owned(allocateMessage()))
     {
@@ -380,7 +423,7 @@ void VAC6Processor::onTimer(Timer * /* timer */)
 
       m.setMessageID(kLCDData_MID);
       m.setBinary(LCDDATA_SAMPLES_ATTR, lcdData.fSamples, MAX_ARRAY_SIZE);
-      m.setFloat(LCDDATA_SOFT_CLIPPING_LEVEL_ATTR, fSoftClippingLevel.getValueInSample());
+      m.setFloat(LCDDATA_SOFT_CLIPPING_LEVEL_ATTR, fState.fSoftClippingLevel.getValueInSample());
 
       sendMessage(message);
     }

@@ -44,7 +44,7 @@ tresult VAC6Controller::initialize(FUnknown *context)
   parameters.addParameter(STR16 ("Soft Clipping Level"), // title
                           nullptr, // units
                           0, // stepCount => continuous
-                          0.75, // defaultNormalizedValue
+                          SoftClippingLevel{DEFAULT_SOFT_CLIPPING_LEVEL}.getNormalizedParam(), // defaultNormalizedValue
                           Vst::ParameterInfo::kCanAutomate, // flags
                           EVAC6ParamID::kSoftClippingLevel, // tag
                           kRootUnitId, // unitID => not using units at this stage
@@ -64,7 +64,7 @@ tresult VAC6Controller::initialize(FUnknown *context)
   parameters.addParameter(STR16 ("Zoom Level"), // title
                           nullptr, // units
                           0, // stepCount => continuous
-                          0.5, // defaultNormalizedValue
+                          DEFAULT_ZOOM_FACTOR_X, // defaultNormalizedValue
                           Vst::ParameterInfo::kCanAutomate, // flags
                           EVAC6ParamID::kLCDZoomFactorX, // tag
                           kRootUnitId, // unitID => not using units at this stage
@@ -131,6 +131,8 @@ CView *VAC6Controller::verifyView(CView *view,
 ///////////////////////////////////////////
 tresult VAC6Controller::setComponentState(IBStream *state)
 {
+  DLOG_F(INFO, "VAC6Controller::setComponentState");
+
   // we receive the current state of the component (processor part)
   if(state == nullptr)
     return kResultFalse;
@@ -141,11 +143,18 @@ tresult VAC6Controller::setComponentState(IBStream *state)
   // EVAC6ParamID::kSoftClippingLevel
   double savedParamSoftLevelClipping = 0.f;
   if(!streamer.readDouble(savedParamSoftLevelClipping))
-    return kResultFalse;
+    savedParamSoftLevelClipping = DEFAULT_SOFT_CLIPPING_LEVEL;
   setParamNormalized(EVAC6ParamID::kSoftClippingLevel, SoftClippingLevel{savedParamSoftLevelClipping}.getNormalizedParam());
 
-  DLOG_F(INFO, "VAC6Controller::setComponentState => kSoftClippingLevel=%f",
-         savedParamSoftLevelClipping);
+  // EVAC6ParamID::kLCDZoomFactorX
+  double savedParamZoomFactorX = 0.f;
+  if(!streamer.readDouble(savedParamZoomFactorX))
+    savedParamZoomFactorX = DEFAULT_ZOOM_FACTOR_X;
+  setParamNormalized(EVAC6ParamID::kLCDZoomFactorX, savedParamZoomFactorX);
+
+  DLOG_F(INFO, "VAC6Controller::setComponentState => kSoftClippingLevel=%f, kLCDZoomFactorX=%f",
+         savedParamSoftLevelClipping,
+         savedParamZoomFactorX);
 
   return kResultOk;
 }

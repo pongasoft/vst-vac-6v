@@ -102,7 +102,7 @@ ZoomWindow::ZoomWindow(int iVisibleWindowSize, CircularBuffer<TSample> const &iB
 
   fMaxZoomFactor = fBuffer.getSize() / iVisibleWindowSize;
 
-  setZoomFactor(0.75);
+  setZoomFactor(1.0);
 }
 
 ////////////////////////////////////////////////////////////
