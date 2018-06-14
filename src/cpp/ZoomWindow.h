@@ -106,7 +106,7 @@ public:
   };
 
 public:
-  ZoomWindow(int iVisibleWindowSize, CircularBuffer<TSample> const &iBuffer);
+  ZoomWindow(int iVisibleWindowSize, int iBufferSize);
 
   /**
    * @param iZoomFactorPercent zoom factor between 0-1 (where 1 is min zoom, and 0 is max zoom)
@@ -117,18 +117,18 @@ public:
    * change the zoom factor while making sure it zooms "around" iInputPageOffset
    * @return the new iInputHistoryOffset
    */
-  int setZoomFactor(double iZoomFactorPercent, int iInputPageOffset);
+  int setZoomFactor(double iZoomFactorPercent, int iInputPageOffset, CircularBuffer<TSample> const &iBuffer);
 
   inline bool nextZoomedValue(TSample iSample, WindowPoint &oNextZoomedValue)
   {
     return fZoom.nextZoomedValue(iSample, oNextZoomedValue);
   };
 
-  WindowPoint computeZoomValue(int iInputPageOffset) const;
+  WindowPoint computeZoomValue(int iInputPageOffset, CircularBuffer<TSample> const &iBuffer) const;
 
-  bool computeZoomWindow(IZoomCallback &callback);
+  bool computeZoomWindow(CircularBuffer<TSample> const &iBuffer, IZoomCallback &callback);
 
-  void computeZoomWindow(TSample *samples);
+  void computeZoomWindow(CircularBuffer<TSample> const &iBuffer, TSample *samples);
 
   void setWindowOffset(int iInputHistoryOffset);
 
@@ -158,19 +158,20 @@ private:
   /**
    * Computes the zoom value from a zoom point
    */
-  WindowPoint computeZoomValue(ZoomPoint const &iZoomPoint) const;
+  WindowPoint computeZoomValue(ZoomPoint const &iZoomPoint, CircularBuffer<TSample> const &iBuffer) const;
 
   /**
    * Find the zoom point so that zp.fBufferOffset is the closest to iBufferOffset and returns
    * the index. Also tries to find the point where the zoom value would be the closest.
    */
-  int findClosestWindowIndex(int iBufferOffset, WindowPoint const &iZoomValue) const;
+  int findClosestWindowIndex(int iBufferOffset, WindowPoint const &iZoomValue, CircularBuffer<TSample> const &iBuffer) const;
 
   inline int minWindowIdx() const
   { return fMinWindowOffset - fVisibleWindowSize + 1; }
 
 private:
   int const fVisibleWindowSize;
+  int const fBufferSize;
 
   // Since points repeat, there is no need to keep more (max repeat = 10 points!)
   ZoomPoint fPoints[MAX_ZOOM_POINTS];
@@ -187,9 +188,6 @@ private:
 
   // the maximum amount of zoom allowed
   int fMaxZoomFactor;
-
-  // the underlying buffer
-  CircularBuffer<TSample> const &fBuffer;
 
   /**
    * Zoom associated to this window */

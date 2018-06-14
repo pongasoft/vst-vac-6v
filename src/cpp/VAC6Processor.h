@@ -4,6 +4,7 @@
 #include "VAC6Constants.h"
 #include "logging/loguru.hpp"
 #include "VAC6Model.h"
+#include "AudioBuffer.h"
 #include "CircularBuffer.h"
 #include "ZoomWindow.h"
 #include "Concurrent.h"
@@ -58,6 +59,44 @@ public:
   tresult PLUGIN_API setupProcessing(ProcessSetup &setup) override;
 
 protected:
+
+  template<typename SampleType>
+  class MaxAccumulator
+  {
+  public:
+    explicit MaxAccumulator(int32 iNumSamples) : fNumSamples{iNumSamples}
+    {
+
+    }
+
+    bool accumulate(SampleType iSample, SampleType &oMaxSample)
+    {
+      if(iSample < 0)
+        iSample = -iSample;
+
+      fAccumulatedMax = std::max(fAccumulatedMax, iSample);
+      fAccumulatedSamples++;
+
+      if(fAccumulatedSamples == fNumSamples)
+      {
+        oMaxSample = fAccumulatedMax;
+        fAccumulatedMax = 0;
+        fAccumulatedSamples = 0;
+        return true;
+      }
+
+      return false;
+
+    }
+
+  private:
+
+    const int32 fNumSamples;
+
+    SampleType fAccumulatedMax{0};
+    int32 fAccumulatedSamples{0};
+  };
+
   /**
    * Processes the parameters that have changed since the last call to process
    *
@@ -75,6 +114,15 @@ protected:
    */
   template<typename SampleType>
   tresult genericProcessInputs(ProcessData &data);
+
+  /**
+   * Processes a single audio channel
+   */
+  template<typename SampleType>
+  bool genericProcessChannel(typename AudioBuffers<SampleType>::Channel const &iIn,
+                             typename AudioBuffers<SampleType>::Channel &iOut,
+                             MaxAccumulator<TSample> *iMaxAccumulator,
+                             CircularBuffer<TSample> *iMaxBuffer);
 
   template<typename SampleType>
   inline EMaxLevelState toMaxLevelState(SampleType value);
@@ -98,15 +146,18 @@ private:
   SingleElementQueue<State> fStateUpdate;
   AtomicValue<State> fLatestState;
 
-  CircularBuffer<TSample> *fMaxBuffer;
+  CircularBuffer<TSample> *fLeftMaxBuffer;
+  MaxAccumulator <TSample> *fLeftMaxAccumulator;
+  CircularBuffer<TSample> *fRightMaxBuffer;
+  MaxAccumulator <TSample> *fRightMaxAccumulator;
   ZoomWindow *fZoomWindow;
-  long fAccumulatorBatchSize;
 
   SampleRateBasedClock fClock;
   Timer *fTimer;
   SampleRateBasedClock::RateLimiter fRateLimiter;
   SingleElementQueue<MaxLevel> fMaxLevelUpdate;
   SingleElementQueue<LCDData> fLCDDataUpdate;
+
 };
 
 }

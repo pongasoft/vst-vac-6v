@@ -1,7 +1,6 @@
 #include <base/source/fstreamer.h>
 #include <public.sdk/source/vst/vstaudioprocessoralgo.h>
 
-#include "AudioBuffer.h"
 #include "Messaging.h"
 
 #include "VAC6Processor.h"
@@ -24,10 +23,12 @@ VAC6Processor::VAC6Processor() :
   fPreviousState{fState},
   fStateUpdate{},
   fLatestState{fState},
-  fMaxBuffer{nullptr},
+  fLeftMaxBuffer{nullptr},
+  fLeftMaxAccumulator{nullptr},
+  fRightMaxBuffer{nullptr},
+  fRightMaxAccumulator{nullptr},
   fZoomWindow{nullptr},
   fClock{44100},
-  fAccumulatorBatchSize{fClock.getSampleCountFor(ACCUMULATOR_BATCH_SIZE_IN_MS)},
   fTimer{nullptr},
   fRateLimiter{},
   fMaxLevelUpdate{},
@@ -45,7 +46,10 @@ VAC6Processor::~VAC6Processor()
   DLOG_F(INFO, "VAC6Processor::~VAC6Processor()");
 
   delete fZoomWindow;
-  delete fMaxBuffer;
+  delete fLeftMaxBuffer;
+  delete fLeftMaxAccumulator;
+  delete fRightMaxBuffer;
+  delete fRightMaxAccumulator;
 }
 
 
@@ -101,15 +105,25 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
 
   // since this method is called multiple times, we make sure that there is no leak...
   delete fZoomWindow;
-  delete fMaxBuffer;
+  delete fLeftMaxBuffer;
+  delete fLeftMaxAccumulator;
+  delete fRightMaxBuffer;
+  delete fRightMaxAccumulator;
 
-  fAccumulatorBatchSize = fClock.getSampleCountFor(ACCUMULATOR_BATCH_SIZE_IN_MS),
-  fMaxBuffer = new CircularBuffer<TSample>(static_cast<int>(ceil(fClock.getSampleCountFor(HISTORY_SIZE_IN_SECONDS * 1000) / fAccumulatorBatchSize)));
-  fMaxBuffer->init(0);
-  fZoomWindow = new ZoomWindow(MAX_ARRAY_SIZE, *fMaxBuffer);
+  auto accumulatorBatchSize = static_cast<int32>(fClock.getSampleCountFor(ACCUMULATOR_BATCH_SIZE_IN_MS));
+
+  fLeftMaxBuffer = new CircularBuffer<TSample>(static_cast<int>(ceil(fClock.getSampleCountFor(HISTORY_SIZE_IN_SECONDS * 1000) / accumulatorBatchSize)));
+  fLeftMaxBuffer->init(0);
+  fLeftMaxAccumulator = new MaxAccumulator<TSample>(accumulatorBatchSize);
+
+  fRightMaxBuffer = new CircularBuffer<TSample>(fLeftMaxBuffer->getSize());
+  fRightMaxBuffer->init(0);
+  fRightMaxAccumulator = new MaxAccumulator<TSample>(accumulatorBatchSize);
+
+  fZoomWindow = new ZoomWindow(MAX_ARRAY_SIZE, fLeftMaxBuffer->getSize());
   fZoomWindow->setZoomFactor(DEFAULT_ZOOM_FACTOR_X);
 
-  DLOG_F(INFO, "fMaxBufferSize=%d,fAccumulatorBatchSize=%ld", fMaxBuffer->getSize(), fAccumulatorBatchSize);
+  DLOG_F(INFO, "fMaxBufferSize=%d,accumulatorBatchSize=%d", fLeftMaxBuffer->getSize(), accumulatorBatchSize);
 
 //  if(true)
 //  {
@@ -117,8 +131,8 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
 //    for(int i = 0; i < 250; i++)
 //    {
 //      auto sample = fromDisplayValue(expectedDisplayValue, 118.0);
-//      fMaxBuffer->setAt(0, sample);
-//      fMaxBuffer->incrementHead();
+//      fLeftMaxBuffer->setAt(0, sample);
+//      fLeftMaxBuffer->incrementHead();
 //
 //      expectedDisplayValue++;
 //      if(expectedDisplayValue == 119)
@@ -171,7 +185,44 @@ tresult PLUGIN_API VAC6Processor::process(ProcessData &data)
   return res;
 }
 
-int __displayValue{0};
+/////////////////////////////////////////
+// VAC6Processor::genericProcessChannel
+/////////////////////////////////////////
+template<typename SampleType>
+bool VAC6Processor::genericProcessChannel(typename AudioBuffers<SampleType>::Channel const &iIn,
+                                          typename AudioBuffers<SampleType>::Channel &iOut,
+                                          MaxAccumulator<TSample> *iMaxAccumulator,
+                                          CircularBuffer<TSample> *iMaxBuffer)
+{
+  DCHECK_EQ_F(iIn.getNumSamples(), iOut.getNumSamples());
+
+  bool silent = true;
+
+  auto numSamples = iIn.getNumSamples();
+  auto inPtr = iIn.getBuffer();
+  auto outPtr = iOut.getBuffer();
+
+  for(int i = 0; i < numSamples; ++i, inPtr++, outPtr++)
+  {
+    auto sample = *inPtr;
+
+    TSample max;
+    if(iMaxAccumulator->accumulate(sample, max))
+    {
+      iMaxBuffer->setAt(0, max);
+      iMaxBuffer->incrementHead();
+    }
+
+    if(silent && !pongasoft::VST::Common::isSilent(sample))
+      silent = false;
+
+    *outPtr = sample;
+  }
+
+  iOut.setSilenceFlag(silent);
+
+  return silent;
+}
 
 /////////////////////////////////////////
 // VAC6Processor::genericProcessInputs
@@ -182,28 +233,23 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   AudioBuffers<SampleType> in(data.inputs[0], data.numSamples);
   AudioBuffers<SampleType> out(data.outputs[0], data.numSamples);
 
-  tresult res = out.copyFrom(in);
+  // making sure we are being called properly...
+  if(in.getNumChannels() != 2 || out.getNumChannels() != 2)
+    return kResultFalse;
+
+  auto leftChannel = out.getLeftChannel();
+  auto rightChannel = out.getRightChannel();
+
+  genericProcessChannel<SampleType>(in.getLeftChannel(), leftChannel, fLeftMaxAccumulator, fLeftMaxBuffer);
+  genericProcessChannel<SampleType>(in.getRightChannel(), rightChannel, fRightMaxAccumulator, fRightMaxBuffer);
 
   if(fPreviousState.fZoomFactorX != fState.fZoomFactorX)
-    fZoomWindow->setZoomFactor(fState.fZoomFactorX, MAX_INPUT_PAGE_OFFSET);
+    fZoomWindow->setZoomFactor(fState.fZoomFactorX, MAX_INPUT_PAGE_OFFSET, *fLeftMaxBuffer);
 
   // TODO
   // TODO should not assume data.numSamples is of fixed amount... use BATCH_SIZE_IN_MS instead
   // TODO
   auto max = out.absoluteMax();
-
-  // we store the value in the buffer
-  fMaxBuffer->setAt(0, max);
-  if(fMaxLevelResetRequested)
-  {
-    __displayValue++;
-    if(__displayValue == 119)
-      __displayValue = 0;
-    auto sample = fromDisplayValue(__displayValue, 118.0);
-    fMaxBuffer->setAt(0, sample);
-    fMaxBuffer->incrementHead();
-    fMaxLevelResetRequested = false;
-  }
 
   auto maxLevelValue = std::max(static_cast<TSample>(max), fMaxLevel.fValue);
   auto maxLevelState = toMaxLevelState(maxLevelValue);
@@ -211,12 +257,11 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   fMaxLevel.fValue = maxLevelValue;
   fMaxLevel.fState = maxLevelState;
 
-  out.adjustSilenceFlags();
-
   if(fRateLimiter.shouldUpdate(data.numSamples))
   {
     LCDData lcdData{};
-    fZoomWindow->computeZoomWindow(lcdData.fSamples);
+    fZoomWindow->computeZoomWindow(*fLeftMaxBuffer, lcdData.fLeftSamples);
+    fZoomWindow->computeZoomWindow(*fRightMaxBuffer, lcdData.fRightSamples);
     lcdData.fSoftClippingLevel = fState.fSoftClippingLevel;
 
     fMaxLevelUpdate.push(fMaxLevel);
@@ -226,10 +271,7 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
     fMaxLevel.fState = kStateOk;
   }
 
-  // we move the buffer head
-  fMaxBuffer->incrementHead();
-
-  return res;
+  return kResultOk;
 }
 
 ///////////////////////////////////////////
@@ -427,7 +469,8 @@ void VAC6Processor::onTimer(Timer * /* timer */)
       Message m{message};
 
       m.setMessageID(kLCDData_MID);
-      m.setBinary(LCDDATA_SAMPLES_ATTR, lcdData.fSamples, MAX_ARRAY_SIZE);
+      m.setBinary(LCDDATA_LEFT_SAMPLES_ATTR, lcdData.fLeftSamples, MAX_ARRAY_SIZE);
+      m.setBinary(LCDDATA_RIGHT_SAMPLES_ATTR, lcdData.fRightSamples, MAX_ARRAY_SIZE);
       m.setFloat(LCDDATA_SOFT_CLIPPING_LEVEL_ATTR, fState.fSoftClippingLevel.getValueInSample());
 
       sendMessage(message);

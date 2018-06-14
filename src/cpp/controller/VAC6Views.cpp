@@ -73,7 +73,8 @@ void LCDView::onMessage(Message const &message)
 {
   fLCDData.fSoftClippingLevel = SoftClippingLevel{message.getFloat(LCDDATA_SOFT_CLIPPING_LEVEL_ATTR,
                                                                    fLCDData.fSoftClippingLevel.getValueInSample())};
-  message.getBinary(LCDDATA_SAMPLES_ATTR, fLCDData.fSamples, MAX_ARRAY_SIZE);
+  message.getBinary(LCDDATA_LEFT_SAMPLES_ATTR, fLCDData.fLeftSamples, MAX_ARRAY_SIZE);
+  message.getBinary(LCDDATA_RIGHT_SAMPLES_ATTR, fLCDData.fRightSamples, MAX_ARRAY_SIZE);
 
   updateView();
 }
@@ -120,9 +121,14 @@ void LCDView::draw(CDrawContext *iContext) const
   CCoord left = 0;
 
   // display every sample in the array as a vertical line (from the bottom)
-  for(TSample sample : fLCDData.fSamples)
+  for(int i = 0; i < MAX_ARRAY_SIZE; i++)
   {
     double displayValue;
+
+    TSample leftSample = fLCDData.fLeftSamples[i];
+    TSample rightSample = fLCDData.fRightSamples[i];
+
+    TSample sample = std::max(leftSample, rightSample);
 
     if(sample >= Common::Sample64SilentThreshold)
     {

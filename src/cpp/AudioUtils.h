@@ -9,6 +9,9 @@ namespace Common {
 using namespace Steinberg;
 using namespace Steinberg::Vst;
 
+#define BIT_SET(a,b) ((a) |= (static_cast<uint64>(1)<<(b)))
+#define BIT_CLEAR(a,b) ((a) &= ~(static_cast<uint64>(1)<<(b)))
+
 // defines the threshold of silence
 constexpr Sample32 Sample32SilentThreshold = ((Sample32)2.0e-8);
 constexpr Sample64 Sample64SilentThreshold = ((Sample64)2.0e-8);

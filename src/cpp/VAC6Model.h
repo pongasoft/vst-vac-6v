@@ -105,12 +105,14 @@ private:
 // LCDData
 ///////////////////////////////////
 constexpr IAttributeList::AttrID LCDDATA_SOFT_CLIPPING_LEVEL_ATTR = "SCL";
-constexpr IAttributeList::AttrID LCDDATA_SAMPLES_ATTR = "Samples";
+constexpr IAttributeList::AttrID LCDDATA_LEFT_SAMPLES_ATTR = "LSamples";
+constexpr IAttributeList::AttrID LCDDATA_RIGHT_SAMPLES_ATTR = "RSamples";
 
 struct LCDData
 {
   SoftClippingLevel fSoftClippingLevel{};
-  TSample fSamples[MAX_ARRAY_SIZE]{};
+  TSample fLeftSamples[MAX_ARRAY_SIZE]{};
+  TSample fRightSamples[MAX_ARRAY_SIZE]{};
 };
 
 }

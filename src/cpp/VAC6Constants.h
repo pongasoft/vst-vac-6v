@@ -10,8 +10,8 @@ using namespace Steinberg::Vst;
 
 using TSample = Steinberg::Vst::Sample64;
 
-//constexpr long UI_FRAME_RATE_MS = 40; // 40ms => 25 frames per seconds
-constexpr long UI_FRAME_RATE_MS = 250; // 4 per seconds for dev
+constexpr long UI_FRAME_RATE_MS = 40; // 40ms => 25 frames per seconds
+//constexpr long UI_FRAME_RATE_MS = 250; // 4 per seconds for dev
 
 constexpr int MAX_ARRAY_SIZE = 256; // size of LCD window
 constexpr int MAX_INPUT_PAGE_OFFSET = MAX_ARRAY_SIZE - 1;
