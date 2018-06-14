@@ -26,6 +26,8 @@ VAC6Processor::VAC6Processor() :
   fLatestState{fState},
   fMaxBuffer{nullptr},
   fZoomWindow{nullptr},
+  fClock{44100},
+  fAccumulatorBatchSize{fClock.getSampleCountFor(ACCUMULATOR_BATCH_SIZE_IN_MS)},
   fTimer{nullptr},
   fRateLimiter{},
   fMaxLevelUpdate{},
@@ -93,31 +95,36 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
          setup.maxSamplesPerBlock,
          setup.sampleRate);
 
-  fRateLimiter.init(setup.sampleRate, UI_FRAME_RATE_MS);
+  fClock.setSampleRate(setup.sampleRate);
+
+  fRateLimiter = fClock.getRateLimiter(UI_FRAME_RATE_MS);
 
   // since this method is called multiple times, we make sure that there is no leak...
   delete fZoomWindow;
   delete fMaxBuffer;
 
-  fMaxBuffer = new CircularBuffer<TSample>(1000);
+  fAccumulatorBatchSize = fClock.getSampleCountFor(ACCUMULATOR_BATCH_SIZE_IN_MS),
+  fMaxBuffer = new CircularBuffer<TSample>(static_cast<int>(ceil(fClock.getSampleCountFor(HISTORY_SIZE_IN_SECONDS * 1000) / fAccumulatorBatchSize)));
   fMaxBuffer->init(0);
   fZoomWindow = new ZoomWindow(MAX_ARRAY_SIZE, *fMaxBuffer);
   fZoomWindow->setZoomFactor(DEFAULT_ZOOM_FACTOR_X);
 
-  if(true)
-  {
-    int expectedDisplayValue = 1;
-    for(int i = 0; i < 250; i++)
-    {
-      auto sample = fromDisplayValue(expectedDisplayValue, 118.0);
-      fMaxBuffer->setAt(0, sample);
-      fMaxBuffer->incrementHead();
+  DLOG_F(INFO, "fMaxBufferSize=%d,fAccumulatorBatchSize=%ld", fMaxBuffer->getSize(), fAccumulatorBatchSize);
 
-      expectedDisplayValue++;
-      if(expectedDisplayValue == 119)
-        expectedDisplayValue = 1;
-    }
-  }
+//  if(true)
+//  {
+//    int expectedDisplayValue = 1;
+//    for(int i = 0; i < 250; i++)
+//    {
+//      auto sample = fromDisplayValue(expectedDisplayValue, 118.0);
+//      fMaxBuffer->setAt(0, sample);
+//      fMaxBuffer->incrementHead();
+//
+//      expectedDisplayValue++;
+//      if(expectedDisplayValue == 119)
+//        expectedDisplayValue = 1;
+//    }
+//  }
 
   return result;
 }
@@ -186,8 +193,7 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   auto max = out.absoluteMax();
 
   // we store the value in the buffer
-  // TODO uncomment
-  // fMaxBuffer->setAt(0, max);
+  fMaxBuffer->setAt(0, max);
   if(fMaxLevelResetRequested)
   {
     __displayValue++;
@@ -221,8 +227,7 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   }
 
   // we move the buffer head
-  // TODO uncomment
-  // fMaxBuffer->incrementHead();
+  fMaxBuffer->incrementHead();
 
   return res;
 }

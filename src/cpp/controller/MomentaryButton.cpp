@@ -33,7 +33,7 @@ MomentaryButton::MomentaryButton(const MomentaryButton &momentaryButton)
 ///////////////////////////////////////////
 void MomentaryButton::draw(CDrawContext *fContext)
 {
-  DLOG_F(INFO, "MomentaryButton::draw(%f)", value);
+//  DLOG_F(INFO, "MomentaryButton::draw(%f)", value);
 
   CPoint where(0, 0);
 

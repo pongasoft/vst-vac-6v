@@ -7,6 +7,7 @@
 #include "CircularBuffer.h"
 #include "ZoomWindow.h"
 #include "Concurrent.h"
+#include "Clock.h"
 #include <base/source/timer.h>
 
 namespace pongasoft {
@@ -18,37 +19,6 @@ using namespace Steinberg::Vst;
 
 using namespace VST::Common;
 using namespace pongasoft::Common;
-
-/**
- * Keeps track of the time in number of samples processed vs sample rate
- */
-class RateLimiter
-{
-public:
-  RateLimiter() : fRateLimitInSamples{0}, fSampleCount{0}
-  {}
-
-  void init(SampleRate sampleRate, long rateLimitInMillis)
-  {
-    fRateLimitInSamples = static_cast<long>(rateLimitInMillis * sampleRate / 1000);
-    fSampleCount = 0;
-  }
-
-  bool shouldUpdate(int numSamples)
-  {
-    fSampleCount += numSamples;
-    if(fSampleCount >= fRateLimitInSamples)
-    {
-      fSampleCount -= fRateLimitInSamples;
-      return true;
-    }
-    return false;
-  }
-
-private:
-  long fRateLimitInSamples;
-  long fSampleCount;
-};
 
 class VAC6Processor : public AudioEffect, ITimerCallback
 {
@@ -130,9 +100,11 @@ private:
 
   CircularBuffer<TSample> *fMaxBuffer;
   ZoomWindow *fZoomWindow;
+  long fAccumulatorBatchSize;
 
+  SampleRateBasedClock fClock;
   Timer *fTimer;
-  RateLimiter fRateLimiter;
+  SampleRateBasedClock::RateLimiter fRateLimiter;
   SingleElementQueue<MaxLevel> fMaxLevelUpdate;
   SingleElementQueue<LCDData> fLCDDataUpdate;
 };
