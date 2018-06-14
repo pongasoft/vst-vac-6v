@@ -6,6 +6,25 @@ namespace pongasoft {
 namespace VST {
 namespace VAC6 {
 
+const CColor LevelStateOk_Color{0, 255, 0};
+const CColor LevelStateSoftClipping_Color{248, 122, 0};
+const CColor LevelStateHardClipping_Color{255, 0, 0};
+
+/**
+ * Determine the color based on the value of the sample relative to the soft clipping level
+ */
+inline CColor const &computeColor(SoftClippingLevel const &iSofClippingLevel, TSample iSample)
+{
+  CColor const &color =
+    iSample > HARD_CLIPPING_LEVEL ? LevelStateHardClipping_Color :
+    iSample > iSofClippingLevel.getValueInSample() ? LevelStateSoftClipping_Color :
+    LevelStateOk_Color;
+
+  return color;
+}
+
+const CColor MaxLevelView_NoData_Color{200, 200, 200};
+
 ///////////////////////////////////////////
 // MaxLevelView::setMaxLevel
 ///////////////////////////////////////////
@@ -22,28 +41,25 @@ void MaxLevelView::updateView() const
 {
   if(fView != nullptr)
   {
+    TSample max = std::max(fMaxLevel.fLeftValue, fMaxLevel.fRightValue);
+
     char text[256];
-    sprintf(text, "%.2f / %d", fMaxLevel.fValue, fMaxLevel.fState);
-    fView->setText(text);
-
-    switch(fMaxLevel.fState)
+    if(max > 0)
     {
-      case kStateOk:
-        fView->setFontColor(CColor{0, 255, 0});
-        break;
-
-      case kStateSoftClipping:
-        fView->setFontColor(CColor{248, 122, 0});
-        break;
-
-      case kStateHardClipping:
-        fView->setFontColor(CColor{255, 0, 0});
-        break;
-
-      default:
-        // should not be here
-        break;
+      const auto &color = computeColor(fMaxLevel.fSoftClippingLevel, max);
+      if(max >= Common::Sample64SilentThreshold)
+        sprintf(text, "%+.2f", sampleToDb(max));
+      else
+        sprintf(text, "-oo");
+      fView->setFontColor(color);
     }
+    else
+    {
+      sprintf(text, "---.--");
+      fView->setFontColor(MaxLevelView_NoData_Color);
+    }
+
+    fView->setText(text);
   }
 }
 
@@ -52,18 +68,17 @@ void MaxLevelView::updateView() const
 ///////////////////////////////////////////
 void MaxLevelView::onMessage(Message const &message)
 {
-  MaxLevel maxLevel{
-    message.getFloat(MAX_LEVEL_VALUE_ATTR, 0),
-    static_cast<EMaxLevelState>(message.getInt(MAX_LEVEL_STATE_ATTR, 0))
-  };
+  MaxLevel maxLevel{};
+
+  maxLevel.fSoftClippingLevel = SoftClippingLevel{message.getFloat(MAX_LEVEL_SOFT_CLIPPING_LEVEL_ATTR,
+                                                                   fMaxLevel.fSoftClippingLevel.getValueInSample())};
+  maxLevel.fLeftValue = message.getFloat(MAX_LEVEL_LEFT_VALUE_ATTR, -1);
+  maxLevel.fRightValue = message.getFloat(MAX_LEVEL_RIGHT_VALUE_ATTR, -1);
 
   setMaxLevel(maxLevel);
 }
 
 // TODO => how to read this from VAC6.uidesc?
-const CColor LCDView_LevelStateOk_Color{0, 255, 0};
-const CColor LCDView_LevelStateSoftClipping_Color{248, 122, 0};
-const CColor LCDView_LevelStateHardClipping_Color{255, 0, 0};
 const CColor LCDView_SoftClippingLevel_Color{200, 200, 200, 123};
 
 ///////////////////////////////////////////
@@ -142,10 +157,7 @@ void LCDView::draw(CDrawContext *iContext) const
       auto top = height - displayValue;
 
       // color of the sample depends on its level
-      CColor const &color =
-        sample > HARD_CLIPPING_LEVEL ? LCDView_LevelStateHardClipping_Color :
-        sample > fLCDData.fSoftClippingLevel.getValueInSample() ? LCDView_LevelStateSoftClipping_Color :
-        LCDView_LevelStateOk_Color;
+      CColor const &color = computeColor(fLCDData.fSoftClippingLevel, sample);
 
       rdc.drawLine(left, top, left, height, color);
     }

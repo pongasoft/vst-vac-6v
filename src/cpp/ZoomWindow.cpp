@@ -98,7 +98,7 @@ ZoomWindow::ZoomWindow(int iVisibleWindowSize, int iBufferSize) :
   fWindowOffset(MAX_WINDOW_OFFSET),
   fBufferSize(iBufferSize)
 {
-  assert(iVisibleWindowSize > 0);
+  DCHECK_GT_F(iVisibleWindowSize, 0);
 
   fMaxZoomFactor = fBufferSize / iVisibleWindowSize;
 

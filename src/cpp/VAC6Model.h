@@ -28,17 +28,9 @@ inline double sampleToDb(SampleType valueInSample)
   return std::log10(valueInSample) * 20.0;
 }
 
-constexpr IAttributeList::AttrID MAX_LEVEL_VALUE_ATTR = "Value";
-constexpr IAttributeList::AttrID MAX_LEVEL_STATE_ATTR = "State";
-
-/**
- * Encapsulates the concept of max level
- */
-struct MaxLevel
-{
-  TSample fValue;
-  EMaxLevelState fState;
-};
+constexpr IAttributeList::AttrID MAX_LEVEL_SOFT_CLIPPING_LEVEL_ATTR = "SCL";
+constexpr IAttributeList::AttrID MAX_LEVEL_LEFT_VALUE_ATTR = "LValue";
+constexpr IAttributeList::AttrID MAX_LEVEL_RIGHT_VALUE_ATTR = "RValue";
 
 constexpr TSample DEFAULT_SOFT_CLIPPING_LEVEL = 0.50118723362; // dbToSample<TSample>(-6.0);
 constexpr TSample HARD_CLIPPING_LEVEL = 1.0;
@@ -46,6 +38,7 @@ constexpr double MIN_SOFT_CLIPPING_LEVEL_DB = -24;
 constexpr double MIN_VOLUME_DB = -60; // -60dB
 constexpr TSample MIN_AUDIO_SAMPLE = 0.001; // dbToSample<TSample>(-60.0)
 constexpr double DEFAULT_ZOOM_FACTOR_X = 0.5;
+constexpr long DEFAULT_MAX_LEVEL_RESET_IN_SECONDS = 5;
 
 ///////////////////////////////////////////
 // toDisplayValue
@@ -100,6 +93,17 @@ public:
 private:
   Sample64 fValueInSample;
 };
+
+///////////////////////////////////
+// MaxLevel
+///////////////////////////////////
+struct MaxLevel
+{
+  SoftClippingLevel fSoftClippingLevel{};
+  TSample fLeftValue{-1};
+  TSample fRightValue{-1};
+};
+
 
 ///////////////////////////////////
 // LCDData

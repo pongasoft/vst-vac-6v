@@ -21,6 +21,127 @@ using namespace Steinberg::Vst;
 using namespace VST::Common;
 using namespace pongasoft::Common;
 
+/**
+ * Processor for a single audio channel
+ */
+class AudioChannelProcessor
+{
+private:
+  class MaxAccumulator
+  {
+  public:
+    explicit MaxAccumulator(long iBatchSize) : fBatchSize{iBatchSize}
+    {
+    }
+
+    inline long getBatchSize() const
+    {
+      return fBatchSize;
+    }
+
+    inline TSample getAccumulatedMax() const
+    {
+      return fAccumulatedMax;
+    }
+
+    void reset(long iBatchSize)
+    {
+      fBatchSize = iBatchSize;
+      fAccumulatedMax = 0;
+      fAccumulatedSamples = 0;
+    }
+
+    void reset()
+    {
+      reset(fBatchSize);
+    }
+
+    template<typename SampleType>
+    bool accumulate(SampleType iSample, SampleType &oMaxSample)
+    {
+      if(iSample < 0)
+        iSample = -iSample;
+
+      fAccumulatedMax = std::max(fAccumulatedMax, iSample);
+      fAccumulatedSamples++;
+
+      if(fAccumulatedSamples == fBatchSize)
+      {
+        oMaxSample = fAccumulatedMax;
+        fAccumulatedMax = 0;
+        fAccumulatedSamples = 0;
+        return true;
+      }
+
+      return false;
+    }
+
+  private:
+    long fBatchSize;
+
+    TSample fAccumulatedMax{0};
+    int32 fAccumulatedSamples{0};
+  };
+
+public:
+  explicit AudioChannelProcessor(SampleRateBasedClock const &iClock) :
+    fMaxAccumulatorForBuffer(iClock.getSampleCountFor(ACCUMULATOR_BATCH_SIZE_IN_MS)),
+    fMaxBuffer{new CircularBuffer<TSample>(
+      static_cast<int>(ceil(iClock.getSampleCountFor(HISTORY_SIZE_IN_SECONDS * 1000) / fMaxAccumulatorForBuffer.getBatchSize())))},
+    fMaxLevelAccumulator(iClock.getSampleCountFor(DEFAULT_MAX_LEVEL_RESET_IN_SECONDS * 1000)),
+    fMaxLevel{-1}
+  {
+    fMaxBuffer->init(0);
+  }
+
+  ~AudioChannelProcessor()
+  {
+    delete fMaxBuffer;
+  }
+
+  CircularBuffer<TSample> const &getMaxBuffer() const
+  {
+    return *fMaxBuffer;
+  };
+
+  long getBufferAccumulatorBatchSize() const
+  {
+    return fMaxAccumulatorForBuffer.getBatchSize();
+  }
+
+  void resetMaxLevelAccumulator()
+  {
+    fMaxLevelAccumulator.reset();
+    fMaxLevel = -1;
+  }
+
+  void resetMaxLevelAccumulator(SampleRateBasedClock const &iClock, long iMaxLevelResetInSeconds)
+  {
+    // if 0 we still do the same buffering as the other buffer otherwise it would not match
+    long maxLevelResetMS = iMaxLevelResetInSeconds == 0 ? ACCUMULATOR_BATCH_SIZE_IN_MS : iMaxLevelResetInSeconds * 1000;
+    fMaxLevelAccumulator.reset(iClock.getSampleCountFor(maxLevelResetMS));
+    fMaxLevel = -1;
+  }
+
+  TSample getMaxLevel() const
+  {
+    return fMaxLevel;
+  }
+
+  template<typename SampleType>
+  bool genericProcessChannel(const typename AudioBuffers<SampleType>::Channel &iIn, typename AudioBuffers<SampleType>::Channel &iOut);
+
+private:
+  MaxAccumulator fMaxAccumulatorForBuffer;
+  CircularBuffer<TSample> *const fMaxBuffer;
+
+  MaxAccumulator fMaxLevelAccumulator;
+  TSample fMaxLevel;
+};
+
+/**
+ * class VAC6Processor, main processor for VAC6 VST
+ */
 class VAC6Processor : public AudioEffect, ITimerCallback
 {
 public:
@@ -59,44 +180,6 @@ public:
   tresult PLUGIN_API setupProcessing(ProcessSetup &setup) override;
 
 protected:
-
-  template<typename SampleType>
-  class MaxAccumulator
-  {
-  public:
-    explicit MaxAccumulator(int32 iNumSamples) : fNumSamples{iNumSamples}
-    {
-
-    }
-
-    bool accumulate(SampleType iSample, SampleType &oMaxSample)
-    {
-      if(iSample < 0)
-        iSample = -iSample;
-
-      fAccumulatedMax = std::max(fAccumulatedMax, iSample);
-      fAccumulatedSamples++;
-
-      if(fAccumulatedSamples == fNumSamples)
-      {
-        oMaxSample = fAccumulatedMax;
-        fAccumulatedMax = 0;
-        fAccumulatedSamples = 0;
-        return true;
-      }
-
-      return false;
-
-    }
-
-  private:
-
-    const int32 fNumSamples;
-
-    SampleType fAccumulatedMax{0};
-    int32 fAccumulatedSamples{0};
-  };
-
   /**
    * Processes the parameters that have changed since the last call to process
    *
@@ -115,15 +198,6 @@ protected:
   template<typename SampleType>
   tresult genericProcessInputs(ProcessData &data);
 
-  /**
-   * Processes a single audio channel
-   */
-  template<typename SampleType>
-  bool genericProcessChannel(typename AudioBuffers<SampleType>::Channel const &iIn,
-                             typename AudioBuffers<SampleType>::Channel &iOut,
-                             MaxAccumulator<TSample> *iMaxAccumulator,
-                             CircularBuffer<TSample> *iMaxBuffer);
-
   template<typename SampleType>
   inline EMaxLevelState toMaxLevelState(SampleType value);
 
@@ -137,22 +211,21 @@ private:
     double fZoomFactorX{DEFAULT_ZOOM_FACTOR_X};
   };
 
-  MaxLevel fMaxLevel;
   bool fMaxLevelResetRequested;
 
   State fState;
   State fPreviousState;
 
+  SampleRateBasedClock fClock;
+
   SingleElementQueue<State> fStateUpdate;
   AtomicValue<State> fLatestState;
 
-  CircularBuffer<TSample> *fLeftMaxBuffer;
-  MaxAccumulator <TSample> *fLeftMaxAccumulator;
-  CircularBuffer<TSample> *fRightMaxBuffer;
-  MaxAccumulator <TSample> *fRightMaxAccumulator;
+  AudioChannelProcessor *fLeftChannelProcessor;
+  AudioChannelProcessor *fRightChannelProcessor;
+
   ZoomWindow *fZoomWindow;
 
-  SampleRateBasedClock fClock;
   Timer *fTimer;
   SampleRateBasedClock::RateLimiter fRateLimiter;
   SingleElementQueue<MaxLevel> fMaxLevelUpdate;

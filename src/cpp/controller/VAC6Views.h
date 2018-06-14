@@ -22,7 +22,7 @@ using namespace GUI;
 class MaxLevelView : public VSTView<CTextLabel>
 {
 public:
-  MaxLevelView() : fMaxLevel{0, kStateOk} {}
+  MaxLevelView() : fMaxLevel{} {}
 
   void setMaxLevel(MaxLevel const &maxLevel);
 
