@@ -5,6 +5,7 @@
 
 #include "VAC6Processor.h"
 #include "VAC6CIDs.h"
+#include "Parameter.h"
 
 namespace pongasoft {
 namespace VST {
@@ -133,13 +134,6 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
   if(result != kResultOk)
     return result;
 
-  DLOG_F(INFO,
-         "VAC6Processor::setupProcessing(processMode=%d, symbolicSampleSize=%d, maxSamplesPerBlock=%d, sampleRate=%f)",
-         setup.processMode,
-         setup.symbolicSampleSize,
-         setup.maxSamplesPerBlock,
-         setup.sampleRate);
-
   fClock.setSampleRate(setup.sampleRate);
 
   fRateLimiter = fClock.getRateLimiter(UI_FRAME_RATE_MS);
@@ -155,7 +149,12 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
   fZoomWindow = new ZoomWindow(MAX_ARRAY_SIZE, fLeftChannelProcessor->getMaxBuffer().getSize());
   fZoomWindow->setZoomFactor(DEFAULT_ZOOM_FACTOR_X);
 
-  DLOG_F(INFO, "fMaxBufferSize=%d,accumulatorBatchSize=%ld",
+  DLOG_F(INFO,
+         "VAC6Processor::setupProcessing(processMode=%d, symbolicSampleSize=%d, maxSamplesPerBlock=%d, sampleRate=%f, fMaxBufferSize=%d, accumulatorBatchSize=%ld)",
+         setup.processMode,
+         setup.symbolicSampleSize,
+         setup.maxSamplesPerBlock,
+         setup.sampleRate,
          fLeftChannelProcessor->getMaxBuffer().getSize(),
          fLeftChannelProcessor->getBufferAccumulatorBatchSize());
 
@@ -231,6 +230,12 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   // making sure we are being called properly...
   if(in.getNumChannels() != 2 || out.getNumChannels() != 2)
     return kResultFalse;
+
+  if(fPreviousState.fMaxLevelAutoResetInSeconds != fState.fMaxLevelAutoResetInSeconds)
+  {
+    fLeftChannelProcessor->resetMaxLevelAccumulator(fClock, fState.fMaxLevelAutoResetInSeconds);
+    fRightChannelProcessor->resetMaxLevelAccumulator(fClock, fState.fMaxLevelAutoResetInSeconds);
+  }
 
   auto leftChannel = out.getLeftChannel();
   auto rightChannel = out.getRightChannel();
@@ -326,16 +331,21 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
         {
           case kSoftClippingLevel:
             newState.fSoftClippingLevel = SoftClippingLevel::fromNormalizedParam(value);
-            stateChanged = true;
+            stateChanged = newState.fSoftClippingLevel.getValueInSample() != fState.fSoftClippingLevel.getValueInSample();
             break;
 
           case kMaxLevelReset:
             fMaxLevelResetRequested = value == 1.0;
             break;
 
+          case kMaxLevelAutoReset:
+            newState.fMaxLevelAutoResetInSeconds = denormalizeDiscreteValue(MAX_LEVEL_AUTO_RESET_STEP_COUNT, value);
+            stateChanged = newState.fMaxLevelAutoResetInSeconds != fState.fMaxLevelAutoResetInSeconds;
+            break;
+
           case kLCDZoomFactorX:
             newState.fZoomFactorX = value;
-            stateChanged = true;
+            stateChanged = newState.fZoomFactorX != fState.fZoomFactorX;
             break;
 
           default:
@@ -344,7 +354,6 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
         }
       }
     }
-
   }
 
   if(stateChanged)
@@ -368,21 +377,36 @@ tresult VAC6Processor::setState(IBStream *state)
 
   IBStreamer streamer(state, kLittleEndian);
 
-  double savedParam = 0;
-  if(!streamer.readDouble(savedParam))
-    savedParam = DEFAULT_SOFT_CLIPPING_LEVEL;
-  newState.fSoftClippingLevel = SoftClippingLevel{savedParam};
+  // soft clipping level
+  {
+    double savedParam = 0;
+    if(!streamer.readDouble(savedParam))
+      savedParam = DEFAULT_SOFT_CLIPPING_LEVEL;
+    newState.fSoftClippingLevel = SoftClippingLevel{savedParam};
+  }
 
-  savedParam = 0;
-  if(!streamer.readDouble(savedParam))
-    savedParam = DEFAULT_ZOOM_FACTOR_X;
-  newState.fZoomFactorX = savedParam;
+  // zoom factor X
+  {
+    double savedParam = 0;
+    if(!streamer.readDouble(savedParam))
+      savedParam = DEFAULT_ZOOM_FACTOR_X;
+    newState.fZoomFactorX = savedParam;
+  }
+
+  // max level auto reset
+  {
+    int16 savedParam = 0;
+    if(!streamer.readInt16(savedParam))
+      savedParam = DEFAULT_MAX_LEVEL_RESET_IN_SECONDS;
+    newState.fMaxLevelAutoResetInSeconds = savedParam;
+  }
 
   fStateUpdate.push(newState);
 
-  DLOG_F(INFO, "VAC6Processor::setState => fSoftClippingLevel=%f, fZoomFactorX=%f",
+  DLOG_F(INFO, "VAC6Processor::setState => fSoftClippingLevel=%f, fZoomFactorX=%f, fMaxLevelAutoResetInSeconds=%d",
          newState.fSoftClippingLevel.getValueInSample(),
-         newState.fZoomFactorX);
+         newState.fZoomFactorX,
+         newState.fMaxLevelAutoResetInSeconds);
 
   return kResultOk;
 }
@@ -401,33 +425,14 @@ tresult VAC6Processor::getState(IBStream *state)
 
   streamer.writeDouble(latestState.fSoftClippingLevel.getValueInSample());
   streamer.writeDouble(latestState.fZoomFactorX);
+  streamer.writeInt32(latestState.fMaxLevelAutoResetInSeconds);
 
-  DLOG_F(INFO, "VAC6Processor::getState => fSoftClippingLevel=%f, fZoomFactorX=%f",
+  DLOG_F(INFO, "VAC6Processor::getState => fSoftClippingLevel=%f, fZoomFactorX=%f, fMaxLevelAutoResetInSeconds=%d",
          latestState.fSoftClippingLevel.getValueInSample(),
-         latestState.fZoomFactorX);
+         latestState.fZoomFactorX,
+         latestState.fMaxLevelAutoResetInSeconds);
 
   return kResultOk;
-}
-
-///////////////////////////////////
-// VAC6Processor::toMaxLevelState
-///////////////////////////////////
-template<typename SampleType>
-EMaxLevelState VAC6Processor::toMaxLevelState(SampleType value)
-{
-  if(value < MIN_AUDIO_SAMPLE)
-    return kStateOk;
-
-  // hard clipping
-  if(value > HARD_CLIPPING_LEVEL)
-    return kStateHardClipping;
-
-  // soft clipping
-  if(value > fState.fSoftClippingLevel.getValueInSample())
-    return kStateSoftClipping;
-
-  return kStateOk;
-
 }
 
 ///////////////////////////////////////////

@@ -53,8 +53,6 @@ if (SMTG_CREATE_VST2_VERSION)
 endif()
 
 set(vst_sources
-		${CPP_SOURCES}/controller/ControlManager.h
-		${CPP_SOURCES}/controller/ControlManager.cpp
 		${CPP_SOURCES}/controller/CustomDisplayView.h
 		${CPP_SOURCES}/controller/CustomDisplayView.cpp
 		${CPP_SOURCES}/controller/DrawContext.h
@@ -72,6 +70,7 @@ set(vst_sources
 		${CPP_SOURCES}/Clock.h
 		${CPP_SOURCES}/Concurrent.h
 		${CPP_SOURCES}/Messaging.h
+		${CPP_SOURCES}/Parameter.h
 		${CPP_SOURCES}/VAC6CIDs.h
 		${CPP_SOURCES}/VAC6Constants.h
 		${CPP_SOURCES}/VAC6Model.h

@@ -198,9 +198,6 @@ protected:
   template<typename SampleType>
   tresult genericProcessInputs(ProcessData &data);
 
-  template<typename SampleType>
-  inline EMaxLevelState toMaxLevelState(SampleType value);
-
   // from ITimerCallback
   void onTimer(Timer *timer) override;
 
@@ -209,6 +206,7 @@ private:
   {
     SoftClippingLevel fSoftClippingLevel{DEFAULT_SOFT_CLIPPING_LEVEL};
     double fZoomFactorX{DEFAULT_ZOOM_FACTOR_X};
+    int fMaxLevelAutoResetInSeconds{DEFAULT_MAX_LEVEL_RESET_IN_SECONDS};
   };
 
   bool fMaxLevelResetRequested;

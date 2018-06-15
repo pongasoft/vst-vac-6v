@@ -1,8 +1,10 @@
 #include <vstgui4/vstgui/plugin-bindings/vst3editor.h>
 #include <base/source/fstreamer.h>
+#include <pluginterfaces/base/ustring.h>
 #include "../logging/loguru.hpp"
 #include "VAC6Controller.h"
 #include "../VAC6CIDs.h"
+#include "../Parameter.h"
 
 namespace pongasoft {
 namespace VST {
@@ -60,6 +62,22 @@ tresult VAC6Controller::initialize(FUnknown *context)
                           kRootUnitId, // unitID => not using units at this stage
                           STR16 ("Max Lvl Rst")); // shortTitle
 
+  // An option menu to change the auto reset (from OFF to 10s)
+  auto maxLevelAutoResetParam = new StringListParameter(USTRING("Max Level Auto Reset"),
+                                                        EVAC6ParamID::kMaxLevelAutoReset);
+  maxLevelAutoResetParam->appendString(USTRING("OFF"));
+  maxLevelAutoResetParam->appendString(USTRING("1s"));
+  maxLevelAutoResetParam->appendString(USTRING("2s"));
+  maxLevelAutoResetParam->appendString(USTRING("3s"));
+  maxLevelAutoResetParam->appendString(USTRING("4s"));
+  maxLevelAutoResetParam->appendString(USTRING("5s"));
+  maxLevelAutoResetParam->appendString(USTRING("6s"));
+  maxLevelAutoResetParam->appendString(USTRING("7s"));
+  maxLevelAutoResetParam->appendString(USTRING("8s"));
+  maxLevelAutoResetParam->appendString(USTRING("9s"));
+  maxLevelAutoResetParam->appendString(USTRING("10s"));
+  parameters.addParameter(maxLevelAutoResetParam);
+
   // the momentary button that resets the max level
   parameters.addParameter(STR16 ("Zoom Level"), // title
                           nullptr, // units
@@ -101,8 +119,6 @@ CView *VAC6Controller::verifyView(CView *view,
                                   const IUIDescription * /*description*/,
                                   VST3Editor * /*editor*/)
 {
-  DLOG_F(INFO, "VAC6Controller::verifyView()");
-
   auto control = dynamic_cast<CControl *>(view);
   if(control != nullptr)
   {
@@ -144,7 +160,8 @@ tresult VAC6Controller::setComponentState(IBStream *state)
   double savedParamSoftLevelClipping = 0.f;
   if(!streamer.readDouble(savedParamSoftLevelClipping))
     savedParamSoftLevelClipping = DEFAULT_SOFT_CLIPPING_LEVEL;
-  setParamNormalized(EVAC6ParamID::kSoftClippingLevel, SoftClippingLevel{savedParamSoftLevelClipping}.getNormalizedParam());
+  setParamNormalized(EVAC6ParamID::kSoftClippingLevel,
+                     SoftClippingLevel{savedParamSoftLevelClipping}.getNormalizedParam());
 
   // EVAC6ParamID::kLCDZoomFactorX
   double savedParamZoomFactorX = 0.f;
@@ -152,9 +169,17 @@ tresult VAC6Controller::setComponentState(IBStream *state)
     savedParamZoomFactorX = DEFAULT_ZOOM_FACTOR_X;
   setParamNormalized(EVAC6ParamID::kLCDZoomFactorX, savedParamZoomFactorX);
 
-  DLOG_F(INFO, "VAC6Controller::setComponentState => kSoftClippingLevel=%f, kLCDZoomFactorX=%f",
+  // EVAC6ParamID::kMaxLevelAutoReset
+  int16 savedMaxLevelAutoReset = 0;
+  if(!streamer.readInt16(savedMaxLevelAutoReset))
+    savedMaxLevelAutoReset = DEFAULT_MAX_LEVEL_RESET_IN_SECONDS;
+  setParamNormalized(EVAC6ParamID::kMaxLevelAutoReset,
+                     normalizeDiscreteValue(MAX_LEVEL_AUTO_RESET_STEP_COUNT, savedMaxLevelAutoReset));
+
+  DLOG_F(INFO, "VAC6Controller::setComponentState => kSoftClippingLevel=%f, kLCDZoomFactorX=%f, kMaxLevelAutoReset=%d",
          savedParamSoftLevelClipping,
-         savedParamZoomFactorX);
+         savedParamZoomFactorX,
+         savedMaxLevelAutoReset);
 
   return kResultOk;
 }
