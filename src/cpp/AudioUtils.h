@@ -1,6 +1,7 @@
 #pragma once
 
 #include <pluginterfaces/vst/ivstaudioprocessor.h>
+#include <cmath>
 
 namespace pongasoft {
 namespace VST {
@@ -45,35 +46,6 @@ inline static bool equals5DP(T const &v1, T const &v2)
 {
   return std::fabs(v1 - v2) < 1e-5;
 }
-
-class ClockSample
-{
-public:
-  ClockSample(SampleRate iSampleRate) : fSampleRate(iSampleRate) {}
-
-private:
-  SampleRate fSampleRate;
-};
-
-//// returns true if the buffer is silent (meaning all channels are silent => set to 1)
-//inline bool isSilent(AudioBusBuffers &buffer)
-//{
-//  return buffer.silenceFlags == (static_cast<uint64>(1) << buffer.numChannels) - 1;
-//}
-//
-///**
-// * Use of template to retrieve the proper buffer
-// */
-//template<typename SampleType>
-//inline SampleType** getBuffer(AudioBusBuffers &buffer);
-//
-//// specialization for Sample32
-//template<>
-//inline Sample32** getBuffer(AudioBusBuffers &buffer) { return buffer.channelBuffers32; }
-//
-//// specialization for Sample64
-//template<>
-//inline Sample64** getBuffer(AudioBusBuffers &buffer) { return buffer.channelBuffers64; }
 
 }
 }

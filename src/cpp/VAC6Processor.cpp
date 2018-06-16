@@ -244,7 +244,8 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   fRightChannelProcessor->genericProcessChannel<SampleType>(in.getRightChannel(), rightChannel);
 
   if(fPreviousState.fZoomFactorX != fState.fZoomFactorX)
-    fZoomWindow->setZoomFactor(fState.fZoomFactorX, MAX_INPUT_PAGE_OFFSET, fLeftChannelProcessor->getMaxBuffer());
+//    fZoomWindow->setZoomFactor(fState.fZoomFactorX, MAX_INPUT_PAGE_OFFSET, fLeftChannelProcessor->getMaxBuffer());
+    fZoomWindow->setZoomFactor(fState.fZoomFactorX);
 
   if(fMaxLevelResetRequested)
   {
