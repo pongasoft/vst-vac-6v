@@ -41,7 +41,6 @@ void Zoom::setZoomFactor(double iZoomFactor)
 
 void Zoom::reset()
 {
-  fZoomAlgorithm.init(fZoomFactor);
   fLastPercent = 0;
 }
 
@@ -49,36 +48,33 @@ void Zoom::reset(TSample iSample, int iPercent)
 {
   assert(iPercent <= FLOAT_TO_INT_FACTOR);
 
-  fZoomAlgorithm.init(fZoomFactor);
-  fZoomAlgorithm.start(iSample, iPercent);
+  fZoomAlgorithm.start(iSample);
   fLastPercent = fZoomFactor - iPercent;
 }
 
-bool Zoom::nextZoomedValue(TSample iSample, WindowPoint &oNextZoomedValue)
+bool Zoom::nextZoomedValue(TSample iSample, TSample &oNextZoomedValue)
 {
   if(isNoZoom())
   {
-    oNextZoomedValue.fAvg = iSample;
-    oNextZoomedValue.fMin = iSample;
-    oNextZoomedValue.fMax = iSample;
+    oNextZoomedValue = iSample;
 
     return true;
   }
 
   if(fLastPercent == 0)
   {
-    fZoomAlgorithm.start(iSample, FLOAT_TO_INT_FACTOR);
+    fZoomAlgorithm.start(iSample);
     fLastPercent = fZoomFactor - FLOAT_TO_INT_FACTOR;
     return false;
   }
 
   if(fLastPercent <= FLOAT_TO_INT_FACTOR)
   {
-    oNextZoomedValue = fZoomAlgorithm.end(iSample, fLastPercent);
+    oNextZoomedValue = fZoomAlgorithm.end(iSample);
     fLastPercent = FLOAT_TO_INT_FACTOR - fLastPercent;
     if(fLastPercent > 0)
     {
-      fZoomAlgorithm.start(iSample, fLastPercent);
+      fZoomAlgorithm.start(iSample);
       fLastPercent = fZoomFactor - fLastPercent;
     }
     return true;
@@ -172,7 +168,7 @@ int ZoomWindow::setZoomFactor(double iZoomFactorPercent, int iInputPageOffset, C
 
   // first determine the offset prior to zooming from the window idx
   int bufferOffset;
-  WindowPoint zoomValue;
+  TSample zoomValue;
 
   if(fZoom.isNoZoom())
     bufferOffset = windowIdx;
@@ -220,14 +216,14 @@ int ZoomWindow::setZoomFactor(double iZoomFactorPercent, int iInputPageOffset, C
 ////////////////////////////////////////////////////////////
 // ZoomWindow::computeZoomValue
 ////////////////////////////////////////////////////////////
-WindowPoint ZoomWindow::computeZoomValue(int iInputPageOffset, CircularBuffer<TSample> const &iBuffer) const
+TSample ZoomWindow::computeZoomValue(int iInputPageOffset, CircularBuffer<TSample> const &iBuffer) const
 {
   DCHECK_EQ_F(fBufferSize, iBuffer.getSize());
 
   int idx = fWindowOffset - fVisibleWindowSize + 1 + iInputPageOffset;
 
   if(fZoom.isNoZoom())
-    return WindowPoint {iBuffer.getAt(idx)};
+    return TSample {iBuffer.getAt(idx)};
 
   return computeZoomValue(getZoomPoint(idx), iBuffer);
 }
@@ -235,7 +231,7 @@ WindowPoint ZoomWindow::computeZoomValue(int iInputPageOffset, CircularBuffer<TS
 ////////////////////////////////////////////////////////////
 // ZoomWindow::computeZoomValue
 ////////////////////////////////////////////////////////////
-WindowPoint ZoomWindow::computeZoomValue(const ZoomWindow::ZoomPoint &iZoomPoint, CircularBuffer<TSample> const &iBuffer) const
+TSample ZoomWindow::computeZoomValue(const ZoomWindow::ZoomPoint &iZoomPoint, CircularBuffer<TSample> const &iBuffer) const
 {
   DCHECK_EQ_F(fBufferSize, iBuffer.getSize());
 
@@ -245,7 +241,7 @@ WindowPoint ZoomWindow::computeZoomValue(const ZoomWindow::ZoomPoint &iZoomPoint
 
   zoom.reset(iBuffer.getAt(offset++), iZoomPoint.fPercentFirstSample);
 
-  WindowPoint res;
+  TSample res;
 
   while(!zoom.nextZoomedValue(iBuffer.getAt(offset++), res))
   {
@@ -281,14 +277,14 @@ void ZoomWindow::computeZoomWindow(CircularBuffer<TSample> const &iBuffer, TSamp
 
   for(int i = 0; i < fVisibleWindowSize; ++i)
   {
-    WindowPoint nextZoomedValue;
+    TSample nextZoomedValue;
 
     while(!fZoom.nextZoomedValue(iBuffer.getAt(offset++), nextZoomedValue))
     {
       // nothing to do in the loop itself
     }
 
-    samples[i] = nextZoomedValue.fMax;
+    samples[i] = nextZoomedValue;
   }
 }
 
@@ -307,7 +303,7 @@ bool ZoomWindow::computeZoomWindow(CircularBuffer<TSample> const &iBuffer, IZoom
 
     for(int i = 0; i < fVisibleWindowSize; ++i)
     {
-      res |= callback.zoomValue(i, WindowPoint {iBuffer.getAt(offset++)});
+      res |= callback.zoomValue(i, TSample {iBuffer.getAt(offset++)});
     }
     return res;
   }
@@ -320,7 +316,7 @@ bool ZoomWindow::computeZoomWindow(CircularBuffer<TSample> const &iBuffer, IZoom
 
   for(int i = 0; i < fVisibleWindowSize; ++i)
   {
-    WindowPoint nextZoomedValue;
+    TSample nextZoomedValue;
 
     while(!fZoom.nextZoomedValue(iBuffer.getAt(offset++), nextZoomedValue))
     {
@@ -377,7 +373,7 @@ ZoomWindow::ZoomPoint ZoomWindow::getZoomPointLeftOfScreen() const
 ////////////////////////////////////////////////////////////
 // ZoomWindow::findClosestWindowIndex
 ////////////////////////////////////////////////////////////
-int ZoomWindow::findClosestWindowIndex(int iBufferOffset, WindowPoint const &iZoomValue, CircularBuffer<TSample> const &iBuffer) const
+int ZoomWindow::findClosestWindowIndex(int iBufferOffset, TSample const &iZoomValue, CircularBuffer<TSample> const &iBuffer) const
 {
   DCHECK_EQ_F(fBufferSize, iBuffer.getSize());
 
@@ -403,7 +399,7 @@ int ZoomWindow::findClosestWindowIndex(int iBufferOffset, WindowPoint const &iZo
       i2 = mid - 1;
   }
 
-  TSample minZoomDelta = fabs(iZoomValue.fAvg - computeZoomValue(zp, iBuffer).fAvg);
+  TSample minZoomDelta = fabs(iZoomValue - computeZoomValue(zp, iBuffer));
   int minBufferOffsetDelta = abs(iBufferOffset - zp.fBufferOffset);
 
   // we found the exact point... no need to go further...
@@ -422,7 +418,7 @@ int ZoomWindow::findClosestWindowIndex(int iBufferOffset, WindowPoint const &iZo
       continue;
 
     const ZoomPoint &point = getZoomPoint(idx);
-    TSample delta = fabs(iZoomValue.fAvg - computeZoomValue(point, iBuffer).fAvg);
+    TSample delta = fabs(iZoomValue - computeZoomValue(point, iBuffer));
 
     if(delta < minZoomDelta)
     {

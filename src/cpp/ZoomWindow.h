@@ -14,52 +14,28 @@ const int MAX_ZOOM_POINTS = 10; // computed in zoom.groovy
 
 using TSample = Steinberg::Vst::Sample64;
 
-struct WindowPoint
-{
-  WindowPoint() : fAvg(0), fMin(0), fMax(0)
-  {}
-
-  explicit WindowPoint(TSample iValue) : fAvg(iValue), fMin(iValue), fMax(iValue)
-  {}
-
-  TSample fAvg;
-  TSample fMin;
-  TSample fMax;
-};
-
 class ZoomAlgorithm
 {
 public:
-  inline void init(int iZoomFactor)
+  inline void start(TSample iSample)
   {
-    fZoomFactor = iZoomFactor;
-  }
-
-  inline void start(TSample iSample, int iPercentFirstSample)
-  {
-    fWindowPoint.fAvg = iSample * iPercentFirstSample / FLOAT_TO_INT_FACTOR;
-    fWindowPoint.fMin = iSample;
-    fWindowPoint.fMax = iSample;
+    fWindowPoint = iSample;
   }
 
   inline void next(TSample iSample)
   {
-    fWindowPoint.fAvg += iSample;
-    fWindowPoint.fMax = std::max(fWindowPoint.fMax, iSample);
+    fWindowPoint = std::max(fWindowPoint, iSample);
   }
 
-  inline WindowPoint end(TSample iSample, int iPercentLastSample)
+  inline TSample end(TSample iSample)
   {
-    fWindowPoint.fAvg += iSample * iPercentLastSample / FLOAT_TO_INT_FACTOR;
-    fWindowPoint.fAvg /= ((TSample) (fZoomFactor)) / FLOAT_TO_INT_FACTOR;
-    fWindowPoint.fMax = std::max(fWindowPoint.fMax, iSample);
+    fWindowPoint = std::max(fWindowPoint, iSample);
 
     return fWindowPoint;
   }
 
 private:
-  WindowPoint fWindowPoint;
-  int fZoomFactor{};
+  TSample fWindowPoint{0};
 };
 
 /**
@@ -69,7 +45,7 @@ class Zoom
 public:
   Zoom();
 
-  Zoom(double iZoomFactor);
+  explicit Zoom(double iZoomFactor);
 
   /**
    * @param iZoomFactor zoom factor is 1.0 for min zoom. 2.0 for example means twice as big... etc...
@@ -79,7 +55,7 @@ public:
   inline bool isNoZoom() const
   { return fZoomFactor == FLOAT_TO_INT_FACTOR; }
 
-  bool nextZoomedValue(TSample iSample, WindowPoint &oNextZoomedValue);
+  bool nextZoomedValue(TSample iSample, TSample &oNextZoomedValue);
 
   void reset();
 
@@ -102,7 +78,7 @@ public:
   class IZoomCallback
   {
   public:
-    virtual bool zoomValue(int iIdx, WindowPoint const &iValue) = 0;
+    virtual bool zoomValue(int iIdx, TSample const &iValue) = 0;
   };
 
 public:
@@ -119,12 +95,12 @@ public:
    */
   int setZoomFactor(double iZoomFactorPercent, int iInputPageOffset, CircularBuffer<TSample> const &iBuffer);
 
-  inline bool nextZoomedValue(TSample iSample, WindowPoint &oNextZoomedValue)
+  inline bool nextZoomedValue(TSample iSample, TSample &oNextZoomedValue)
   {
     return fZoom.nextZoomedValue(iSample, oNextZoomedValue);
   };
 
-  WindowPoint computeZoomValue(int iInputPageOffset, CircularBuffer<TSample> const &iBuffer) const;
+  TSample computeZoomValue(int iInputPageOffset, CircularBuffer<TSample> const &iBuffer) const;
 
   bool computeZoomWindow(CircularBuffer<TSample> const &iBuffer, IZoomCallback &callback);
 
@@ -158,13 +134,13 @@ private:
   /**
    * Computes the zoom value from a zoom point
    */
-  WindowPoint computeZoomValue(ZoomPoint const &iZoomPoint, CircularBuffer<TSample> const &iBuffer) const;
+  TSample computeZoomValue(ZoomPoint const &iZoomPoint, CircularBuffer<TSample> const &iBuffer) const;
 
   /**
    * Find the zoom point so that zp.fBufferOffset is the closest to iBufferOffset and returns
    * the index. Also tries to find the point where the zoom value would be the closest.
    */
-  int findClosestWindowIndex(int iBufferOffset, WindowPoint const &iZoomValue, CircularBuffer<TSample> const &iBuffer) const;
+  int findClosestWindowIndex(int iBufferOffset, TSample const &iZoomValue, CircularBuffer<TSample> const &iBuffer) const;
 
   inline int minWindowIdx() const
   { return fMinWindowOffset - fVisibleWindowSize + 1; }
