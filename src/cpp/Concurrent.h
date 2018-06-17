@@ -3,7 +3,14 @@
 #include <atomic>
 
 namespace pongasoft {
+namespace VST {
 namespace Common {
+
+// TODO TODO TODO
+// Although this implementation are thread safe/lock free they do allocate memory from the processing/real time thread
+// which is BAD
+// needs to be fixed!!!
+// TODO TODO TODO
 
 /**
  * Thread safe and lock free queue containing at most one element. The intended usage is for 1 thread to call
@@ -18,6 +25,11 @@ public:
   SingleElementQueue() : fSingleElement{nullptr}
   {}
 
+  bool isLockFree() const
+  {
+    return fSingleElement.is_lock_free();
+  }
+
   ~SingleElementQueue()
   {
     delete fSingleElement.exchange(nullptr);
@@ -30,7 +42,7 @@ public:
    *                 isn't one
    * @return true if there was one element in the queue, false otherwise
    */
-  inline bool pop(T &oElement)
+  bool popFromProcessingThread(T &oElement)
   {
     auto element = fSingleElement.exchange(nullptr);
     if(element)
@@ -47,7 +59,7 @@ public:
    * Pushes one element in the queue. If the queue already had an element it will be replaced.
    * @param iElement the element to push (clearly not modified by the call)
    */
-  inline void push(T const &iElement)
+  void pushFromUIThread(T const &iElement)
   {
     delete fSingleElement.exchange(new T(iElement));
   }
@@ -76,13 +88,18 @@ public:
     delete fNewValue.exchange(nullptr);
   }
 
+  bool isLockFree() const
+  {
+    return fNewValue.is_lock_free();
+  }
+
   /**
    * Returns the "current" value. Note that this method should be called by one thread at a time (it is ok to call
    * "set" at the same time with another thread).
    *
    * @return the value. Since it is returning the address of the value, you should copy it if you wish to store it.
    */
-  inline const T &get()
+  const T &getFromUIThread()
   {
     auto state = fNewValue.exchange(nullptr);
     if(state)
@@ -97,7 +114,7 @@ public:
   /**
    * Updates the current value with the provided one. This method is safe to be called by multiple threads.
    */
-  inline void set(T const &iValue)
+  void setFromProcessingThread(T const &iValue)
   {
     delete fNewValue.exchange(new T(iValue));
   }
@@ -108,5 +125,6 @@ private:
   std::atomic<T *> fNewValue;
 };
 
+}
 }
 }

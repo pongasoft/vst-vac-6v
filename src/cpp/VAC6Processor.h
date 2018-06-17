@@ -20,7 +20,6 @@ using namespace Steinberg;
 using namespace Steinberg::Vst;
 
 using namespace VST::Common;
-using namespace pongasoft::Common;
 
 /**
  * class VAC6Processor, main processor for VAC6 VST
