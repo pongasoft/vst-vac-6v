@@ -261,8 +261,12 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   if(fRateLimiter.shouldUpdate(data.numSamples))
   {
     LCDData lcdData{};
-    fLeftChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fLeftSamples);
-    fRightChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fRightSamples);
+    if(fState.fLeftChannelOn)
+      fLeftChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fLeftSamples);
+    lcdData.fLeftChannelOn = fState.fLeftChannelOn;
+    if(fState.fRightChannelOn)
+      fRightChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fRightSamples);
+    lcdData.fRightChannelOn = fState.fRightChannelOn;
     lcdData.fSoftClippingLevel = fState.fSoftClippingLevel;
 
     fMaxLevelUpdate.pushFromUIThread(MaxLevel{fState.fSoftClippingLevel,
@@ -341,7 +345,7 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
             break;
 
           case kMaxLevelReset:
-            fMaxLevelResetRequested = value == 1.0;
+            fMaxLevelResetRequested = denormalizeBoolValue(value);
             break;
 
           case kMaxLevelAutoReset:
@@ -352,6 +356,16 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
           case kLCDZoomFactorX:
             newState.fZoomFactorX = value;
             stateChanged = newState.fZoomFactorX != fState.fZoomFactorX;
+            break;
+
+          case kLCDLeftChannel:
+            newState.fLeftChannelOn = denormalizeBoolValue(value);
+            stateChanged = newState.fLeftChannelOn != fState.fLeftChannelOn;
+            break;
+
+          case kLCDRightChannel:
+            newState.fRightChannelOn = denormalizeBoolValue(value);
+            stateChanged = newState.fRightChannelOn != fState.fRightChannelOn;
             break;
 
           default:
@@ -407,12 +421,30 @@ tresult VAC6Processor::setState(IBStream *state)
     newState.fMaxLevelAutoResetInSeconds = savedParam;
   }
 
+  // left channel on
+  {
+    bool savedParam;
+    if(!streamer.readBool(savedParam))
+      savedParam = true;
+    newState.fLeftChannelOn = savedParam;
+  }
+
+  // right channel on
+  {
+    bool savedParam;
+    if(!streamer.readBool(savedParam))
+      savedParam = true;
+    newState.fRightChannelOn = savedParam;
+  }
+
   fStateUpdate.pushFromUIThread(newState);
 
-  DLOG_F(INFO, "VAC6Processor::setState => fSoftClippingLevel=%f, fZoomFactorX=%f, fMaxLevelAutoResetInSeconds=%d",
+  DLOG_F(INFO, "VAC6Processor::setState => fSoftClippingLevel=%f, fZoomFactorX=%f, fMaxLevelAutoResetInSeconds=%d, fLeftChannelOn=%d, fRightChannelOn=%d",
          newState.fSoftClippingLevel.getValueInSample(),
          newState.fZoomFactorX,
-         newState.fMaxLevelAutoResetInSeconds);
+         newState.fMaxLevelAutoResetInSeconds,
+         newState.fLeftChannelOn,
+         newState.fRightChannelOn);
 
   return kResultOk;
 }
@@ -432,11 +464,15 @@ tresult VAC6Processor::getState(IBStream *state)
   streamer.writeDouble(latestState.fSoftClippingLevel.getValueInSample());
   streamer.writeDouble(latestState.fZoomFactorX);
   streamer.writeInt32(latestState.fMaxLevelAutoResetInSeconds);
+  streamer.writeBool(latestState.fLeftChannelOn);
+  streamer.writeBool(latestState.fRightChannelOn);
 
-  DLOG_F(INFO, "VAC6Processor::getState => fSoftClippingLevel=%f, fZoomFactorX=%f, fMaxLevelAutoResetInSeconds=%d",
+  DLOG_F(INFO, "VAC6Processor::getState => fSoftClippingLevel=%f, fZoomFactorX=%f, fMaxLevelAutoResetInSeconds=%d, fLeftChannelOn=%d, fRightChannelOn=%d",
          latestState.fSoftClippingLevel.getValueInSample(),
          latestState.fZoomFactorX,
-         latestState.fMaxLevelAutoResetInSeconds);
+         latestState.fMaxLevelAutoResetInSeconds,
+         latestState.fLeftChannelOn,
+         latestState.fRightChannelOn);
 
   return kResultOk;
 }
@@ -470,8 +506,10 @@ void VAC6Processor::onTimer(Timer * /* timer */)
       Message m{message};
 
       m.setMessageID(kLCDData_MID);
-      m.setBinary(LCDDATA_LEFT_SAMPLES_ATTR, lcdData.fLeftSamples, MAX_ARRAY_SIZE);
-      m.setBinary(LCDDATA_RIGHT_SAMPLES_ATTR, lcdData.fRightSamples, MAX_ARRAY_SIZE);
+      if(lcdData.fLeftChannelOn)
+        m.setBinary(LCDDATA_LEFT_SAMPLES_ATTR, lcdData.fLeftSamples, MAX_ARRAY_SIZE);
+      if(lcdData.fRightChannelOn)
+        m.setBinary(LCDDATA_RIGHT_SAMPLES_ATTR, lcdData.fRightSamples, MAX_ARRAY_SIZE);
       m.setFloat(LCDDATA_SOFT_CLIPPING_LEVEL_ATTR, fState.fSoftClippingLevel.getValueInSample());
 
       sendMessage(message);

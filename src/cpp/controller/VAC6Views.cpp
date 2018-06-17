@@ -88,8 +88,8 @@ void LCDView::onMessage(Message const &message)
 {
   fLCDData.fSoftClippingLevel = SoftClippingLevel{message.getFloat(LCDDATA_SOFT_CLIPPING_LEVEL_ATTR,
                                                                    fLCDData.fSoftClippingLevel.getValueInSample())};
-  message.getBinary(LCDDATA_LEFT_SAMPLES_ATTR, fLCDData.fLeftSamples, MAX_ARRAY_SIZE);
-  message.getBinary(LCDDATA_RIGHT_SAMPLES_ATTR, fLCDData.fRightSamples, MAX_ARRAY_SIZE);
+  fLCDData.fLeftChannelOn = message.getBinary(LCDDATA_LEFT_SAMPLES_ATTR, fLCDData.fLeftSamples, MAX_ARRAY_SIZE) > -1;
+  fLCDData.fRightChannelOn = message.getBinary(LCDDATA_RIGHT_SAMPLES_ATTR, fLCDData.fRightSamples, MAX_ARRAY_SIZE) > -1;
 
   updateView();
 }
@@ -135,34 +135,40 @@ void LCDView::draw(CDrawContext *iContext) const
   auto height = fView->getViewSize().getHeight();
   CCoord left = 0;
 
-  // display every sample in the array as a vertical line (from the bottom)
-  for(int i = 0; i < MAX_ARRAY_SIZE; i++)
+  bool leftChannelOn = fLCDData.fLeftChannelOn;
+  bool rightChannelOn = fLCDData.fRightChannelOn;
+
+  if(leftChannelOn || rightChannelOn)
   {
-    double displayValue;
-
-    TSample leftSample = fLCDData.fLeftSamples[i];
-    TSample rightSample = fLCDData.fRightSamples[i];
-
-    TSample sample = std::max(leftSample, rightSample);
-
-    if(sample >= Common::Sample64SilentThreshold)
+    // display every sample in the array as a vertical line (from the bottom)
+    for(int i = 0; i < MAX_ARRAY_SIZE; i++)
     {
-      if(sample < MIN_AUDIO_SAMPLE) // a single pixel for -60dB to silent
-        displayValue = 1;
-      else
+      double displayValue;
+
+      TSample leftSample = leftChannelOn ? fLCDData.fLeftSamples[i] : 0;
+      TSample rightSample = rightChannelOn ? fLCDData.fRightSamples[i] : 0;
+
+      TSample sample = std::max(leftSample, rightSample);
+
+      if(sample >= Common::Sample64SilentThreshold)
       {
-        displayValue = toDisplayValue(sample, height);
+        if(sample < MIN_AUDIO_SAMPLE) // a single pixel for -60dB to silent
+          displayValue = 1;
+        else
+        {
+          displayValue = toDisplayValue(sample, height);
+        }
+
+        auto top = height - displayValue;
+
+        // color of the sample depends on its level
+        CColor const &color = computeColor(fLCDData.fSoftClippingLevel, sample);
+
+        rdc.drawLine(left, top, left, height, color);
       }
 
-      auto top = height - displayValue;
-
-      // color of the sample depends on its level
-      CColor const &color = computeColor(fLCDData.fSoftClippingLevel, sample);
-
-      rdc.drawLine(left, top, left, height, color);
+      left++;
     }
-
-    left++;
   }
 
   // display the soft clipping level line (which is controlled by a knob)

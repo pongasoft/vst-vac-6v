@@ -56,7 +56,7 @@ tresult VAC6Controller::initialize(FUnknown *context)
   parameters.addParameter(STR16 ("Max Level Reset"), // title
                           nullptr, // units
                           1, // stepCount => 1 means toggle
-                          0, // defaultNormalizedValue
+                          normalizeBoolValue(false), // defaultNormalizedValue
                           Vst::ParameterInfo::kCanAutomate, // flags
                           EVAC6ParamID::kMaxLevelReset, // tag
                           kRootUnitId, // unitID => not using units at this stage
@@ -87,6 +87,26 @@ tresult VAC6Controller::initialize(FUnknown *context)
                           EVAC6ParamID::kLCDZoomFactorX, // tag
                           kRootUnitId, // unitID => not using units at this stage
                           STR16 ("Zoom Lvl")); // shortTitle
+
+  // on/off toggle to show/hide left channel
+  parameters.addParameter(STR16 ("Left Channel"), // title
+                          nullptr, // units
+                          1, // stepCount => 1 means toggle
+                          normalizeBoolValue(true), // defaultNormalizedValue
+                          Vst::ParameterInfo::kCanAutomate, // flags
+                          EVAC6ParamID::kLCDLeftChannel, // tag
+                          kRootUnitId, // unitID => not using units at this stage
+                          STR16 ("L Chan")); // shortTitle
+
+  // on/off toggle to show/hide right channel
+  parameters.addParameter(STR16 ("Right Channel"), // title
+                          nullptr, // units
+                          1, // stepCount => 1 means toggle
+                          normalizeBoolValue(true), // defaultNormalizedValue
+                          Vst::ParameterInfo::kCanAutomate, // flags
+                          EVAC6ParamID::kLCDRightChannel, // tag
+                          kRootUnitId, // unitID => not using units at this stage
+                          STR16 ("R Chan")); // shortTitle
 
   return result;
 }
@@ -176,10 +196,24 @@ tresult VAC6Controller::setComponentState(IBStream *state)
   setParamNormalized(EVAC6ParamID::kMaxLevelAutoReset,
                      normalizeDiscreteValue(MAX_LEVEL_AUTO_RESET_STEP_COUNT, savedMaxLevelAutoReset));
 
-  DLOG_F(INFO, "VAC6Controller::setComponentState => kSoftClippingLevel=%f, kLCDZoomFactorX=%f, kMaxLevelAutoReset=%d",
+  // EVAC6ParamID::kLCDLeftChannel
+  bool savedLeftChannelOn;
+  if(!streamer.readBool(savedLeftChannelOn))
+    savedLeftChannelOn = true;
+  setParamNormalized(EVAC6ParamID::kLCDLeftChannel, normalizeBoolValue(savedLeftChannelOn));
+
+  // EVAC6ParamID::kLCDRightChannel
+  bool savedRightChannelOn;
+  if(!streamer.readBool(savedRightChannelOn))
+    savedRightChannelOn = true;
+  setParamNormalized(EVAC6ParamID::kLCDRightChannel, normalizeBoolValue(savedRightChannelOn));
+
+  DLOG_F(INFO, "VAC6Controller::setComponentState => kSoftClippingLevel=%f, kLCDZoomFactorX=%f, kMaxLevelAutoReset=%d, kLCDLeftChannel=%d, kLCDRightChannel=%d",
          savedParamSoftLevelClipping,
          savedParamZoomFactorX,
-         savedMaxLevelAutoReset);
+         savedMaxLevelAutoReset,
+         savedLeftChannelOn,
+         savedRightChannelOn);
 
   return kResultOk;
 }

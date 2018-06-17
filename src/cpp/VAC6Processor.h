@@ -89,6 +89,8 @@ private:
     SoftClippingLevel fSoftClippingLevel{DEFAULT_SOFT_CLIPPING_LEVEL};
     double fZoomFactorX{DEFAULT_ZOOM_FACTOR_X};
     int fMaxLevelAutoResetInSeconds{DEFAULT_MAX_LEVEL_RESET_IN_SECONDS};
+    bool fLeftChannelOn{true};
+    bool fRightChannelOn{true};
   };
 
   bool fMaxLevelResetRequested;

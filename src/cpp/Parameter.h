@@ -20,6 +20,16 @@ inline int denormalizeDiscreteValue(int iStepCount, ParamValue iNormalizedValue)
   return static_cast<int>(std::floor(std::min(static_cast<ParamValue>(iStepCount), iNormalizedValue * (iStepCount + 1))));
 }
 
+inline ParamValue normalizeBoolValue(bool iValue)
+{
+  return iValue ? 1.0 : 0;
+}
+
+inline bool denormalizeBoolValue(ParamValue iNormalizedValue)
+{
+  return iNormalizedValue > 0;
+}
+
 }
 }
 }

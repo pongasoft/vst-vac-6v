@@ -116,7 +116,10 @@ constexpr IAttributeList::AttrID LCDDATA_RIGHT_SAMPLES_ATTR = "RSamples";
 struct LCDData
 {
   SoftClippingLevel fSoftClippingLevel{};
+  bool fLeftChannelOn{true};
   TSample fLeftSamples[MAX_ARRAY_SIZE]{};
+
+  bool fRightChannelOn{true};
   TSample fRightSamples[MAX_ARRAY_SIZE]{};
 };
 
