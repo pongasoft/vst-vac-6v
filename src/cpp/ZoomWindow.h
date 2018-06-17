@@ -9,14 +9,8 @@ namespace pongasoft {
 namespace VST {
 namespace Common {
 
-using namespace Common;
-
-constexpr int ZOOM_BATCH_SIZE = 10;
-
-//const int FLOAT_TO_INT_FACTOR = 10;  // using one digit precision (1.2, 1.3, etc...)
 
 using TSample = Steinberg::Vst::Sample64;
-
 
 /**
  * batchSize is linked to how precise you want to be in regards to the zoom factor
@@ -25,26 +19,53 @@ using TSample = Steinberg::Vst::Sample64;
 template <int batchSize = 10>
 class Zoom
 {
-  class ZoomedBuffer
+public:
+  using class_type = Zoom<batchSize>;
+
+  class MaxAccumulator
   {
   public:
-
-    TSample nextSample();
-
-    inline int getCurrentBufferOffset() const
+    explicit MaxAccumulator(class_type const *iZoom) :
+      fZoom{iZoom},
+      fAccumulatedMax{0},
+      fAccumulatedSamples{0},
+      fBatchSizeIdx{0}
     {
-      return fBufferOffset;
+    }
+
+    MaxAccumulator(class_type const *iZoom, int iBatchSizeIdx) :
+      fZoom{iZoom},
+      fAccumulatedMax{0},
+      fAccumulatedSamples{0},
+      fBatchSizeIdx{iBatchSizeIdx}
+    {
+    }
+
+    template<typename SampleType>
+    bool accumulate(SampleType iSample, SampleType &oMaxSample)
+    {
+      if(iSample < 0)
+        iSample = -iSample;
+
+      fAccumulatedMax = std::max(fAccumulatedMax, iSample);
+      fAccumulatedSamples++;
+
+      if(fAccumulatedSamples == fZoom->fBatchSizes[fBatchSizeIdx])
+      {
+        oMaxSample = fAccumulatedMax;
+        fAccumulatedMax = 0;
+        fAccumulatedSamples = 0;
+        fBatchSizeIdx++;
+        if(fBatchSizeIdx == batchSize)
+          fBatchSizeIdx = 0;
+        return true;
+      }
+
+      return false;
     }
 
   private:
-    friend class Zoom<batchSize>;
-
-    ZoomedBuffer(Zoom<batchSize> const &iZoom, CircularBuffer<TSample> const &iBuffer, int iBufferOffset, int iBatchSizeIdx);
-
-    Zoom<batchSize> const &fZoom;
-
-    CircularBuffer<TSample> const &fBuffer;
-    int fBufferOffset;
+    class_type const *fZoom;
 
     TSample fAccumulatedMax;
     int fAccumulatedSamples;
@@ -52,7 +73,7 @@ class Zoom
   };
 
 public:
-  friend class Zoom<batchSize>::ZoomedBuffer;
+  friend class class_type::MaxAccumulator;
 
   explicit Zoom(double iZoomFactor = 1.0)
   {
@@ -62,7 +83,21 @@ public:
   /**
    * @param iZoomFactor zoom factor is 1.0 for min zoom. 2.0 for example means twice as big... etc...
    */
-  void setZoomFactor(double iZoomFactor);
+  MaxAccumulator setZoomFactor(double iZoomFactor)
+  {
+    DCHECK_F(iZoomFactor >= 1.0);
+
+    fZoomFactor = static_cast<int>(iZoomFactor * batchSize);
+    init();
+    return MaxAccumulator{this};
+  }
+
+  /**
+   * @param iZoomPointIndex negative index on where to start
+   * @param oOffset the offset (output) on where the start in the non zoomed buffer
+   * @return an accumulator to start accumulating from a given zoom point index
+   */
+  MaxAccumulator getAccumulatorFromIndex(int iZoomPointIndex, int &oOffset) const;
 
   /**
    * @return true if there is no zoom at all (1.0)
@@ -88,10 +123,6 @@ public:
     return fZoomFactor;
   }
 
-  /**
-   * Returns a zoomed version of the buffer starting at iZoomPointIndex
-   */
-  ZoomedBuffer zoomFromIndex(int iZoomPointIndex, CircularBuffer<TSample> const &iBuffer) const;
 
 private:
 
@@ -111,56 +142,57 @@ private:
   int fOffset[batchSize];
 };
 
+using TZoom = Zoom<10>;
 
 /**
  * Represents a zoom window
  */
 class ZoomWindow
 {
+
 public:
   ZoomWindow(int iVisibleWindowSize, int iBufferSize);
 
   /**
    * @param iZoomFactorPercent zoom factor between 0-1 (where 1 is min zoom, and 0 is max zoom)
    */
-  void setZoomFactor(double iZoomFactorPercent);
+  TZoom::MaxAccumulator setZoomFactor(double iZoomFactorPercent);
 
   /**
-   * change the zoom factor while making sure it zooms "around" iInputPageOffset
-   * @return the new iInputHistoryOffset
+   * Return the visible size of the window */
+  inline int getVisibleWindowSize() const
+  {
+    return fVisibleWindowSize;
+  }
+
+  /**
+   * Computes the zoom
+   * @param iBuffer
+   * @param oBuffer
    */
-  //int setZoomFactor(double iZoomFactorPercent, int iInputPageOffset, CircularBuffer<TSample> const &iBuffer);
-
-//  inline bool nextZoomedValue(TSample iSample, TSample &oNextZoomedValue)
-//  {
-//    return fZoom.nextZoomedValue(iSample, oNextZoomedValue);
-//  };
-
-//  TSample computeZoomValue(int iInputPageOffset, CircularBuffer<TSample> const &iBuffer) const;
-//
-  void computeZoomWindow(CircularBuffer<TSample> const &iBuffer, TSample *samples);
-
-//  void setWindowOffset(int iInputHistoryOffset);
+  TZoom::MaxAccumulator computeZoomWindow(const CircularBuffer <TSample> &iBuffer, CircularBuffer <TSample> &oBuffer) const;
 
 private:
   // here iIdx is relative to the right of the screen (see fWindowOffset)
-  Zoom<ZOOM_BATCH_SIZE>::ZoomedBuffer zoomFromIndex(int iIdx, CircularBuffer<TSample> const &iBuffer) const;
+  TZoom::MaxAccumulator getMaxAccumulatorFromIndex(int iIdx, int &oOffset) const;
 
 
   // Convenient method to compute the zoom point at the left of the LCD screen
-  Zoom<ZOOM_BATCH_SIZE>::ZoomedBuffer zoomFromLeftOfScreen(CircularBuffer<TSample> const &iBuffer) const;
+  TZoom::MaxAccumulator getMaxAccumulatorFromLeftOfScreen(int &oOffset) const;
 
 //
+////
+////  /**
+////   * Computes the zoom value from a zoom point
+////   */
+////  TSample computeZoomValue(ZoomedBuffer const &iZoomPoint, CircularBuffer<TSample> const &iBuffer) const;
+//
 //  /**
-//   * Computes the zoom value from a zoom point
+//   * Find the zoom point so that zp.fBufferOffset is the closest to iBufferOffset and returns
+//   * the index. Also tries to find the point where the zoom value would be the closest.
 //   */
-//  TSample computeZoomValue(ZoomedBuffer const &iZoomPoint, CircularBuffer<TSample> const &iBuffer) const;
-
-  /**
-   * Find the zoom point so that zp.fBufferOffset is the closest to iBufferOffset and returns
-   * the index. Also tries to find the point where the zoom value would be the closest.
-   */
-  //int findClosestWindowIndex(int iBufferOffset, TSample const &iZoomValue, CircularBuffer<TSample> const &iBuffer) const;
+//  //int findClosestWindowIndex(int iBufferOffset, TSample const &iZoomValue, CircularBuffer<TSample> const &iBuffer) const;
+//
 
   inline int minWindowIdx() const
   {
@@ -170,12 +202,6 @@ private:
 private:
   int const fVisibleWindowSize;
   int const fBufferSize;
-
-//  // Since points repeat, there is no need to keep more (max repeat = 10 points!)
-//  ZoomedBuffer fPoints[MAX_ZOOM_POINTS];
-//
-//  // how many samples does fPoints represents
-//  int fPointsSizeInSamples;
 
   // offset in the zoomed window (with -1 being the right of the LCD screen for most recent point)
   // this assumes that it corresponds to -1 in fBuffer as well
@@ -189,80 +215,8 @@ private:
 
   /**
    * Zoom associated to this window */
-  Zoom<ZOOM_BATCH_SIZE> fZoom;
+  TZoom fZoom;
 };
-
-////////////////////////////////////////////////////////////
-// ZoomedBuffer::ZoomedBuffer
-////////////////////////////////////////////////////////////
-template<int batchSize>
-Zoom<batchSize>::ZoomedBuffer::ZoomedBuffer(Zoom<batchSize> const &iZoom,
-                                            CircularBuffer<TSample> const &iBuffer, int iBufferOffset,
-                                            int iBatchSizeIdx) :
-  fZoom{iZoom},
-  fBuffer{iBuffer},
-  fBufferOffset{iBufferOffset},
-  fAccumulatedMax{0},
-  fAccumulatedSamples{0},
-  fBatchSizeIdx{iBatchSizeIdx}
-{
-  // nothing to do
-}
-
-////////////////////////////////////////////////////////////
-// ZoomedBuffer::nextSample
-////////////////////////////////////////////////////////////
-template<int batchSize>
-TSample Zoom<batchSize>::ZoomedBuffer::nextSample()
-{
-  int numSamples = fZoom.fBatchSizes[fBatchSizeIdx];
-
-  TSample max = 0;
-  for(int i = 0; i < numSamples; i++)
-  {
-    max = std::max(max, fBuffer.getAt(fBufferOffset++));
-  }
-
-  fBatchSizeIdx++;
-  if(fBatchSizeIdx == batchSize)
-    fBatchSizeIdx = 0;
-
-  return max;
-}
-
-////////////////////////////////////////////////////////////
-// Zoom::zoomFromIndex
-////////////////////////////////////////////////////////////
-template<int batchSize>
-typename Zoom<batchSize>::ZoomedBuffer Zoom<batchSize>::zoomFromIndex(int iZoomPointIndex, CircularBuffer<TSample> const &iBuffer) const
-{
-  // take into account how many multiples of batches we have to skip
-  int offset = -getBatchSizeInSamples();
-  offset += iZoomPointIndex / batchSize * getBatchSizeInSamples();
-
-  // determine which index to use
-  int batchSizeIndex = iZoomPointIndex % batchSize;
-  if(batchSizeIndex == 0)
-    offset += getBatchSizeInSamples();
-  else
-    batchSizeIndex += batchSize; // because iIdx is negative, the modulo will be negative as well...
-
-  DCHECK_F(batchSizeIndex >= 0 && batchSizeIndex < batchSize);
-
-  return Zoom<batchSize>::ZoomedBuffer(*this, iBuffer, offset + fOffset[batchSizeIndex], batchSizeIndex);
-}
-
-////////////////////////////////////////////////////////////
-// Zoom::setZoomFactor
-////////////////////////////////////////////////////////////
-template<int batchSize>
-void Zoom<batchSize>::setZoomFactor(double iZoomFactor)
-{
-  DCHECK_F(iZoomFactor >= 1.0);
-
-  fZoomFactor = static_cast<int>(iZoomFactor * batchSize);
-  init();
-}
 
 ////////////////////////////////////////////////////////////
 // Zoom::init
@@ -295,6 +249,30 @@ void Zoom<batchSize>::init()
   }
 
   DCHECK_EQ_F(totalBatchSize, fZoomFactor);
+}
+
+////////////////////////////////////////////////////////////
+// Zoom::getAccumulatorFromIndex
+////////////////////////////////////////////////////////////
+template<int batchSize>
+typename Zoom<batchSize>::MaxAccumulator Zoom<batchSize>::getAccumulatorFromIndex(int iZoomPointIndex, int &oOffset) const
+{
+  // take into account how many multiples of batches we have to skip
+  int offset = -getBatchSizeInSamples();
+  offset += iZoomPointIndex / batchSize * getBatchSizeInSamples();
+
+  // determine which index to use
+  int batchSizeIndex = iZoomPointIndex % batchSize;
+  if(batchSizeIndex == 0)
+    offset += getBatchSizeInSamples();
+  else
+    batchSizeIndex += batchSize; // because iIdx is negative, the modulo will be negative as well...
+
+  DCHECK_F(batchSizeIndex >= 0 && batchSizeIndex < batchSize);
+
+  oOffset = offset + fOffset[batchSizeIndex];
+
+  return Zoom<batchSize>::MaxAccumulator(this, batchSizeIndex);
 }
 
 }

@@ -14,11 +14,11 @@ using namespace Common;
 using namespace VAC6;
 
 /////////////////////////////////////////
-// AudioChannelProcessor::genericProcessChannel
+// VAC6AudioChannelProcessor::genericProcessChannel
 /////////////////////////////////////////
 template<typename SampleType>
-bool AudioChannelProcessor::genericProcessChannel(typename AudioBuffers<SampleType>::Channel const &iIn,
-                                                  typename AudioBuffers<SampleType>::Channel &iOut)
+bool VAC6AudioChannelProcessor::genericProcessChannel(typename AudioBuffers<SampleType>::Channel const &iIn,
+                                                      typename AudioBuffers<SampleType>::Channel &iOut)
 {
   DCHECK_EQ_F(iIn.getNumSamples(), iOut.getNumSamples());
 
@@ -35,8 +35,14 @@ bool AudioChannelProcessor::genericProcessChannel(typename AudioBuffers<SampleTy
     TSample max;
     if(fMaxAccumulatorForBuffer.accumulate(sample, max))
     {
-      fMaxBuffer->setAt(0, max);
-      fMaxBuffer->incrementHead();
+      fMaxBuffer->push(max);
+
+      // only when we get a sample in the max buffer do we accumulate in the zoomed one
+      TSample zoomedMax;
+      if(fZoomMaxAccumulator.accumulate(sample, zoomedMax))
+      {
+        fZoomMaxBuffer->push(zoomedMax);
+      }
     }
 
     if(fMaxLevelAccumulator.accumulate(sample, max))
@@ -72,7 +78,6 @@ VAC6Processor::VAC6Processor() :
   fClock{44100},
   fLeftChannelProcessor{nullptr},
   fRightChannelProcessor{nullptr},
-  fZoomWindow{nullptr},
   fTimer{nullptr},
   fRateLimiter{},
   fMaxLevelUpdate{},
@@ -89,7 +94,6 @@ VAC6Processor::~VAC6Processor()
 {
   DLOG_F(INFO, "VAC6Processor::~VAC6Processor()");
 
-  delete fZoomWindow;
   delete fRightChannelProcessor;
   delete fLeftChannelProcessor;
 }
@@ -139,15 +143,11 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
   fRateLimiter = fClock.getRateLimiter(UI_FRAME_RATE_MS);
 
   // since this method is called multiple times, we make sure that there is no leak...
-  delete fZoomWindow;
   delete fRightChannelProcessor;
   delete fLeftChannelProcessor;
 
-  fLeftChannelProcessor = new AudioChannelProcessor(fClock);
-  fRightChannelProcessor = new AudioChannelProcessor(fClock);
-
-  fZoomWindow = new ZoomWindow(MAX_ARRAY_SIZE, fLeftChannelProcessor->getMaxBuffer().getSize());
-  fZoomWindow->setZoomFactor(DEFAULT_ZOOM_FACTOR_X);
+  fLeftChannelProcessor = new VAC6AudioChannelProcessor(fClock);
+  fRightChannelProcessor = new VAC6AudioChannelProcessor(fClock);
 
   DLOG_F(INFO,
          "VAC6Processor::setupProcessing(processMode=%d, symbolicSampleSize=%d, maxSamplesPerBlock=%d, sampleRate=%f, fMaxBufferSize=%d, accumulatorBatchSize=%ld)",
@@ -237,15 +237,18 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
     fRightChannelProcessor->resetMaxLevelAccumulator(fClock, fState.fMaxLevelAutoResetInSeconds);
   }
 
+  if(fPreviousState.fZoomFactorX != fState.fZoomFactorX)
+  {
+    fLeftChannelProcessor->setZoomFactor(fState.fZoomFactorX);
+    fRightChannelProcessor->setZoomFactor(fState.fZoomFactorX);
+  }
+
   auto leftChannel = out.getLeftChannel();
   auto rightChannel = out.getRightChannel();
 
   fLeftChannelProcessor->genericProcessChannel<SampleType>(in.getLeftChannel(), leftChannel);
   fRightChannelProcessor->genericProcessChannel<SampleType>(in.getRightChannel(), rightChannel);
 
-  if(fPreviousState.fZoomFactorX != fState.fZoomFactorX)
-//    fZoomWindow->setZoomFactor(fState.fZoomFactorX, MAX_INPUT_PAGE_OFFSET, fLeftChannelProcessor->getMaxBuffer());
-    fZoomWindow->setZoomFactor(fState.fZoomFactorX);
 
   if(fMaxLevelResetRequested)
   {
@@ -256,8 +259,8 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   if(fRateLimiter.shouldUpdate(data.numSamples))
   {
     LCDData lcdData{};
-    fZoomWindow->computeZoomWindow(fLeftChannelProcessor->getMaxBuffer(), lcdData.fLeftSamples);
-    fZoomWindow->computeZoomWindow(fRightChannelProcessor->getMaxBuffer(), lcdData.fRightSamples);
+    fLeftChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fLeftSamples);
+    fRightChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fRightSamples);
     lcdData.fSoftClippingLevel = fState.fSoftClippingLevel;
 
     fMaxLevelUpdate.push(MaxLevel{fState.fSoftClippingLevel,

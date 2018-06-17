@@ -18,20 +18,36 @@ public:
   };
 
   ~CircularBuffer()
-  { delete[] fBuf; }
+  {
+    delete[] fBuf;
+  }
 
   // handle negative offsets as well
   inline int getSize() const
-  { return fSize; }
+  {
+    return fSize;
+  }
 
   inline T getAt(int offset) const
-  { return fBuf[adjustIndexFromOffset(offset)]; }
+  {
+    return fBuf[adjustIndexFromOffset(offset)];
+  }
 
   inline void setAt(int offset, T e)
-  { fBuf[adjustIndexFromOffset(offset)] = e; };
+  {
+    fBuf[adjustIndexFromOffset(offset)] = e;
+  };
 
   inline void incrementHead()
-  { fStart = adjustIndex(fStart + 1); }
+  {
+    fStart = adjustIndex(fStart + 1);
+  }
+
+  inline void push(T e)
+  {
+    setAt(0, e);
+    incrementHead();
+  }
 
   inline void init(T initValue)
   {

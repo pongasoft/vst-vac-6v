@@ -74,6 +74,8 @@ set(vst_sources
 		${CPP_SOURCES}/VAC6CIDs.h
 		${CPP_SOURCES}/VAC6Constants.h
 		${CPP_SOURCES}/VAC6Model.h
+		${CPP_SOURCES}/VAC6AudioChannelProcessor.h
+		${CPP_SOURCES}/VAC6AudioChannelProcessor.cpp
 		${CPP_SOURCES}/VAC6Processor.h
 		${CPP_SOURCES}/VAC6Processor.cpp
 		${CPP_SOURCES}/VAC6VST3.cpp

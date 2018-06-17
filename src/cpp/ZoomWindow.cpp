@@ -30,9 +30,9 @@ ZoomWindow::ZoomWindow(int iVisibleWindowSize, int iBufferSize) :
 // ZoomWindow::setZoomFactor
 // Recomputes the zoom points based on the factor
 ////////////////////////////////////////////////////////////
-void ZoomWindow::setZoomFactor(double iZoomFactorPercent)
+TZoom::MaxAccumulator ZoomWindow::setZoomFactor(double iZoomFactorPercent)
 {
-  fZoom.setZoomFactor(iZoomFactorPercent * (1 - fMaxZoomFactor) + fMaxZoomFactor);
+  auto accumulator = fZoom.setZoomFactor(iZoomFactorPercent * (1 - fMaxZoomFactor) + fMaxZoomFactor);
 
   if(fZoom.isNoZoom())
   {
@@ -49,6 +49,8 @@ void ZoomWindow::setZoomFactor(double iZoomFactorPercent)
 
   // we make sure that fWindowOffset remains within its bounds!
   fWindowOffset = clamp(fWindowOffset, fMinWindowOffset, MAX_WINDOW_OFFSET);
+
+  return accumulator;
 }
 
 ////////////////////////////////////////////////////////////
@@ -110,49 +112,42 @@ void ZoomWindow::setZoomFactor(double iZoomFactorPercent)
 ////////////////////////////////////////////////////////////
 // ZoomWindow::computeZoomWindow
 ////////////////////////////////////////////////////////////
-void ZoomWindow::computeZoomWindow(CircularBuffer<TSample> const &iBuffer, TSample *samples)
+TZoom::MaxAccumulator ZoomWindow::computeZoomWindow(CircularBuffer<TSample> const &iBuffer, CircularBuffer<TSample> &oBuffer) const
 {
   DCHECK_EQ_F(fBufferSize, iBuffer.getSize());
+  DCHECK_EQ_F(fVisibleWindowSize, oBuffer.getSize());
 
-  if(fZoom.isNoZoom())
+  int offset = 0;
+  auto accumulator = getMaxAccumulatorFromLeftOfScreen(offset);
+
+  TSample max;
+  for(; offset < 0; offset++)
   {
-    int offset = fWindowOffset - fVisibleWindowSize + 1;
-
-    for(int i = 0; i < fVisibleWindowSize; ++i)
-    {
-      samples[i] = iBuffer.getAt(offset++);
-    }
-    return;
+    if(accumulator.accumulate(iBuffer.getAt(offset), max))
+      oBuffer.push(max);
   }
 
-  auto zoomedBuffer = zoomFromLeftOfScreen(iBuffer);
-
-  for(int i = 0; i < fVisibleWindowSize; ++i)
-  {
-    samples[i] = zoomedBuffer.nextSample();
-  }
+  return accumulator;
 }
 
 ////////////////////////////////////////////////////////////
-// ZoomWindow::zoom
+// ZoomWindow::getMaxAccumulatorFromIndex
 ////////////////////////////////////////////////////////////
-Zoom<ZOOM_BATCH_SIZE>::ZoomedBuffer ZoomWindow::zoomFromIndex(int iIdx, CircularBuffer<TSample> const &iBuffer) const
+TZoom::MaxAccumulator ZoomWindow::getMaxAccumulatorFromIndex(int iIdx, int &oOffset) const
 {
   DCHECK_F(iIdx >= minWindowIdx() && iIdx <= MAX_WINDOW_OFFSET);
 
-  auto zoomedBuffer = fZoom.zoomFromIndex(iIdx, iBuffer);
-
-  DCHECK_F(zoomedBuffer.getCurrentBufferOffset() >= -fBufferSize);
-
-  return zoomedBuffer;
+  auto accumulator = fZoom.getAccumulatorFromIndex(iIdx, oOffset);
+  DCHECK_F(oOffset >= -fBufferSize);
+  return accumulator;
 }
 
 ////////////////////////////////////////////////////////////
-// ZoomWindow::zoomFromLeftOfScreen
+// ZoomWindow::getMaxAccumulatorFromLeftOfScreen
 ////////////////////////////////////////////////////////////
-Zoom<ZOOM_BATCH_SIZE>::ZoomedBuffer ZoomWindow::zoomFromLeftOfScreen(CircularBuffer<TSample> const &iBuffer) const
+TZoom::MaxAccumulator ZoomWindow::getMaxAccumulatorFromLeftOfScreen(int &oOffset) const
 {
-  return zoomFromIndex(fWindowOffset - fVisibleWindowSize + 1, iBuffer);
+  return getMaxAccumulatorFromIndex(fWindowOffset - fVisibleWindowSize + 1, oOffset);
 }
 
 ////////////////////////////////////////////////////////////
