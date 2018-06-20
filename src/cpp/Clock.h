@@ -2,13 +2,23 @@
 
 #include <pluginterfaces/vst/vsttypes.h>
 #include <cmath>
+#include <chrono>
 
 namespace pongasoft {
 namespace VST {
 namespace Common {
 
-using namespace Steinberg::Vst;
 
+namespace Clock {
+
+inline long getCurrentTimeMillis()
+{
+  using namespace std::chrono;
+  return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+}
+
+}
+using namespace Steinberg::Vst;
 
 class SampleRateBasedClock
 {
@@ -50,6 +60,11 @@ public:
   long getSampleCountFor(long iMillis) const
   {
     return static_cast<long>(ceil(fSampleRate * iMillis / 1000.0));
+  }
+
+  long getTimeForSampleCount(long iSampleCount) const
+  {
+    return static_cast<long>(ceil(iSampleCount * 1000.0 / fSampleRate));
   }
 
   SampleRate getSampleRate() const

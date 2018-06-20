@@ -13,14 +13,15 @@ using namespace VST::Common;
 // VAC6AudioChannelProcessor::VAC6AudioChannelProcessor
 /////////////////////////////////////////
 VAC6AudioChannelProcessor::VAC6AudioChannelProcessor(SampleRateBasedClock const &iClock) :
-  fMaxAccumulatorForBuffer(iClock.getSampleCountFor(ACCUMULATOR_BATCH_SIZE_IN_MS)),
+  fClock{iClock},
+  fMaxAccumulatorForBuffer(fClock.getSampleCountFor(ACCUMULATOR_BATCH_SIZE_IN_MS)),
   fMaxBuffer{new CircularBuffer<TSample>(
-    static_cast<int>(ceil(iClock.getSampleCountFor(HISTORY_SIZE_IN_SECONDS * 1000) / fMaxAccumulatorForBuffer.getBatchSize())))},
-  fMaxLevelAccumulator(iClock.getSampleCountFor(DEFAULT_MAX_LEVEL_RESET_IN_SECONDS * 1000)),
+    static_cast<int>(ceil(fClock.getSampleCountFor(HISTORY_SIZE_IN_SECONDS * 1000) / fMaxAccumulatorForBuffer.getBatchSize())))},
+  fMaxLevelAccumulator(fClock.getSampleCountFor(DEFAULT_MAX_LEVEL_RESET_IN_SECONDS * 1000)),
   fMaxLevel{-1},
   fZoomWindow{MAX_ARRAY_SIZE, fMaxBuffer->getSize()},
   fZoomMaxAccumulator{fZoomWindow.setZoomFactor(DEFAULT_ZOOM_FACTOR_X)},
-  fZoomMaxBuffer{new CircularBuffer<TSample>(fZoomWindow.getVisibleWindowSize())}
+  fZoomMaxBuffer{new CircularBuffer<TSample>(fZoomWindow.getVisibleWindowSizeInPoints())}
 {
   fMaxBuffer->init(0);
   fZoomMaxBuffer->init(0);

@@ -109,12 +109,15 @@ struct MaxLevel
 ///////////////////////////////////
 // LCDData
 ///////////////////////////////////
+constexpr IAttributeList::AttrID LCDDATA_WINDOW_SIZE_MS_ATTR = "WSMS";
 constexpr IAttributeList::AttrID LCDDATA_SOFT_CLIPPING_LEVEL_ATTR = "SCL";
 constexpr IAttributeList::AttrID LCDDATA_LEFT_SAMPLES_ATTR = "LSamples";
 constexpr IAttributeList::AttrID LCDDATA_RIGHT_SAMPLES_ATTR = "RSamples";
 
 struct LCDData
 {
+  long fWindowSizeInMillis{0};
+
   SoftClippingLevel fSoftClippingLevel{};
   bool fLeftChannelOn{true};
   TSample fLeftSamples[MAX_ARRAY_SIZE]{};

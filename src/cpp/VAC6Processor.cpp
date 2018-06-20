@@ -158,21 +158,6 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
          fLeftChannelProcessor->getMaxBuffer().getSize(),
          fLeftChannelProcessor->getBufferAccumulatorBatchSize());
 
-//  if(true)
-//  {
-//    int expectedDisplayValue = 1;
-//    for(int i = 0; i < 250; i++)
-//    {
-//      auto sample = fromDisplayValue(expectedDisplayValue, 118.0);
-//      fLeftMaxBuffer->setAt(0, sample);
-//      fLeftMaxBuffer->incrementHead();
-//
-//      expectedDisplayValue++;
-//      if(expectedDisplayValue == 119)
-//        expectedDisplayValue = 1;
-//    }
-//  }
-
   return result;
 }
 
@@ -233,8 +218,8 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
 
   if(fPreviousState.fMaxLevelAutoResetInSeconds != fState.fMaxLevelAutoResetInSeconds)
   {
-    fLeftChannelProcessor->resetMaxLevelAccumulator(fClock, fState.fMaxLevelAutoResetInSeconds);
-    fRightChannelProcessor->resetMaxLevelAccumulator(fClock, fState.fMaxLevelAutoResetInSeconds);
+    fLeftChannelProcessor->resetMaxLevelAccumulator(fState.fMaxLevelAutoResetInSeconds);
+    fRightChannelProcessor->resetMaxLevelAccumulator(fState.fMaxLevelAutoResetInSeconds);
   }
 
   if(fPreviousState.fZoomFactorX != fState.fZoomFactorX)
@@ -266,10 +251,11 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
       fRightChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fRightSamples);
     lcdData.fRightChannelOn = fState.fRightChannelOn;
     lcdData.fSoftClippingLevel = fState.fSoftClippingLevel;
+    lcdData.fWindowSizeInMillis = fLeftChannelProcessor->getWindowSizeInMillis();
 
     fMaxLevelUpdate.push(MaxLevel{fState.fSoftClippingLevel,
-                                              fLeftChannelProcessor->getMaxLevel(),
-                                              fRightChannelProcessor->getMaxLevel()});
+                                  fLeftChannelProcessor->getMaxLevel(),
+                                  fRightChannelProcessor->getMaxLevel()});
     fLCDDataUpdate.push(lcdData);
   }
 
@@ -509,6 +495,7 @@ void VAC6Processor::onTimer(Timer * /* timer */)
       if(lcdData.fRightChannelOn)
         m.setBinary(LCDDATA_RIGHT_SAMPLES_ATTR, lcdData.fRightSamples, MAX_ARRAY_SIZE);
       m.setFloat(LCDDATA_SOFT_CLIPPING_LEVEL_ATTR, fState.fSoftClippingLevel.getValueInSample());
+      m.setInt(LCDDATA_WINDOW_SIZE_MS_ATTR, lcdData.fWindowSizeInMillis);
 
       sendMessage(message);
     }

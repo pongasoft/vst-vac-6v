@@ -56,6 +56,7 @@ set(vst_sources
 		${CPP_SOURCES}/controller/CustomDisplayView.h
 		${CPP_SOURCES}/controller/CustomDisplayView.cpp
 		${CPP_SOURCES}/controller/DrawContext.h
+		${CPP_SOURCES}/controller/DrawContext.cpp
 		${CPP_SOURCES}/controller/MomentaryButton.h
 		${CPP_SOURCES}/controller/MomentaryButton.cpp
 		${CPP_SOURCES}/controller/VAC6Controller.h
@@ -71,6 +72,7 @@ set(vst_sources
 		${CPP_SOURCES}/Concurrent.h
 		${CPP_SOURCES}/Messaging.h
 		${CPP_SOURCES}/Parameter.h
+		${CPP_SOURCES}/Utils.h
 		${CPP_SOURCES}/VAC6CIDs.h
 		${CPP_SOURCES}/VAC6Constants.h
 		${CPP_SOURCES}/VAC6Model.h

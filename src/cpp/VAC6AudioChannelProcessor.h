@@ -97,11 +97,11 @@ public:
     fMaxLevel = -1;
   }
 
-  void resetMaxLevelAccumulator(SampleRateBasedClock const &iClock, long iMaxLevelResetInSeconds)
+  void resetMaxLevelAccumulator(long iMaxLevelResetInSeconds)
   {
     // if 0 we still do the same buffering as the other buffer otherwise it would not match
     long maxLevelResetMS = iMaxLevelResetInSeconds == 0 ? ACCUMULATOR_BATCH_SIZE_IN_MS : iMaxLevelResetInSeconds * 1000;
-    fMaxLevelAccumulator.reset(iClock.getSampleCountFor(maxLevelResetMS));
+    fMaxLevelAccumulator.reset(fClock.getSampleCountFor(maxLevelResetMS));
     fMaxLevel = -1;
   }
 
@@ -120,6 +120,17 @@ public:
   }
 
   /**
+   * @return the duration of the window in milliseconds
+   */
+  long getWindowSizeInMillis()
+  {
+//    DLOG_F(INFO, "getWindowSizeInMillis - %d,%ld",
+//           fZoomWindow.getVisibleWindowSizeInSamples(),
+//           fClock.getTimeForSampleCount(fZoomWindow.getVisibleWindowSizeInSamples()));
+//
+    return fClock.getTimeForSampleCount(fZoomWindow.getVisibleWindowSizeInSamples() * fMaxAccumulatorForBuffer.getBatchSize());
+  }
+  /**
    * Copy the zoomed samples into the array provided.
    *
    * @param iNumSamples size of the provided array
@@ -130,6 +141,8 @@ public:
   bool genericProcessChannel(const typename AudioBuffers<SampleType>::Channel &iIn, typename AudioBuffers<SampleType>::Channel &iOut);
 
 private:
+  SampleRateBasedClock fClock;
+
   MaxAccumulator fMaxAccumulatorForBuffer;
   CircularBuffer<TSample> *const fMaxBuffer;
 

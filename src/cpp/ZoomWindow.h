@@ -2,6 +2,7 @@
 
 #include <pluginterfaces/vst/vsttypes.h>
 #include <algorithm>
+#include <cmath>
 #include "CircularBuffer.h"
 #include "logging/loguru.hpp"
 
@@ -159,10 +160,20 @@ public:
   TZoom::MaxAccumulator setZoomFactor(double iZoomFactorPercent);
 
   /**
-   * Return the visible size of the window */
-  inline int getVisibleWindowSize() const
+   * Return the visible size of the window (number of points) */
+  inline int getVisibleWindowSizeInPoints() const
   {
     return fVisibleWindowSize;
+  }
+
+  /**
+   * @return the number of samples displayed in the window (when not zoomed,
+   * getVisibleWindowSizeInSamples() == getVisibleWindowSizeInPoints(), if zoom is 2x,
+   * then getVisibleWindowSizeInSamples() == 2 * getVisibleWindowSizeInPoints() etc...)
+   */
+  inline int getVisibleWindowSizeInSamples() const
+  {
+    return static_cast<int>(ceil(getVisibleWindowSizeInPoints() * fZoom.getBatchSizeInSamples() / static_cast<double>(fZoom.getBatchSize())));
   }
 
   /**

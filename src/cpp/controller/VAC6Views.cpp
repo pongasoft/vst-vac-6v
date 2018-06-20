@@ -1,6 +1,7 @@
 #include "VAC6Views.h"
 #include "../AudioUtils.h"
-#include "DrawContext.h"
+#include "../Utils.h"
+#include "../Clock.h"
 
 namespace pongasoft {
 namespace VST {
@@ -86,10 +87,53 @@ const CColor LCDView_SoftClippingLevel_Color{200, 200, 200, 123};
 ///////////////////////////////////////////
 void LCDView::onMessage(Message const &message)
 {
+  auto previousSoftClippingLevel = fLCDData.fSoftClippingLevel.getValueInSample();
   fLCDData.fSoftClippingLevel = SoftClippingLevel{message.getFloat(LCDDATA_SOFT_CLIPPING_LEVEL_ATTR,
                                                                    fLCDData.fSoftClippingLevel.getValueInSample())};
+
+  auto previousWindowSize = fLCDData.fWindowSizeInMillis;
+  fLCDData.fWindowSizeInMillis = message.getInt(LCDDATA_WINDOW_SIZE_MS_ATTR, fLCDData.fWindowSizeInMillis);
+
   fLCDData.fLeftChannelOn = message.getBinary(LCDDATA_LEFT_SAMPLES_ATTR, fLCDData.fLeftSamples, MAX_ARRAY_SIZE) > -1;
   fLCDData.fRightChannelOn = message.getBinary(LCDDATA_RIGHT_SAMPLES_ATTR, fLCDData.fRightSamples, MAX_ARRAY_SIZE) > -1;
+
+  long now = Clock::getCurrentTimeMillis();
+
+  if(previousSoftClippingLevel != fLCDData.fSoftClippingLevel.getValueInSample() ||
+     previousWindowSize != fLCDData.fWindowSizeInMillis)
+  {
+    delete fLCDMessage;
+
+    char text[256];
+    sprintf(text, "Level: %+.2fdB | Zoom: %.1fs",
+            fLCDData.fSoftClippingLevel.getValueInDb(),
+            fLCDData.fWindowSizeInMillis / 1000.0);
+
+    fLCDMessage = new LCDMessage(UTF8String(text), now);
+  }
+
+  if(fLCDMessage != nullptr)
+  {
+    if(fLCDMessage->isExpired(now))
+    {
+      delete fLCDMessage;
+      fLCDMessage = nullptr;
+    }
+    else
+    {
+      // we bring now to "0" compare to fLCDMessage->fTime
+      now -= fLCDMessage->fTime;
+      auto startOfFade = fLCDMessage->fVisibleDuration;
+      if(startOfFade <= now)
+      {
+        // we bring now to "0" compare to startOfFade
+        now -= startOfFade;
+        auto lerp = Utils::Lerp<float>(0, 255, fLCDMessage->fFadeDuration, 0);
+        float alpha = lerp.compute(now);
+        fLCDMessage->fColor.alpha = static_cast<uint8_t>(alpha);
+      }
+    }
+  }
 
   updateView();
 }
@@ -176,6 +220,16 @@ void LCDView::draw(CDrawContext *iContext) const
   auto top = height - softClippingDisplayValue;
 
   rdc.drawLine(0, top, fView->getWidth(), top, LCDView_SoftClippingLevel_Color);
+
+  if(fLCDMessage != nullptr)
+  {
+    StringDrawContext sdc{};
+    sdc.fHoriTxtAlign = kLeftText;
+    sdc.fTextInset = {2, 2};
+    sdc.fFontColor = fLCDMessage->fColor;
+
+    rdc.drawString(fLCDMessage->fText, CRect{0, 0, MAX_ARRAY_SIZE, 20}, sdc);
+  }
 }
 
 }
