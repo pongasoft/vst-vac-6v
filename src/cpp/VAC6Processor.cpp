@@ -85,8 +85,6 @@ VAC6Processor::VAC6Processor() :
 {
   setControllerClass(VAC6ControllerUID);
   DLOG_F(INFO, "VAC6Processor::VAC6Processor()");
-  DCHECK_F(fStateUpdate.isLockFree());
-  DCHECK_F(fLatestState.isLockFree());
 }
 
 ///////////////////////////////////////////
@@ -205,7 +203,7 @@ tresult PLUGIN_API VAC6Processor::setActive(TBool state)
 tresult PLUGIN_API VAC6Processor::process(ProcessData &data)
 {
   // 1. we check if there was any state update (UI calls setState)
-  fStateUpdate.popFromProcessingThread(fState);
+  fStateUpdate.pop(fState);
 
   // 2. process parameter changes (this will override any update in step 1.)
   if(data.inputParameterChanges != nullptr)
@@ -269,10 +267,10 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
     lcdData.fRightChannelOn = fState.fRightChannelOn;
     lcdData.fSoftClippingLevel = fState.fSoftClippingLevel;
 
-    fMaxLevelUpdate.pushFromUIThread(MaxLevel{fState.fSoftClippingLevel,
+    fMaxLevelUpdate.push(MaxLevel{fState.fSoftClippingLevel,
                                               fLeftChannelProcessor->getMaxLevel(),
                                               fRightChannelProcessor->getMaxLevel()});
-    fLCDDataUpdate.pushFromUIThread(lcdData);
+    fLCDDataUpdate.push(lcdData);
   }
 
   return kResultOk;
@@ -379,7 +377,7 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
   if(stateChanged)
   {
     fState = newState;
-    fLatestState.setFromProcessingThread(newState);
+    fLatestState.set(newState);
   }
 
   return stateChanged;
@@ -437,7 +435,7 @@ tresult VAC6Processor::setState(IBStream *state)
     newState.fRightChannelOn = savedParam;
   }
 
-  fStateUpdate.pushFromUIThread(newState);
+  fStateUpdate.push(newState);
 
   DLOG_F(INFO, "VAC6Processor::setState => fSoftClippingLevel=%f, fZoomFactorX=%f, fMaxLevelAutoResetInSeconds=%d, fLeftChannelOn=%d, fRightChannelOn=%d",
          newState.fSoftClippingLevel.getValueInSample(),
@@ -457,7 +455,7 @@ tresult VAC6Processor::getState(IBStream *state)
   if(state == nullptr)
     return kResultFalse;
 
-  auto latestState = fLatestState.getFromUIThread();
+  auto latestState = fLatestState.get();
 
   IBStreamer streamer(state, kLittleEndian);
 
@@ -483,7 +481,7 @@ tresult VAC6Processor::getState(IBStream *state)
 void VAC6Processor::onTimer(Timer * /* timer */)
 {
   MaxLevel maxLevel{};
-  if(fMaxLevelUpdate.popFromProcessingThread(maxLevel))
+  if(fMaxLevelUpdate.pop(maxLevel))
   {
     if(auto message = owned(allocateMessage()))
     {
@@ -499,7 +497,7 @@ void VAC6Processor::onTimer(Timer * /* timer */)
   }
 
   LCDData lcdData{};
-  if(fLCDDataUpdate.popFromProcessingThread(lcdData))
+  if(fLCDDataUpdate.pop(lcdData))
   {
     if(auto message = owned(allocateMessage()))
     {

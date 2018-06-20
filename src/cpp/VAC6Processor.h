@@ -100,16 +100,16 @@ private:
 
   SampleRateBasedClock fClock;
 
-  SingleElementQueue<State> fStateUpdate;
-  AtomicValue<State> fLatestState;
+  SpinLock::SingleElementQueue<State> fStateUpdate;
+  SpinLock::AtomicValue<State> fLatestState;
 
   VAC6AudioChannelProcessor *fLeftChannelProcessor;
   VAC6AudioChannelProcessor *fRightChannelProcessor;
 
   Timer *fTimer;
   SampleRateBasedClock::RateLimiter fRateLimiter;
-  SingleElementQueue<MaxLevel> fMaxLevelUpdate;
-  SingleElementQueue<LCDData> fLCDDataUpdate;
+  SpinLock::SingleElementQueue<MaxLevel> fMaxLevelUpdate;
+  SpinLock::SingleElementQueue<LCDData> fLCDDataUpdate;
 
 };
 

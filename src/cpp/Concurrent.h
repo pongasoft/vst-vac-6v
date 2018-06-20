@@ -5,35 +5,127 @@
 namespace pongasoft {
 namespace VST {
 namespace Common {
+namespace SpinLock {
 
-// TODO TODO TODO
-// Although this implementation are thread safe/lock free they do allocate memory from the processing/real time thread
-// which is BAD
-// needs to be fixed!!!
-// TODO TODO TODO
+/*
+ * One of the big issue in the VST world comes from the fact that the processing thread maintains the state but it
+ * is being accessed/changed by the UI thread (AudioEffect::setState and AudioEffect::getState). Moreover if the
+ * processing thread needs to send a message to the UI thread this must happen in a timer (running in the UI thread)
+ * meaning the processing thread needs to have a way to communicate the content of the message to the timer in a
+ * thread safe way. See thread https://sdk.steinberg.net/viewtopic.php?f=4&t=516 for discussion.
+ *
+ * The 2 primitives required are an atomic value (for getState) and a queue with one element (where the element in the
+ * queue can be updated if not popped yet) (for setState / timer message)
+ *
+ * One of the golden rules of real time audio programming is not to use locks. Implementing those primitives without
+ * using any locks requires memory allocation which is also another no-no for real time audio programming which then
+ * constrains memory allocation to the UI thread only. This makes the code very challenging to write in a thread
+ * safe fashion and no solution is provided part of the SDK.
+ *
+ * As a trade-off, I decided to go for a much simpler solution which does use a very lightweight lock: a user space
+ * spin lock. The implementation is not allocating any memory in any thread and is relying on the std::atomic_flag
+ * concept which is guaranteed to be lock free. It also does not make any system calls.
+ *
+ * SingleElementQueue and AtomicValue both use a spin lock and keep the lock only for the duration of copying
+ * the Element/Value that each concept encapsulates (of type T). So the worst case scenario from the real time
+ * processing should be to wait for the other thread to copy T which seems like a pretty fair trade-off as it is quite
+ * constrained (of course the real time processing could theoretically "spin" for a long time but in practice the
+ * UI thread is not "banging" on the lock to create this scenario).
+ */
 
 /**
- * Thread safe and lock free queue containing at most one element. The intended usage is for 1 thread to call
- * "push" while another thread calls "pop". Calling "push" multiple times is safe and simply replaces the value in the
- * queue if there is already one. The type T must have a copy constructor. This class trades locks for memory allocation.
- * At any moment the queue may have 1 or 0 elements ("pop" returns false when no element)
+ * A simple implementation of a spin lock using the std::atomic_flag which is guaranteed to be atomic and lock free.
+ * The usage is the following:
+ *
+ * auto lock = spinLock.acquire();
+ * ...
+ *
+ * the lock is released automatically when it exits the scope.
+ */
+
+class SpinLock
+{
+public:
+
+  class Lock
+  {
+  public:
+    /**
+     * This will automatically release the lock
+     */
+    inline ~Lock()
+    {
+      if(fSpinLock != nullptr)
+        fSpinLock->unlock();
+    }
+
+    inline Lock(Lock &&iLock) noexcept : fSpinLock{iLock.fSpinLock}
+    {
+      iLock.fSpinLock = nullptr;
+    }
+
+    Lock(Lock const &) = delete;
+    Lock& operator=(Lock const &) = delete;
+
+  private:
+    friend class SpinLock;
+
+    explicit Lock(SpinLock *iSpinLock) : fSpinLock{iSpinLock}
+    {
+    }
+
+
+    SpinLock *fSpinLock;
+  };
+
+  SpinLock() : fFlag{false}
+  {
+  }
+
+  /**
+   * @return the lock that will be released when it goes out of scope
+   */
+  inline Lock acquire()
+  {
+    while(fFlag.test_and_set(std::memory_order_acquire))
+    {
+      // nothing to do => spin
+    }
+
+    return Lock(this);
+  }
+
+
+  SpinLock(SpinLock const &) = delete;
+
+  SpinLock &operator=(SpinLock const &) = delete;
+
+private:
+  friend class Lock;
+
+  inline void unlock()
+  {
+    fFlag.clear(std::memory_order_release);
+  }
+
+  std::atomic_flag fFlag;
+};
+
+/**
+ * This class implements a queue which has at most 1 element (0 or 1). If there is already an element and the
+ * push method is called again, it will replace the current element. This implementation uses a SpinLock and is
+ * thread safe to be called by any number of threads. This implementation does not allocate any memory and is expecting
+ * the T type to have an empty constructor and operator=.
  */
 template<typename T>
 class SingleElementQueue
 {
 public:
-  SingleElementQueue() : fSingleElement{nullptr}
+  SingleElementQueue() : fSingleElement{T{}}, fIsEmpty{true}, fSpinLock{}
   {}
 
-  bool isLockFree() const
-  {
-    return fSingleElement.is_lock_free();
-  }
-
-  ~SingleElementQueue()
-  {
-    delete fSingleElement.exchange(nullptr);
-  }
+  explicit SingleElementQueue(T const &iFirstElement) : fSingleElement{iFirstElement}, fIsEmpty{false}, fSpinLock{}
+  {}
 
   /**
    * Returns the single element in the queue if there is one
@@ -42,56 +134,46 @@ public:
    *                 isn't one
    * @return true if there was one element in the queue, false otherwise
    */
-  bool popFromProcessingThread(T &oElement)
+  bool pop(T &oElement)
   {
-    auto element = fSingleElement.exchange(nullptr);
-    if(element)
-    {
-      oElement = *element;
-      delete element;
-      return true;
-    }
+    auto lock = fSpinLock.acquire();
+    if(fIsEmpty)
+      return false;
 
-    return false;
+    oElement = fSingleElement;
+    fIsEmpty = true;
+
+    return true;
   };
 
   /**
    * Pushes one element in the queue. If the queue already had an element it will be replaced.
    * @param iElement the element to push (clearly not modified by the call)
    */
-  void pushFromUIThread(T const &iElement)
+  void push(T const &iElement)
   {
-    delete fSingleElement.exchange(new T(iElement));
+    auto lock = fSpinLock.acquire();
+    fSingleElement = iElement;
+    fIsEmpty = false;
   }
 
-
 private:
-  std::atomic<T *> fSingleElement;
+  T fSingleElement;
+  bool fIsEmpty;
+  SpinLock fSpinLock;
 };
 
 /**
- * Thread safe and lock free atomic value. The intended usage is for 1 thread to call "set" while another thread
- * calls "get". The type T must have a copy constructor. This class trades locks for memory allocation.
- *
- * Note that "set" is multi thread safe. "get" is only thread safe in relationship to "set" meaning it is fine to call
- * "get" from one thread while another thread is calling "set", but it is not fine to call "get" from multiple threads.
+ * This class encapsulates a single atomic value. This implementation uses a SpinLock and is
+ * thread safe to be called by any number of threads. This implementation does not allocate any memory and is
+ * expecting the T type to have an empty constructor, copy constructor and operator=.
  */
 template<typename T>
 class AtomicValue
 {
 public:
-  explicit AtomicValue(T const &iValue) : fValue{iValue}, fNewValue{nullptr}
+  explicit AtomicValue(T const &iValue) : fValue{iValue}, fSpinLock{}
   {}
-
-  ~AtomicValue()
-  {
-    delete fNewValue.exchange(nullptr);
-  }
-
-  bool isLockFree() const
-  {
-    return fNewValue.is_lock_free();
-  }
 
   /**
    * Returns the "current" value. Note that this method should be called by one thread at a time (it is ok to call
@@ -99,32 +181,29 @@ public:
    *
    * @return the value. Since it is returning the address of the value, you should copy it if you wish to store it.
    */
-  const T &getFromUIThread()
+  T get()
   {
-    auto state = fNewValue.exchange(nullptr);
-    if(state)
-    {
-      fValue = *state;
-      delete state;
-    }
-
+    auto lock = fSpinLock.acquire();
     return fValue;
   };
 
   /**
-   * Updates the current value with the provided one. This method is safe to be called by multiple threads.
+   * Updates the current value with the provided one.
    */
-  void setFromProcessingThread(T const &iValue)
+  void set(T const &iValue)
   {
-    delete fNewValue.exchange(new T(iValue));
+    auto lock = fSpinLock.acquire();
+    fValue = iValue;
   }
 
 
 private:
   T fValue;
-  std::atomic<T *> fNewValue;
+  SpinLock fSpinLock;
 };
 
+
+}
 }
 }
 }
