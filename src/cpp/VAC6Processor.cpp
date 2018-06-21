@@ -494,7 +494,7 @@ void VAC6Processor::onTimer(Timer * /* timer */)
         m.setBinary(LCDDATA_LEFT_SAMPLES_ATTR, lcdData.fLeftSamples, MAX_ARRAY_SIZE);
       if(lcdData.fRightChannelOn)
         m.setBinary(LCDDATA_RIGHT_SAMPLES_ATTR, lcdData.fRightSamples, MAX_ARRAY_SIZE);
-      m.setFloat(LCDDATA_SOFT_CLIPPING_LEVEL_ATTR, fState.fSoftClippingLevel.getValueInSample());
+      m.setFloat(LCDDATA_SOFT_CLIPPING_LEVEL_ATTR, lcdData.fSoftClippingLevel.getValueInSample());
       m.setInt(LCDDATA_WINDOW_SIZE_MS_ATTR, lcdData.fWindowSizeInMillis);
 
       sendMessage(message);
