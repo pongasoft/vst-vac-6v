@@ -235,9 +235,6 @@ private:
 template<int batchSize>
 void Zoom<batchSize>::init()
 {
-  if(isNoZoom())
-    return;
-
   int accumulatedZoom = 0;
   int accumulatedSamples = 0;
   int totalBatchSize = 0;
@@ -252,8 +249,8 @@ void Zoom<batchSize>::init()
     }
 
     fBatchSizes[i] = accumulatedSamples;
-    fOffset[i] = totalBatchSize;
     totalBatchSize += accumulatedSamples;
+    fOffset[i] = totalBatchSize;
     accumulatedSamples = 0;
 
     accumulatedZoom = newAccumulatedZoom;
@@ -268,20 +265,20 @@ void Zoom<batchSize>::init()
 template<int batchSize>
 typename Zoom<batchSize>::MaxAccumulator Zoom<batchSize>::getAccumulatorFromIndex(int iZoomPointIndex, int &oOffset) const
 {
-  // take into account how many multiples of batches we have to skip
-  int offset = -getBatchSizeInSamples();
-  offset += iZoomPointIndex / batchSize * getBatchSizeInSamples();
+  // the first element in the offset is -1 so it should always be a negative number
+  DCHECK_F(iZoomPointIndex < 0);
 
-  // determine which index to use
+  // to simplify the math we revert the index [-oo, -1] => [0, +oo]
+  iZoomPointIndex = -iZoomPointIndex - 1;
+
   int batchSizeIndex = iZoomPointIndex % batchSize;
-  if(batchSizeIndex == 0)
-    offset += getBatchSizeInSamples();
-  else
-    batchSizeIndex += batchSize; // because iIdx is negative, the modulo will be negative as well...
-
   DCHECK_F(batchSizeIndex >= 0 && batchSizeIndex < batchSize);
 
-  oOffset = offset + fOffset[batchSizeIndex];
+  int offset = (iZoomPointIndex / batchSize) * getBatchSizeInSamples(); // multiple of getBatchSizeInSamples
+  offset += fOffset[batchSizeIndex];
+
+  // we revert the index back into [-oo, -1]
+  oOffset = -offset;
 
   return Zoom<batchSize>::MaxAccumulator(this, batchSizeIndex);
 }

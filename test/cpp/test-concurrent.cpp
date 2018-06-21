@@ -249,7 +249,7 @@ TEST(AtomicValueTest, Atomic)
     for(int i = 0; i < N; i++)
     {
       State s;
-      s.init(0);
+      s.init(i);
       atomicState.set(s);
     }
   };
@@ -429,6 +429,112 @@ TEST(SingleElementQueueTest, MultiThreadSafe)
 
 }
 
+/**
+ * the purpose of this test is to bang on the SingleElementQueueTest using many threads on the push and pop side and make sure
+ * that the state is always consistent meaning get and set are actually atomic.
+ */
+// AtomicValueTest - Atomic
+TEST(SingleElementQueueTest, Atomic)
+{
+  constexpr int SIZE = 2000;
+
+  struct State
+  {
+    int fValue{0};
+    double fArray[SIZE]{};
+
+    void init(int iValue)
+    {
+      fValue = iValue;
+      for(int i = 0; i < SIZE; i++)
+        fArray[i] = 1.0 / (fValue + 1.0);
+    }
+
+    void check()
+    {
+      for(int i = 0; i < SIZE; i++)
+        ASSERT_EQ(fArray[i], 1.0 / (fValue + 1.0));
+    }
+  };
+
+  constexpr int N = 1000;
+  constexpr int M = 10;
+
+  std::atomic<int> stateChecked[N];
+  for(int i = 0; i < N; i++)
+    stateChecked[i].store(0);
+
+  State state;
+  state.init(0);
+
+  SingleElementQueue<State> queue{};
+
+  auto ui = [&] {
+    for(int i = 0; i < N; i++)
+    {
+      State s;
+      if(queue.pop(s))
+      {
+        s.check();
+        stateChecked[i]++;
+      }
+    }
+
+  };
+
+  auto processing = [&] {
+    for(int i = 0; i < N; i++)
+    {
+      State s;
+      s.init(i);
+      queue.push(s);
+    }
+  };
+
+  auto processingThreads = new std::thread *[M];
+  auto uiThreads = new std::thread *[M];
+
+  for(int i = 0; i < M; i++)
+  {
+    processingThreads[i] = new std::thread(processing);
+    uiThreads[i] = new std::thread(ui);
+  }
+
+
+  for(int i = 0; i < M; i++)
+  {
+    processingThreads[i]->join();
+    delete processingThreads[i];
+    uiThreads[i]->join();
+    delete uiThreads[i];
+  }
+
+  delete[] uiThreads;
+  delete[] processingThreads;
+
+  int count = 0;
+
+  // it is possible that there is still one element in the queue
+  State lastOne;
+  if(queue.pop(lastOne))
+  {
+    lastOne.check();
+    count++;
+  }
+  
+  // because push replaces the previous value, it is impossible to know how many values were actually checked
+
+  for(int i = 0; i < N; i++)
+  {
+    int checked = stateChecked[i].load();
+    count += checked;
+    ASSERT_TRUE(checked <= N);
+    
+  }
+
+  ASSERT_TRUE(count <= N*M);
+
+}
 
 }
 }
