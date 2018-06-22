@@ -186,3 +186,8 @@ gtest_add_tests(
 		TARGET      ${PROJECT_TEST_NAME}
 		TEST_LIST   ${PROJECT_TEST_NAME}_targets
 )
+
+###################################################
+# Dev help
+###################################################
+configure_file(${CMAKE_CURRENT_LIST_DIR}/dev-install.sh.in ${CMAKE_BINARY_DIR}/dev-install.sh)
