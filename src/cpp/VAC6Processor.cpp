@@ -39,7 +39,7 @@ bool VAC6AudioChannelProcessor::genericProcessChannel(typename AudioBuffers<Samp
 
       // only when we get a sample in the max buffer do we accumulate in the zoomed one
       TSample zoomedMax;
-      if(fZoomMaxAccumulator.accumulate(sample, zoomedMax))
+      if(fZoomMaxAccumulator.accumulate(max, zoomedMax))
       {
         fZoomMaxBuffer->push(zoomedMax);
       }

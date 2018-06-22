@@ -94,7 +94,7 @@ public:
   void resetMaxLevelAccumulator()
   {
     fMaxLevelAccumulator.reset();
-    fMaxLevel = -1;
+    fMaxLevel = 0;
   }
 
   void resetMaxLevelAccumulator(long iMaxLevelResetInSeconds)
@@ -102,7 +102,7 @@ public:
     // if 0 we still do the same buffering as the other buffer otherwise it would not match
     long maxLevelResetMS = iMaxLevelResetInSeconds == 0 ? ACCUMULATOR_BATCH_SIZE_IN_MS : iMaxLevelResetInSeconds * 1000;
     fMaxLevelAccumulator.reset(fClock.getSampleCountFor(maxLevelResetMS));
-    fMaxLevel = -1;
+    fMaxLevel = 0;
   }
 
   TSample getMaxLevel() const
