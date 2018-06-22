@@ -9,6 +9,7 @@
 #include "../VAC6Model.h"
 #include "CustomDisplayView.h"
 #include "DrawContext.h"
+#include "../Utils.h"
 
 namespace pongasoft {
 namespace VST {
@@ -68,6 +69,26 @@ class LCDView : public VSTView<CustomDisplayView>
       return fTime + fVisibleDuration + fFadeDuration <= iTime;
     }
 
+    bool update(long iTime)
+    {
+      if(isExpired(iTime))
+        return true;
+
+      // we bring now to "0" compare to fTime
+      iTime -= fTime;
+      auto startOfFade = fVisibleDuration;
+      if(startOfFade <= iTime)
+      {
+        // we bring now to "0" compare to startOfFade
+        iTime -= startOfFade;
+        auto lerp = Utils::Lerp<float>(0, 255, fFadeDuration, 0);
+        float alpha = lerp.compute(iTime);
+        fColor.alpha = static_cast<uint8_t>(alpha);
+      }
+
+      return false;
+    }
+
     long fVisibleDuration;
     long fFadeDuration;
     long fTime;
@@ -76,12 +97,13 @@ class LCDView : public VSTView<CustomDisplayView>
   };
 
 public:
-  LCDView() : fLCDData{}, fLCDMessage{nullptr}
+  LCDView() : fLCDData{}, fLCDSoftClipingLevelMessage{nullptr}, fLCDZoomFactorXMessage{nullptr}
   {};
 
   ~LCDView() override
   {
-    delete fLCDMessage;
+    delete fLCDZoomFactorXMessage;
+    delete fLCDSoftClipingLevelMessage;
   }
 
   void onMessage(Message const &message);
@@ -96,7 +118,8 @@ private:
   void draw(CDrawContext *iContext) const;
 
   LCDData fLCDData;
-  LCDMessage *fLCDMessage;
+  LCDMessage *fLCDSoftClipingLevelMessage;
+  LCDMessage *fLCDZoomFactorXMessage;
 };
 
 }

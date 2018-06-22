@@ -99,39 +99,41 @@ void LCDView::onMessage(Message const &message)
 
   long now = Clock::getCurrentTimeMillis();
 
-  if(previousSoftClippingLevel != fLCDData.fSoftClippingLevel.getValueInSample() ||
-     previousWindowSize != fLCDData.fWindowSizeInMillis)
+  if(previousSoftClippingLevel != fLCDData.fSoftClippingLevel.getValueInSample())
   {
-    delete fLCDMessage;
+    delete fLCDSoftClipingLevelMessage;
 
     char text[256];
-    sprintf(text, "Level: %+.2fdB | Zoom: %.1fs",
-            fLCDData.fSoftClippingLevel.getValueInDb(),
-            fLCDData.fWindowSizeInMillis / 1000.0);
+    sprintf(text, "%+.2fdB", fLCDData.fSoftClippingLevel.getValueInDb());
 
-    fLCDMessage = new LCDMessage(UTF8String(text), now);
+    fLCDSoftClipingLevelMessage = new LCDMessage(UTF8String(text), now);
   }
 
-  if(fLCDMessage != nullptr)
+  if(previousWindowSize != fLCDData.fWindowSizeInMillis)
   {
-    if(fLCDMessage->isExpired(now))
+    delete fLCDZoomFactorXMessage;
+
+    char text[256];
+    sprintf(text, "Zoom: %.1fs", fLCDData.fWindowSizeInMillis / 1000.0);
+
+    fLCDZoomFactorXMessage = new LCDMessage(UTF8String(text), now);
+  }
+
+  if(fLCDSoftClipingLevelMessage != nullptr)
+  {
+    if(fLCDSoftClipingLevelMessage->update(now))
     {
-      delete fLCDMessage;
-      fLCDMessage = nullptr;
+      delete fLCDSoftClipingLevelMessage;
+      fLCDSoftClipingLevelMessage = nullptr;
     }
-    else
+  }
+
+  if(fLCDZoomFactorXMessage != nullptr)
+  {
+    if(fLCDZoomFactorXMessage->update(now))
     {
-      // we bring now to "0" compare to fLCDMessage->fTime
-      now -= fLCDMessage->fTime;
-      auto startOfFade = fLCDMessage->fVisibleDuration;
-      if(startOfFade <= now)
-      {
-        // we bring now to "0" compare to startOfFade
-        now -= startOfFade;
-        auto lerp = Utils::Lerp<float>(0, 255, fLCDMessage->fFadeDuration, 0);
-        float alpha = lerp.compute(now);
-        fLCDMessage->fColor.alpha = static_cast<uint8_t>(alpha);
-      }
+      delete fLCDZoomFactorXMessage;
+      fLCDZoomFactorXMessage = nullptr;
     }
   }
 
@@ -219,16 +221,34 @@ void LCDView::draw(CDrawContext *iContext) const
   auto softClippingDisplayValue = toDisplayValue(fLCDData.fSoftClippingLevel.getValueInSample(), height);
   auto top = height - softClippingDisplayValue;
 
+  // draw the soft clipping line
   rdc.drawLine(0, top, fView->getWidth(), top, LCDView_SoftClippingLevel_Color);
 
-  if(fLCDMessage != nullptr)
+  // TODO handle font: use default?
+  // print the level
+  if(fLCDSoftClipingLevelMessage != nullptr)
   {
     StringDrawContext sdc{};
+    sdc.fStyle |= kShadowText;
     sdc.fHoriTxtAlign = kLeftText;
     sdc.fTextInset = {2, 2};
-    sdc.fFontColor = fLCDMessage->fColor;
+    sdc.fFontColor = fLCDSoftClipingLevelMessage->fColor;
+    sdc.fShadowColor = BLACK_COLOR;
+    sdc.fShadowColor.alpha = fLCDSoftClipingLevelMessage->fColor.alpha;
 
-    rdc.drawString(fLCDMessage->fText, CRect{0, 0, MAX_ARRAY_SIZE, 20}, sdc);
+    auto textTop = top + 3;
+    rdc.drawString(fLCDSoftClipingLevelMessage->fText, CRect{0, textTop, MAX_ARRAY_SIZE, textTop + 20}, sdc);
+
+  }
+
+  if(fLCDZoomFactorXMessage != nullptr)
+  {
+    StringDrawContext sdc{};
+    sdc.fHoriTxtAlign = kCenterText;
+    sdc.fTextInset = {2, 2};
+    sdc.fFontColor = fLCDZoomFactorXMessage->fColor;
+
+    rdc.drawString(fLCDZoomFactorXMessage->fText, CRect{0, 0, MAX_ARRAY_SIZE, 20}, sdc);
   }
 }
 
