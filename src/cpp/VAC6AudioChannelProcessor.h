@@ -21,11 +21,11 @@ using namespace VST::Common;
 class MaxAccumulator
 {
 public:
-  explicit MaxAccumulator(long iBatchSize) : fBatchSize{iBatchSize}
+  explicit MaxAccumulator(uint32 iBatchSize) : fBatchSize{iBatchSize}
   {
   }
 
-  inline long getBatchSize() const
+  inline uint32 getBatchSize() const
   {
     return fBatchSize;
   }
@@ -35,7 +35,11 @@ public:
     return fAccumulatedMax;
   }
 
-  void reset(long iBatchSize)
+  /**
+   * A batch size set to 0 means that it will always accumulate so "accumulate" will always return false =>
+   * you use getAccumulatedMax() to get the most recent accumulated value
+   */
+  void reset(uint32 iBatchSize)
   {
     fBatchSize = iBatchSize;
     fAccumulatedMax = 0;
@@ -54,24 +58,28 @@ public:
       iSample = -iSample;
 
     fAccumulatedMax = std::max(fAccumulatedMax, iSample);
-    fAccumulatedSamples++;
 
-    if(fAccumulatedSamples == fBatchSize)
+    if(fBatchSize > 0)
     {
-      oMaxSample = fAccumulatedMax;
-      fAccumulatedMax = 0;
-      fAccumulatedSamples = 0;
-      return true;
+      fAccumulatedSamples++;
+
+      if(fAccumulatedSamples == fBatchSize)
+      {
+        oMaxSample = fAccumulatedMax;
+        fAccumulatedMax = 0;
+        fAccumulatedSamples = 0;
+        return true;
+      }
     }
 
     return false;
   }
 
 private:
-  long fBatchSize;
+  uint32 fBatchSize;
 
   TSample fAccumulatedMax{0};
-  int32 fAccumulatedSamples{0};
+  uint32 fAccumulatedSamples{0};
 };
 
 class VAC6AudioChannelProcessor
@@ -97,12 +105,18 @@ public:
     fMaxLevel = 0;
   }
 
-  void resetMaxLevelAccumulator(long iMaxLevelResetInSeconds)
+  void resetMaxLevelAccumulator(uint32 iMaxLevelResetInSeconds)
   {
-    // if 0 we still do the same buffering as the other buffer otherwise it would not match
-    long maxLevelResetMS = iMaxLevelResetInSeconds == 0 ? ACCUMULATOR_BATCH_SIZE_IN_MS : iMaxLevelResetInSeconds * 1000;
-    fMaxLevelAccumulator.reset(fClock.getSampleCountFor(maxLevelResetMS));
-    fMaxLevel = 0;
+    if(iMaxLevelResetInSeconds == 0)
+      fMaxLevelAccumulator.reset(0);
+    else
+    {
+      // if 0 we still do the same buffering as the other buffer otherwise it would not match
+      fMaxLevelAccumulator.reset(fClock.getSampleCountFor(iMaxLevelResetInSeconds * 1000));
+    }
+
+    if(fIsLiveView)
+      fMaxLevel = 0;
   }
 
   TSample getMaxLevel() const
@@ -118,6 +132,8 @@ public:
     fZoomWindow.setZoomFactor(iZoomFactorPercent);
     fZoomMaxAccumulator = fZoomWindow.computeZoomWindow(*fMaxBuffer, *fZoomMaxBuffer);
   }
+
+  void setIsLiveView(bool iIsLiveView);
 
   /**
    * @return the duration of the window in milliseconds
@@ -138,7 +154,8 @@ public:
   void computeZoomSamples(int iNumSamples, TSample *oSamples) const;
 
   template<typename SampleType>
-  bool genericProcessChannel(const typename AudioBuffers<SampleType>::Channel &iIn, typename AudioBuffers<SampleType>::Channel &iOut);
+  bool genericProcessChannel(const typename AudioBuffers<SampleType>::Channel &iIn,
+                             typename AudioBuffers<SampleType>::Channel &iOut);
 
 private:
   SampleRateBasedClock fClock;
@@ -152,6 +169,8 @@ private:
   ZoomWindow fZoomWindow;
   TZoom::MaxAccumulator fZoomMaxAccumulator;
   CircularBuffer<TSample> *const fZoomMaxBuffer;
+
+  bool fIsLiveView;
 };
 
 }

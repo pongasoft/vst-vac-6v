@@ -30,28 +30,31 @@ bool VAC6AudioChannelProcessor::genericProcessChannel(typename AudioBuffers<Samp
 
   for(int i = 0; i < numSamples; ++i, inPtr++, outPtr++)
   {
-    TSample sample = *inPtr;
+    const TSample sample = *inPtr;
 
-    TSample max;
-    if(fMaxAccumulatorForBuffer.accumulate(sample, max))
+    if(fIsLiveView)
     {
-      fMaxBuffer->push(max);
-
-      // only when we get a sample in the max buffer do we accumulate in the zoomed one
-      TSample zoomedMax;
-      if(fZoomMaxAccumulator.accumulate(max, zoomedMax))
+      TSample max;
+      if(fMaxAccumulatorForBuffer.accumulate(sample, max))
       {
-        fZoomMaxBuffer->push(zoomedMax);
-      }
-    }
+        fMaxBuffer->push(max);
 
-    if(fMaxLevelAccumulator.accumulate(sample, max))
-    {
-      fMaxLevel = max;
-    }
-    else
-    {
-      fMaxLevel = fMaxLevelAccumulator.getAccumulatedMax();
+        // only when we get a sample in the max buffer do we accumulate in the zoomed one
+        TSample zoomedMax;
+        if(fZoomMaxAccumulator.accumulate(max, zoomedMax))
+        {
+          fZoomMaxBuffer->push(zoomedMax);
+        }
+      }
+
+      if(fMaxLevelAccumulator.accumulate(sample, max))
+      {
+        fMaxLevel = max;
+      }
+      else
+      {
+        fMaxLevel = fMaxLevelAccumulator.getAccumulatedMax();
+      }
     }
 
     if(silent && !pongasoft::VST::Common::isSilent(sample))
@@ -216,6 +219,12 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   if(in.getNumChannels() != 2 || out.getNumChannels() != 2)
     return kResultFalse;
 
+  if(fPreviousState.fLCDLiveView != fState.fLCDLiveView)
+  {
+    fLeftChannelProcessor->setIsLiveView(fState.fLCDLiveView);
+    fRightChannelProcessor->setIsLiveView(fState.fLCDLiveView);
+  }
+
   if(fPreviousState.fMaxLevelAutoResetInSeconds != fState.fMaxLevelAutoResetInSeconds)
   {
     fLeftChannelProcessor->resetMaxLevelAccumulator(fState.fMaxLevelAutoResetInSeconds);
@@ -228,6 +237,7 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
     fRightChannelProcessor->setZoomFactor(fState.fZoomFactorX);
   }
 
+
   auto leftChannel = out.getLeftChannel();
   auto rightChannel = out.getRightChannel();
 
@@ -235,13 +245,13 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   fRightChannelProcessor->genericProcessChannel<SampleType>(in.getRightChannel(), rightChannel);
 
 
-  if(fMaxLevelResetRequested)
+  if(fState.fLCDLiveView && fMaxLevelResetRequested)
   {
     fLeftChannelProcessor->resetMaxLevelAccumulator();
     fRightChannelProcessor->resetMaxLevelAccumulator();
   }
 
-  if(fRateLimiter.shouldUpdate(data.numSamples))
+  if(fRateLimiter.shouldUpdate(static_cast<uint32>(data.numSamples)))
   {
     LCDData lcdData{};
     if(fState.fLeftChannelOn)
@@ -352,6 +362,11 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
             stateChanged = newState.fRightChannelOn != fState.fRightChannelOn;
             break;
 
+          case kLCDLiveView:
+            newState.fLCDLiveView = denormalizeBoolValue(value);
+            stateChanged = newState.fLCDLiveView != fState.fLCDLiveView;
+            break;
+
           default:
             // shouldn't happen?
             break;
@@ -399,10 +414,10 @@ tresult VAC6Processor::setState(IBStream *state)
 
   // max level auto reset
   {
-    int16 savedParam = 0;
-    if(!streamer.readInt16(savedParam))
+    int32 savedParam = 0;
+    if(!streamer.readInt32(savedParam))
       savedParam = DEFAULT_MAX_LEVEL_RESET_IN_SECONDS;
-    newState.fMaxLevelAutoResetInSeconds = savedParam;
+    newState.fMaxLevelAutoResetInSeconds = static_cast<uint32>(savedParam);
   }
 
   // left channel on
@@ -421,14 +436,23 @@ tresult VAC6Processor::setState(IBStream *state)
     newState.fRightChannelOn = savedParam;
   }
 
+  // lcd live view
+  {
+    bool savedParam;
+    if(!streamer.readBool(savedParam))
+      savedParam = true;
+    newState.fLCDLiveView = savedParam;
+  }
+
   fStateUpdate.push(newState);
 
-  DLOG_F(INFO, "VAC6Processor::setState => fSoftClippingLevel=%f, fZoomFactorX=%f, fMaxLevelAutoResetInSeconds=%d, fLeftChannelOn=%d, fRightChannelOn=%d",
+  DLOG_F(INFO, "VAC6Processor::setState => fSoftClippingLevel=%f, fZoomFactorX=%f, fMaxLevelAutoResetInSeconds=%d, fLeftChannelOn=%d, fRightChannelOn=%d, fLCDLiveView=%d",
          newState.fSoftClippingLevel.getValueInSample(),
          newState.fZoomFactorX,
          newState.fMaxLevelAutoResetInSeconds,
          newState.fLeftChannelOn,
-         newState.fRightChannelOn);
+         newState.fRightChannelOn,
+         newState.fLCDLiveView);
 
   return kResultOk;
 }
@@ -450,13 +474,15 @@ tresult VAC6Processor::getState(IBStream *state)
   streamer.writeInt32(latestState.fMaxLevelAutoResetInSeconds);
   streamer.writeBool(latestState.fLeftChannelOn);
   streamer.writeBool(latestState.fRightChannelOn);
+  streamer.writeBool(latestState.fLCDLiveView);
 
-  DLOG_F(INFO, "VAC6Processor::getState => fSoftClippingLevel=%f, fZoomFactorX=%f, fMaxLevelAutoResetInSeconds=%d, fLeftChannelOn=%d, fRightChannelOn=%d",
+  DLOG_F(INFO, "VAC6Processor::getState => fSoftClippingLevel=%f, fZoomFactorX=%f, fMaxLevelAutoResetInSeconds=%d, fLeftChannelOn=%d, fRightChannelOn=%d, fLCDLiveView=%d",
          latestState.fSoftClippingLevel.getValueInSample(),
          latestState.fZoomFactorX,
          latestState.fMaxLevelAutoResetInSeconds,
          latestState.fLeftChannelOn,
-         latestState.fRightChannelOn);
+         latestState.fRightChannelOn,
+         latestState.fLCDLiveView);
 
   return kResultOk;
 }

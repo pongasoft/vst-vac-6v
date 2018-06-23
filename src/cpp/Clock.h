@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pluginterfaces/vst/vsttypes.h>
+#include <pluginterfaces/base/ftypes.h>
 #include <cmath>
 #include <chrono>
 
@@ -8,6 +8,7 @@ namespace pongasoft {
 namespace VST {
 namespace Common {
 
+using namespace Steinberg;
 
 namespace Clock {
 
@@ -29,14 +30,14 @@ public:
   class RateLimiter
   {
   public:
-    explicit RateLimiter(long iRateLimitInSamples = 0) : fRateLimitInSamples{iRateLimitInSamples}, fSampleCount{0}
+    explicit RateLimiter(uint32 iRateLimitInSamples = 0) : fRateLimitInSamples{iRateLimitInSamples}, fSampleCount{0}
     {}
 
     /**
      * Calls this method when a new batch of samples is processed and returns true if the limit (in samples) is
      * achieved
      */
-    bool shouldUpdate(int numSamples)
+    bool shouldUpdate(uint32 numSamples)
     {
       fSampleCount += numSamples;
       if(fSampleCount >= fRateLimitInSamples)
@@ -48,8 +49,8 @@ public:
     }
 
   private:
-    long fRateLimitInSamples;
-    long fSampleCount;
+    uint32 fRateLimitInSamples;
+    uint32 fSampleCount;
   };
 
   explicit SampleRateBasedClock(SampleRate iSampleRate) : fSampleRate{iSampleRate}
@@ -57,14 +58,14 @@ public:
 
   }
 
-  long getSampleCountFor(long iMillis) const
+  uint32 getSampleCountFor(uint32 iMillis) const
   {
-    return static_cast<long>(ceil(fSampleRate * iMillis / 1000.0));
+    return static_cast<uint32>(ceil(fSampleRate * iMillis / 1000.0));
   }
 
-  long getTimeForSampleCount(long iSampleCount) const
+  uint32 getTimeForSampleCount(uint32 iSampleCount) const
   {
-    return static_cast<long>(ceil(iSampleCount * 1000.0 / fSampleRate));
+    return static_cast<uint32>(ceil(iSampleCount * 1000.0 / fSampleRate));
   }
 
   SampleRate getSampleRate() const
@@ -77,7 +78,7 @@ public:
     fSampleRate = iSampleRate;
   }
 
-  RateLimiter getRateLimiter(long iMillis) const
+  RateLimiter getRateLimiter(uint32 iMillis) const
   {
     return RateLimiter{getSampleCountFor(iMillis)};
   }

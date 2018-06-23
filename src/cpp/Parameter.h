@@ -15,9 +15,10 @@ inline ParamValue normalizeDiscreteValue(int iStepCount, int iDiscreteValue)
   return iDiscreteValue / static_cast<double>(iStepCount);
 }
 
-inline int denormalizeDiscreteValue(int iStepCount, ParamValue iNormalizedValue)
+template<typename T>
+inline T denormalizeDiscreteValue(T iStepCount, ParamValue iNormalizedValue)
 {
-  return static_cast<int>(std::floor(std::min(static_cast<ParamValue>(iStepCount), iNormalizedValue * (iStepCount + 1))));
+  return static_cast<T>(std::floor(std::min(static_cast<ParamValue>(iStepCount), iNormalizedValue * (iStepCount + 1))));
 }
 
 inline ParamValue normalizeBoolValue(bool iValue)

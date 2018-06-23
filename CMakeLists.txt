@@ -99,6 +99,8 @@ target_link_libraries(${target} PRIVATE base sdk vstgui_support)
 
 smtg_add_vst3_resource(${target} "resource/Button_mini_translucent_2frames.png")
 smtg_add_vst3_resource(${target} "resource/Button_mini_translucent_2frames_2x.png")
+smtg_add_vst3_resource(${target} "resource/Button_mini_2frames.png")
+smtg_add_vst3_resource(${target} "resource/Button_mini_2frames_2x.png")
 smtg_add_vst3_resource(${target} "resource/VAC6.uidesc")
 smtg_add_vst3_resource(${target} "resource/Knob.png")
 

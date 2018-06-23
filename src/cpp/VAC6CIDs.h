@@ -23,6 +23,7 @@ enum EVAC6ParamID : Steinberg::Vst::ParamID
   kLCDZoomFactorX = 3010,
   kLCDLeftChannel = 3020,
   kLCDRightChannel = 3021,
+  kLCDLiveView = 3030,
 };
 
 enum EVAC6MessageID
