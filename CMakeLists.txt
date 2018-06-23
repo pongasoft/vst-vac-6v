@@ -192,4 +192,6 @@ gtest_add_tests(
 ###################################################
 # Dev help
 ###################################################
-configure_file(${CMAKE_CURRENT_LIST_DIR}/dev-install.sh.in ${CMAKE_BINARY_DIR}/dev-install.sh)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/build-dev.sh.in ${CMAKE_BINARY_DIR}/build-dev.sh)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/install-dev.sh.in ${CMAKE_BINARY_DIR}/install-dev.sh)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/test-dev.sh.in ${CMAKE_BINARY_DIR}/test-dev.sh)
