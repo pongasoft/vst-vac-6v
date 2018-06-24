@@ -1,11 +1,11 @@
 #include <vstgui4/vstgui/uidescription/iviewcreator.h>
 #include <vstgui4/vstgui/uidescription/uiviewcreator.h>
 #include <vstgui4/vstgui/uidescription/uiattributes.h>
-#include <vstgui4/vstgui/uidescription/uiviewfactory.h>
 #include <vstgui4/vstgui/uidescription/detail/uiviewcreatorattributes.h>
 #include <vstgui4/vstgui/lib/cdrawcontext.h>
 #include "CustomDisplayView.h"
 #include "../logging/loguru.hpp"
+#include "CustomView.h"
 
 
 namespace pongasoft {
@@ -74,85 +74,22 @@ void CustomDisplayView::drawStyleChanged()
 // CustomDisplayCreator
 ///////////////////////////////////////////
 
-class CustomDisplayCreator : public ViewCreatorAdapter
+constexpr auto CustomDisplayViewName = TemplateText{"pongasoft::CustomDisplay"};
+constexpr auto CustomDisplayDisplayName = TemplateText{"pongasoft - Custom Display"};
+
+class CustomDisplayCreator : public CustomViewCreator<CustomDisplayView, CustomDisplayViewName, CustomDisplayDisplayName>
 {
 public:
-  static constexpr IdStringPtr kCustomDisplay = "pongasoft::CustomDisplay";
 
-  CustomDisplayCreator()
+  CustomDisplayCreator() : CustomViewCreator()
   {
-    //DLOG_F(INFO, "CustomDisplayView::CustomDisplayView(const CustomDisplayView &c)");
-    VSTGUI::UIViewFactory::registerViewCreator(*this);
+    registerColorAttribute(UIViewCreator::kAttrBackColor, &CustomDisplayView::getBackColor, &CustomDisplayView::setBackColor);
   }
 
-  IdStringPtr getViewName() const override
-  {
-    return kCustomDisplay;
-  }
-
-  IdStringPtr getBaseViewName() const override
-  {
-    return VSTGUI::UIViewCreator::kCControl;
-  }
-
-  UTF8StringPtr getDisplayName() const override
-  {
-    return "pongasoft - Custom Display";
-  }
-
-  CView *create(const UIAttributes &attributes, const IUIDescription *description) const override
-  {
-    DLOG_F(INFO, "CustomDisplayCreator::create()");
-    return new CustomDisplayView(CRect(0, 0, 0, 0), nullptr, -1, nullptr);
-  }
-
-  bool apply(CView *view, const UIAttributes &attributes, const IUIDescription *description) const override
-  {
-    auto *cdv = dynamic_cast<CustomDisplayView *>(view);
-
-    if(cdv == nullptr)
-      return false;
-
-    CColor color;
-
-    if(UIViewCreator::stringToColor(attributes.getAttributeValue(UIViewCreator::kAttrBackColor), color, description))
-      cdv->setBackColor(color);
-
-
-    return true;
-  }
-
-  bool getAttributeNames(std::list<std::string> &attributeNames) const override
-  {
-    attributeNames.emplace_back(UIViewCreator::kAttrBackColor);
-    return true;
-  }
-
-  AttrType getAttributeType(const std::string &attributeName) const override
-  {
-    if(attributeName == UIViewCreator::kAttrBackColor) return kColorType;
-    return kUnknownType;
-  }
-
-  bool getAttributeValue(CView *view, const std::string &attributeName, std::string &stringValue,
-                         const IUIDescription *desc) const override
-  {
-    auto *cdv = dynamic_cast<CustomDisplayView *>(view);
-
-    if(cdv == nullptr)
-      return false;
-
-    else if(attributeName == UIViewCreator::kAttrBackColor)
-    {
-      UIViewCreator::colorToString(cdv->getBackColor(), stringValue, desc);
-      return true;
-    }
-
-    return false;
-  }
 };
 
-CustomDisplayCreator __gLCDDisplayCreator;
+
+CustomDisplayCreator __gLCDDisplayCreator2;
 
 }
 }
