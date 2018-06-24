@@ -58,6 +58,8 @@ set(vst_sources
 		${CPP_SOURCES}/controller/CustomView.h
 		${CPP_SOURCES}/controller/DrawContext.h
 		${CPP_SOURCES}/controller/DrawContext.cpp
+		${CPP_SOURCES}/controller/LCDDisplayView.h
+		${CPP_SOURCES}/controller/LCDDisplayView.cpp
 		${CPP_SOURCES}/controller/MomentaryButton.h
 		${CPP_SOURCES}/controller/MomentaryButton.cpp
 		${CPP_SOURCES}/controller/VAC6Controller.h
@@ -65,7 +67,7 @@ set(vst_sources
 		${CPP_SOURCES}/controller/VAC6Controller.h
 		${CPP_SOURCES}/controller/VAC6Views.h
 		${CPP_SOURCES}/controller/VAC6Views.cpp
-		${CPP_SOURCES}/controller/VSTView.h
+		${CPP_SOURCES}/controller/VSTViewState.h
 		${CPP_SOURCES}/AudioBuffer.h
 		${CPP_SOURCES}/AudioUtils.h
 		${CPP_SOURCES}/CircularBuffer.h

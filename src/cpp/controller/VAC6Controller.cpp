@@ -16,7 +16,7 @@ namespace VAC6 {
 VAC6Controller::VAC6Controller() : EditController(),
                                    fXmlFile("VAC6.uidesc"),
                                    fMaxLevelView{},
-                                   fLCDView{}
+                                   fLCDDisplayState{}
 {
   DLOG_F(INFO, "VAC6Controller::VAC6Controller()");
 }
@@ -159,7 +159,7 @@ CView *VAC6Controller::verifyView(CView *view,
         break;
 
       case kLCD:
-        fLCDView.assign(dynamic_cast<CustomDisplayView *>(control));
+        fLCDDisplayState.assign(dynamic_cast<LCDDisplayView *>(control));
         break;
 
       default:
@@ -287,7 +287,7 @@ tresult VAC6Controller::notify(IMessage *message)
 
     case kLCDData_MID:
     {
-      fLCDView.onMessage(m);
+      fLCDDisplayState.onMessage(m);
       break;
     }
 

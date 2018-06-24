@@ -2,8 +2,9 @@
 
 #include <public.sdk/source/vst/vsteditcontroller.h>
 #include <vstgui4/vstgui/plugin-bindings/vst3editor.h>
-#include "VSTView.h"
+#include "VSTViewState.h"
 #include "VAC6Views.h"
+#include "LCDDisplayView.h"
 
 
 namespace pongasoft {
@@ -69,8 +70,8 @@ private:
   // view for max level
   MaxLevelView fMaxLevelView;
 
-  // view for LCD
-  LCDView fLCDView;
+  // state for LCD Display
+  LCDDisplayState fLCDDisplayState;
 };
 
 }

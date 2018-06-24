@@ -1,8 +1,7 @@
 #pragma once
 
 #include <vstgui4/vstgui/lib/controls/ccontrol.h>
-
-#include <utility>
+#include "CustomView.h"
 
 namespace pongasoft {
 namespace VST {
@@ -35,9 +34,23 @@ protected:
   CustomDisplayDrawCallback fDrawCallback;
 
 protected:
-
   CColor fBackColor;
 };
+
+///////////////////////////////////////////
+// CustomDisplayCreator
+///////////////////////////////////////////
+
+class CustomDisplayCreator : public CustomViewCreator<CustomDisplayView>
+{
+public:
+  explicit CustomDisplayCreator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
+    CustomViewCreator(iViewName, iDisplayName)
+  {
+    registerColorAttribute(UIViewCreator::kAttrBackColor, &CustomDisplayView::getBackColor, &CustomDisplayView::setBackColor);
+  }
+};
+
 
 }
 }

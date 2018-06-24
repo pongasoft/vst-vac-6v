@@ -1,11 +1,6 @@
 #include <vstgui4/vstgui/uidescription/iviewcreator.h>
-#include <vstgui4/vstgui/uidescription/uiviewcreator.h>
-#include <vstgui4/vstgui/uidescription/uiattributes.h>
-#include <vstgui4/vstgui/uidescription/detail/uiviewcreatorattributes.h>
 #include <vstgui4/vstgui/lib/cdrawcontext.h>
 #include "CustomDisplayView.h"
-#include "../logging/loguru.hpp"
-#include "CustomView.h"
 
 
 namespace pongasoft {
@@ -70,22 +65,7 @@ void CustomDisplayView::drawStyleChanged()
   setDirty(true);
 }
 
-///////////////////////////////////////////
-// CustomDisplayCreator
-///////////////////////////////////////////
-
-class CustomDisplayCreator : public CustomViewCreator<CustomDisplayView>
-{
-public:
-  explicit CustomDisplayCreator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) : CustomViewCreator(iViewName, iDisplayName)
-  {
-    registerColorAttribute(UIViewCreator::kAttrBackColor, &CustomDisplayView::getBackColor, &CustomDisplayView::setBackColor);
-  }
-};
-
-
-CustomDisplayCreator __gLCDDisplayCreator2("pongasoft::CustomDisplay", "pongasoft - Custom Display");
-
+CustomDisplayCreator __gCustomDisplayCreator("pongasoft::CustomDisplay", "pongasoft - Custom Display");
 }
 }
 }

@@ -3,6 +3,7 @@
 #include <pluginterfaces/vst/vsttypes.h>
 #include <pluginterfaces/vst/ivstattributes.h>
 #include <cmath>
+#include "VAC6Constants.h"
 
 namespace pongasoft {
 namespace VST {
