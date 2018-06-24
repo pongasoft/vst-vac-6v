@@ -6,6 +6,7 @@
 #include "../VAC6Model.h"
 #include "../Messaging.h"
 #include "../Utils.h"
+#include "VAC6Views.h"
 
 namespace pongasoft {
 namespace VST {
@@ -20,49 +21,13 @@ class LCDDisplayState;
 /**
  * The view that will show the volume history as a graph
  */
-class LCDDisplayView : public CustomDisplayView
+class LCDDisplayView : public HistoryView
 {
 public:
   // Constructor
-  LCDDisplayView(const CRect &size, IControlListener *listener, int32_t tag, CBitmap *pBackground)
-    : CustomDisplayView(size, listener, tag, pBackground)
-  {}
+  LCDDisplayView(const CRect &size, IControlListener *listener, int32_t tag, CBitmap *pBackground);
 
-  // getLevelStateOkColor
-  const CColor &getLevelStateOkColor() const
-  {
-    return fLevelStateOkColor;
-  }
-
-  // setLevelStateOkColor
-  void setLevelStateOkColor(const CColor &iLevelStateOkColor)
-  {
-    fLevelStateOkColor = iLevelStateOkColor;
-  }
-
-  // getLevelStateSoftClippingColor
-  const CColor &getLevelStateSoftClippingColor() const
-  {
-    return fLevelStateSoftClippingColor;
-  }
-
-  // setLevelStateSoftClippingColor
-  void setLevelStateSoftClippingColor(const CColor &iLevelStateSoftClippingColor)
-  {
-    fLevelStateSoftClippingColor = iLevelStateSoftClippingColor;
-  }
-
-  // getLevelStateHardClippingColor
-  const CColor &getLevelStateHardClippingColor() const
-  {
-    return fLevelStateHardClippingColor;
-  }
-
-  // setLevelStateHardClippingColor
-  void setLevelStateHardClippingColor(const CColor &iLevelStateHardClippingColor)
-  {
-    fLevelStateHardClippingColor = iLevelStateHardClippingColor;
-  }
+  LCDDisplayView(const LCDDisplayView &c) = default;
 
   // getSoftClippingLevelColor
   const CColor &getSoftClippingLevelColor() const
@@ -85,13 +50,11 @@ public:
   // draw => does the actual drawing job
   void draw(CDrawContext *iContext) override;
 
-protected:
-  // computeColor
-  const CColor &computeColor(SoftClippingLevel iLevel, double iSample) const;
+  CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override;
 
-  CColor fLevelStateOkColor{};
-  CColor fLevelStateSoftClippingColor{};
-  CColor fLevelStateHardClippingColor{};
+  CLASS_METHODS(LCDDisplayView, HistoryView)
+
+protected:
   CColor fSoftClippingLevelColor{};
 
   // the state
@@ -190,22 +153,13 @@ private:
 /**
  * The factory for LCDDisplayView
  */
-class LCDDisplayCreator : public CustomViewCreator<LCDDisplayView>
+class LCDDisplayViewCreator : public CustomViewCreator<LCDDisplayView>
 {
 public:
-  explicit LCDDisplayCreator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
+  explicit LCDDisplayViewCreator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
     CustomViewCreator(iViewName, iDisplayName)
   {
-    registerAttributes(CustomDisplayCreator());
-    registerColorAttribute("level-state-ok-color",
-                           &LCDDisplayView::getLevelStateOkColor,
-                           &LCDDisplayView::setLevelStateOkColor);
-    registerColorAttribute("level-state-soft-clipping-color",
-                           &LCDDisplayView::getLevelStateSoftClippingColor,
-                           &LCDDisplayView::setLevelStateSoftClippingColor);
-    registerColorAttribute("level-state-hard-clipping-color",
-                           &LCDDisplayView::getLevelStateHardClippingColor,
-                           &LCDDisplayView::setLevelStateHardClippingColor);
+    registerAttributes(HistoryViewCreator());
     registerColorAttribute("soft-clipping-level-color",
                            &LCDDisplayView::getSoftClippingLevelColor,
                            &LCDDisplayView::setSoftClippingLevelColor);

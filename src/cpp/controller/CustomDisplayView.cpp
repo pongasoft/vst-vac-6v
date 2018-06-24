@@ -24,7 +24,10 @@ CustomDisplayView::CustomDisplayView(const CRect &size, IControlListener *listen
 ///////////////////////////////////////////
 // CustomDisplayView::CustomDisplayView
 ///////////////////////////////////////////
-CustomDisplayView::CustomDisplayView(const CustomDisplayView &c) : CControl(c)
+CustomDisplayView::CustomDisplayView(const CustomDisplayView &c) :
+  CControl(c),
+  fDrawCallback{c.fDrawCallback},
+  fBackColor{c.fBackColor}
 {
   DLOG_F(INFO, "CustomDisplayView::CustomDisplayView(const CustomDisplayView &c)");
   setWantsFocus(true);

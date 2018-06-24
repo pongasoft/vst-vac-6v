@@ -5,6 +5,7 @@
 #include "VAC6Controller.h"
 #include "../VAC6CIDs.h"
 #include "../Parameter.h"
+#include "MaxLevelView.h"
 
 namespace pongasoft {
 namespace VST {
@@ -15,7 +16,7 @@ namespace VAC6 {
 ///////////////////////////////////////////
 VAC6Controller::VAC6Controller() : EditController(),
                                    fXmlFile("VAC6.uidesc"),
-                                   fMaxLevelView{},
+                                   fMaxLevelState{},
                                    fLCDDisplayState{}
 {
   DLOG_F(INFO, "VAC6Controller::VAC6Controller()");
@@ -155,7 +156,7 @@ CView *VAC6Controller::verifyView(CView *view,
     switch(control->getTag())
     {
       case kMaxLevelValue:
-        fMaxLevelView.assign(dynamic_cast<CTextLabel *>(control));
+        fMaxLevelState.assign(dynamic_cast<MaxLevelView *>(control));
         break;
 
       case kLCD:
@@ -281,7 +282,7 @@ tresult VAC6Controller::notify(IMessage *message)
   {
     case kMaxLevel_MID:
     {
-      fMaxLevelView.onMessage(m);
+      fMaxLevelState.onMessage(m);
       break;
     }
 

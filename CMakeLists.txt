@@ -60,6 +60,8 @@ set(vst_sources
 		${CPP_SOURCES}/controller/DrawContext.cpp
 		${CPP_SOURCES}/controller/LCDDisplayView.h
 		${CPP_SOURCES}/controller/LCDDisplayView.cpp
+		${CPP_SOURCES}/controller/MaxLevelView.h
+		${CPP_SOURCES}/controller/MaxLevelView.cpp
 		${CPP_SOURCES}/controller/MomentaryButton.h
 		${CPP_SOURCES}/controller/MomentaryButton.cpp
 		${CPP_SOURCES}/controller/VAC6Controller.h

@@ -7,9 +7,10 @@
 		<color name="LevelStateHardClipping" rgba="#ff0000ff"/>
 		<color name="LevelStateOk" rgba="#00ff00ff"/>
 		<color name="LevelStateSoftClipping" rgba="#f87a00ff"/>
+		<color name="MaxLevel_NoData" rgba="#c8c8c8ff"/>
 	</colors>
 	<template background-color="~ GreyCColor" background-color-draw-style="filled and stroked" class="CViewContainer" mouse-enabled="true" name="view" opacity="1" origin="0, 0" size="300, 300" transparent="false" wants-focus="false">
-		<view back-color="~ BlackCColor" background-offset="0, 0" class="CTextLabel" control-tag="Param_MaxLevelValue" default-value="0" font="~ NormalFont" font-antialias="true" font-color="LevelStateOk" frame-color="~ BlackCColor" frame-width="1" max-value="1" min-value="0" mouse-enabled="false" opacity="1" origin="20, 40" round-rect-radius="6" shadow-color="~ RedCColor" size="60, 20" style-3D-in="false" style-3D-out="false" style-no-draw="false" style-no-frame="false" style-no-text="false" style-round-rect="false" style-shadow-text="false" text-alignment="center" text-inset="0, 0" text-rotation="0" text-shadow-offset="1, 1" title="---.--" transparent="false" value-precision="2" wants-focus="false" wheel-inc-value="0.1"/>
+		<view back-color="~ BlackCColor" background-offset="0, 0" class="pongasoft::MaxLevel" control-tag="Param_MaxLevelValue" default-value="0" level-state-hard-clipping-color="LevelStateHardClipping" level-state-ok-color="LevelStateOk" level-state-soft-clipping-color="LevelStateSoftClipping" max-value="1" min-value="0" mouse-enabled="false" no-data-color="MaxLevel_NoData" opacity="1" origin="20, 40" size="60, 20" transparent="false" wants-focus="false" wheel-inc-value="0.1"/>
 		<view angle-range="300" angle-start="135" background-offset="0, 0" bitmap="Knob" circle-drawing="false" class="CAnimKnob" control-tag="Param_SoftClippingLevel" corona-color="~ WhiteCColor" corona-dash-dot="false" corona-drawing="false" corona-from-center="false" corona-inset="0" corona-inverted="false" corona-line-cap-butt="false" corona-outline="false" corona-outline-width-add="2" default-value="0.75" handle-color="~ WhiteCColor" handle-line-width="1" handle-shadow-color="~ GreyCColor" height-of-one-image="75" inverse-bitmap="false" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="20, 200" size="75, 75" skip-handle-drawing="true" sub-pixmaps="64" transparent="false" value-inset="0" wants-focus="true" wheel-inc-value="0.1" zoom-factor="0"/>
 		<view back-color="~ BlackCColor" background-offset="0, 0" class="pongasoft::LCDDisplay" control-tag="Param_LCD" default-value="0.5" level-state-hard-clipping-color="LevelStateHardClipping" level-state-ok-color="LevelStateOk" level-state-soft-clipping-color="LevelStateSoftClipping" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="20, 80" size="256, 118" soft-clipping-level-color="LCDDisplay_SoftClippingLevel" transparent="false" wants-focus="true" wheel-inc-value="0.1"/>
 		<view background-offset="0, 0" bitmap="Button_mini_translucent_2frames" class="pongasoft::MomentaryButton" control-tag="Param_MaxLevelReset" default-value="0" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="90, 40" size="20, 20" transparent="false" wants-focus="true" wheel-inc-value="0.1"/>
@@ -35,7 +36,7 @@
 		<attributes name="UIAttributesController"/>
 		<attributes SelectedRow="13" name="UIViewCreatorDataSource"/>
 		<attributes SelectedRow="2" name="UITagsDataSource"/>
-		<attributes SelectedRow="0" name="UIColorsDataSource"/>
+		<attributes SelectedRow="4" name="UIColorsDataSource"/>
 		<attributes SelectedRow="3" name="UIBitmapsDataSource"/>
 		<attributes SelectedRow="-1" name="UIGradientsDataSource"/>
 	</custom>

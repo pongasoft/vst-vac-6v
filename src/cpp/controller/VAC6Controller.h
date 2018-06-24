@@ -5,6 +5,7 @@
 #include "VSTViewState.h"
 #include "VAC6Views.h"
 #include "LCDDisplayView.h"
+#include "MaxLevelView.h"
 
 
 namespace pongasoft {
@@ -67,8 +68,8 @@ private:
   // the name of the xml file (relative) which contains the ui description
   char const *const fXmlFile;
 
-  // view for max level
-  MaxLevelView fMaxLevelView;
+  // state for max level
+  MaxLevelState fMaxLevelState;
 
   // state for LCD Display
   LCDDisplayState fLCDDisplayState;

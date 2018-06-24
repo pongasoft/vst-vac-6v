@@ -24,23 +24,88 @@ struct StringDrawContext
   bool fAntialias{true};
 };
 
-/**
- * Encapsulates the draw context provided by VSTGUI to reason in relative coordinates (0,0) is top,left
- */
-class RelativeDrawContext
+using RelativeCoord = CCoord;
+using AbsoluteCoord = CCoord;
+using RelativePoint = CPoint;
+using AbsolutePoint = CPoint;
+using RelativeRect = CRect;
+using AbsoluteRect = CRect;
+
+class RelativeView
 {
 public:
-  RelativeDrawContext(CView *iView, CDrawContext *iDrawContext) : fView{iView}, fDrawContext{iDrawContext}
+  explicit RelativeView(CView *iView) : fView{iView}
   {
     auto viewSize = fView->getViewSize();
     fOriginX = viewSize.left;
     fOriginY = viewSize.top;
   }
 
+  inline RelativeRect getViewSize() const
+  {
+    return RelativeRect(0, 0, fView->getWidth(), fView->getHeight());
+  }
+
+  inline AbsoluteCoord toAbsoluteX(RelativeCoord x) const
+  {
+    return x + fOriginX;
+  }
+
+  inline AbsoluteCoord toAbsoluteY(RelativeCoord y) const
+  {
+    return y + fOriginY;
+  }
+
+  inline RelativeCoord fromAbsoluteX(AbsoluteCoord x) const
+  {
+    return x - fOriginX;
+  }
+
+  inline RelativeCoord fromAbsoluteY(AbsoluteCoord y) const
+  {
+    return y - fOriginY;
+  }
+
+  inline AbsolutePoint toAbsolutePoint(RelativePoint const &iPoint) const
+  {
+    return AbsolutePoint{toAbsoluteX(iPoint.x), toAbsoluteY(iPoint.y)};
+  }
+
+  inline RelativePoint fromAbsolutePoint(AbsolutePoint const &iPoint) const
+  {
+    return RelativePoint{fromAbsoluteX(iPoint.x), fromAbsoluteY(iPoint.y)};
+  }
+
+  inline AbsolutePoint toAbsolutePoint(RelativeCoord x, RelativeCoord y) const
+  {
+    return CPoint{x + fOriginX, y + fOriginY};
+  }
+
+  inline AbsoluteRect toAbsoluteRect(RelativeRect const &iRect) const
+  {
+    return CRect(toAbsolutePoint(iRect.getTopLeft()), iRect.getSize());
+  }
+
+protected:
+  CView *fView;
+  CCoord fOriginX;
+  CCoord fOriginY;
+};
+
+/**
+ * Encapsulates the draw context provided by VSTGUI to reason in relative coordinates (0,0) is top,left
+ */
+class RelativeDrawContext : public RelativeView
+{
+public:
+  RelativeDrawContext(CView *iView, CDrawContext *iDrawContext) : RelativeView{iView}, fDrawContext{iDrawContext}
+  {
+  }
+
   void drawLine(CCoord x1, CCoord y1, CCoord x2, CCoord y2, CColor const &color)
   {
     fDrawContext->setFrameColor(color);
-    fDrawContext->drawLine(toAdjustedPoint(x1, y1), toAdjustedPoint(x2, y2));
+    fDrawContext->drawLine(toAbsolutePoint(x1, y1), toAbsolutePoint(x2, y2));
   }
 
   void drawString(UTF8String const &iText, CCoord x, CCoord y, CCoord iHeight, StringDrawContext &iSdc)
@@ -51,37 +116,13 @@ public:
 
   void drawString(UTF8String const &iText, CRect const &fSize, StringDrawContext &iSdc);
 
-private:
-  inline CCoord adjustX(CCoord x)
+  void drawString(UTF8String const &iText, StringDrawContext &iSdc)
   {
-    return x + fOriginX;
+    drawString(iText, getViewSize(), iSdc);
   }
 
-  inline CCoord adjustY(CCoord y)
-  {
-    return y + fOriginY;
-  }
-
-  inline CPoint adjustPoint(CPoint const &iPoint)
-  {
-    return CPoint{adjustX(iPoint.x), adjustY(iPoint.y)};
-  }
-
-  inline CPoint toAdjustedPoint(CCoord x, CCoord y)
-  {
-    return CPoint{x + fOriginX, y + fOriginY};
-  }
-
-  inline CRect adjustRect(CRect const &iRect)
-  {
-    return CRect(adjustPoint(iRect.getTopLeft()), iRect.getSize());
-  }
-
-private:
-  CView *fView;
+protected:
   CDrawContext *fDrawContext;
-  CCoord fOriginX;
-  CCoord fOriginY;
 };
 
 }

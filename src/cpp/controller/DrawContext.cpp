@@ -12,7 +12,7 @@ void RelativeDrawContext::drawString(UTF8String const &fText, CRect const &fSize
   if(!(sdc.fStyle & kNoTextStyle))
   {
     fDrawContext->saveGlobalState();
-    CRect textRect = adjustRect(fSize);
+    CRect textRect = toAbsoluteRect(fSize);
     textRect.inset(sdc.fTextInset.x, sdc.fTextInset.y);
 
     CRect oldClip;

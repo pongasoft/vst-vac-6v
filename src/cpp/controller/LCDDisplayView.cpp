@@ -93,16 +93,12 @@ void LCDDisplayState::beforeUnassign()
 }
 
 ///////////////////////////////////////////
-// LCDDisplayView::computeColor
+// LCDDisplayView::LCDDisplayView
 ///////////////////////////////////////////
-const CColor &LCDDisplayView::computeColor(SoftClippingLevel iSofClippingLevel, double iSample) const
+LCDDisplayView::LCDDisplayView(const CRect &size, IControlListener *listener, int32_t tag, CBitmap *pBackground)
+  : HistoryView(size, listener, tag, pBackground)
 {
-  CColor const &color =
-    iSample > HARD_CLIPPING_LEVEL ? getLevelStateHardClippingColor() :
-    iSample > iSofClippingLevel.getValueInSample() ? getLevelStateSoftClippingColor() :
-    getLevelStateOkColor();
 
-  return color;
 }
 
 ///////////////////////////////////////////
@@ -110,9 +106,10 @@ const CColor &LCDDisplayView::computeColor(SoftClippingLevel iSofClippingLevel, 
 ///////////////////////////////////////////
 void LCDDisplayView::draw(CDrawContext *iContext)
 {
-  DCHECK_NOTNULL_F(fState);
-
   CustomDisplayView::draw(iContext);
+
+  if(fState == nullptr)
+    return;
 
   auto rdc = GUI::RelativeDrawContext{this, iContext};
 
@@ -190,7 +187,20 @@ void LCDDisplayView::draw(CDrawContext *iContext)
   }
 }
 
-LCDDisplayCreator __gLCDDisplayCreator("pongasoft::LCDDisplay", "pongasoft - LCD Display");
+///////////////////////////////////////////
+// LCDDisplayView::onMouseDown
+///////////////////////////////////////////
+CMouseEventResult LCDDisplayView::onMouseDown(CPoint &where, const CButtonState &buttons)
+{
+  RelativeView rv(this);
+  RelativePoint relativeWhere = rv.fromAbsolutePoint(where);
+
+  DLOG_F(INFO, "LCDDisplayView::onMouseDown(%f,%f)", relativeWhere.x, relativeWhere.y);
+  return CView::onMouseDown(where, buttons);
+}
+
+
+LCDDisplayViewCreator __gLCDDisplayViewCreator("pongasoft::LCDDisplay", "pongasoft - LCD Display");
 
 }
 }
