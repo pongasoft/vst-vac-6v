@@ -16,43 +16,45 @@ namespace GUI {
 
 using namespace VSTGUI;
 
-template<typename TView>
+
 class CustomViewAttribute
 {
 public:
-  CustomViewAttribute(std::string const &iName) : fName(iName)
+  CustomViewAttribute(std::string iName) :
+    fName(std::move(iName))
   {}
 
   virtual ~CustomViewAttribute() = default;
 
   virtual IViewCreator::AttrType getType() = 0;
 
+  std::string getName() const
+  {
+    return fName;
+  }
+
+  virtual bool apply(CView *iView, const UIAttributes &iAttributes, const IUIDescription *iDescription) = 0;
+
+  virtual bool getAttributeValue(CView *iView, const IUIDescription *iDescription, std::string &oStringValue) const = 0;
+
+private:
   std::string fName;
-
-  virtual void apply(TView *iView, const UIAttributes &iAttributes, const IUIDescription *iDescription) = 0;
-
-  virtual std::string getAttributeValue(TView *iView, const IUIDescription *iDescription) const = 0;
 };
 
-struct TemplateText
-{
-  const char *text;
-};
-
-template<typename TView, TemplateText const &ViewName, TemplateText const &DisplayName>
+template<typename TView>
 class CustomViewCreator : public ViewCreatorAdapter
 {
 private:
-  class Color : public CustomViewAttribute<TView>
+  class ColorAttribute : public CustomViewAttribute
   {
   public:
     using Getter = const CColor &(TView::*)() const;
     using Setter = void (TView::*)(CColor const &);
 
-    Color(std::string const &iName,
-          Getter iGetter,
-          Setter iSetter) :
-      CustomViewAttribute<TView>(iName),
+    ColorAttribute(std::string const &iName,
+                   Getter iGetter,
+                   Setter iSetter) :
+      CustomViewAttribute(iName),
       fGetter{iGetter},
       fSetter{iSetter}
     {}
@@ -62,24 +64,32 @@ private:
       return IViewCreator::kColorType;
     }
 
-    void apply(TView *iView, const UIAttributes &iAttributes, const IUIDescription *iDescription) override
+    bool apply(CView *iView, const UIAttributes &iAttributes, const IUIDescription *iDescription) override
     {
-      CColor color;
-      if(UIViewCreator::stringToColor(iAttributes.getAttributeValue(CustomViewAttribute<TView>::fName), color,
-                                      iDescription))
+      auto *tv = dynamic_cast<TView *>(iView);
+      if(tv != nullptr)
       {
+        CColor color;
+        if(UIViewCreator::stringToColor(iAttributes.getAttributeValue(getName()), color,
+                                        iDescription))
+        {
 //        DLOG_F(INFO, "CustomViewCreator::Color::apply(%s,%s)", CustomViewAttribute<TView>::fName.c_str(),
 //               iAttributes.getAttributeValue(CustomViewAttribute<TView>::fName)->c_str());
-        (iView->*fSetter)(color);
+          (tv->*fSetter)(color);
+          return true;
+        }
       }
+      return false;
     }
 
-    std::string getAttributeValue(TView *iView, const IUIDescription *iDescription) const override
+    bool getAttributeValue(CView *iView, const IUIDescription *iDescription, std::string &oStringValue) const override
     {
-      std::string stringValue;
-      UIViewCreator::colorToString((iView->*fGetter)(), stringValue, iDescription);
-//      DLOG_F(INFO, "CustomViewCreator::Color::getAttributeValue(%s)=%s", CustomViewAttribute<TView>::fName.c_str(), stringValue.c_str());
-      return stringValue;
+      auto *tv = dynamic_cast<TView *>(iView);
+      if(tv != nullptr)
+      {
+        return UIViewCreator::colorToString((tv->*fGetter)(), oStringValue, iDescription);
+      }
+      return false;
     }
 
   private:
@@ -88,9 +98,14 @@ private:
   };
 
 public:
-  CustomViewCreator() : fAttributes{}
+  CustomViewCreator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
+    fViewName{iViewName},
+    fDisplayName{iDisplayName},
+    fAttributes{}
   {
-    VSTGUI::UIViewFactory::registerViewCreator(*this);
+    // this allows for inheritance!
+    if(iViewName != nullptr && iDisplayName != nullptr)
+      VSTGUI::UIViewFactory::registerViewCreator(*this);
   }
 
   ~CustomViewCreator() override
@@ -104,12 +119,12 @@ public:
 
   IdStringPtr getViewName() const override
   {
-    return ViewName.text;
+    return fViewName;
   }
 
   UTF8StringPtr getDisplayName() const override
   {
-    return DisplayName.text;
+    return fDisplayName;
   }
 
   IdStringPtr getBaseViewName() const override
@@ -117,9 +132,9 @@ public:
     return VSTGUI::UIViewCreator::kCControl;
   }
 
-  void registerColorAttribute(std::string const &iName, typename Color::Getter iGetter, typename Color::Setter iSetter)
+  void registerColorAttribute(std::string const &iName, typename ColorAttribute::Getter iGetter, typename ColorAttribute::Setter iSetter)
   {
-    registerAttribute(new Color(iName, iGetter, iSetter));
+    registerAttribute(new ColorAttribute(iName, iGetter, iSetter));
   }
 
   CView *create(const UIAttributes &attributes, const IUIDescription *description) const override
@@ -163,19 +178,20 @@ public:
     return kUnknownType;
   }
 
-  bool getAttributeValue(CView *view, const std::string &attributeName, std::string &stringValue,
-                         const IUIDescription *desc) const override
+  bool getAttributeValue(CView *iView,
+                         const std::string &iAttributeName,
+                         std::string &oStringValue,
+                         const IUIDescription *iDescription) const override
   {
-    auto *cdv = dynamic_cast<TView *>(view);
+    auto *cdv = dynamic_cast<TView *>(iView);
 
     if(cdv == nullptr)
       return false;
 
-    auto iter = fAttributes.find(attributeName);
+    auto iter = fAttributes.find(iAttributeName);
     if(iter != fAttributes.cend())
     {
-      stringValue = iter->second->getAttributeValue(cdv, desc);
-      return true;
+      return iter->second->getAttributeValue(cdv, iDescription, oStringValue);
     }
 
     return false;
@@ -183,12 +199,14 @@ public:
 
 private:
 
-  void registerAttribute(CustomViewAttribute<TView> *iAttribute)
+  void registerAttribute(CustomViewAttribute *iAttribute)
   {
-    fAttributes[iAttribute->fName] = iAttribute;
+    fAttributes[iAttribute->getName()] = iAttribute;
   }
 
-  std::map<std::string, CustomViewAttribute<TView> *> fAttributes;
+  char const *fViewName;
+  char const *fDisplayName;
+  std::map<std::string, CustomViewAttribute *> fAttributes;
 };
 
 }

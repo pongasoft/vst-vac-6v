@@ -74,22 +74,17 @@ void CustomDisplayView::drawStyleChanged()
 // CustomDisplayCreator
 ///////////////////////////////////////////
 
-constexpr auto CustomDisplayViewName = TemplateText{"pongasoft::CustomDisplay"};
-constexpr auto CustomDisplayDisplayName = TemplateText{"pongasoft - Custom Display"};
-
-class CustomDisplayCreator : public CustomViewCreator<CustomDisplayView, CustomDisplayViewName, CustomDisplayDisplayName>
+class CustomDisplayCreator : public CustomViewCreator<CustomDisplayView>
 {
 public:
-
-  CustomDisplayCreator() : CustomViewCreator()
+  explicit CustomDisplayCreator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) : CustomViewCreator(iViewName, iDisplayName)
   {
     registerColorAttribute(UIViewCreator::kAttrBackColor, &CustomDisplayView::getBackColor, &CustomDisplayView::setBackColor);
   }
-
 };
 
 
-CustomDisplayCreator __gLCDDisplayCreator2;
+CustomDisplayCreator __gLCDDisplayCreator2("pongasoft::CustomDisplay", "pongasoft - Custom Display");
 
 }
 }
