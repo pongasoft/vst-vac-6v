@@ -1,23 +1,12 @@
 #pragma once
 
-#include <vstgui4/vstgui/lib/controls/ctextlabel.h>
-#include <pluginterfaces/vst/ivstmessage.h>
-
-#include "VSTViewState.h"
-#include "../VAC6Constants.h"
-#include "../Messaging.h"
 #include "../VAC6Model.h"
 #include "CustomDisplayView.h"
-#include "DrawContext.h"
-#include "../Utils.h"
 
 namespace pongasoft {
 namespace VST {
 namespace VAC6 {
 
-using namespace VSTGUI;
-using namespace Common;
-using namespace Steinberg::Vst;
 using namespace GUI;
 
 /**
@@ -26,7 +15,8 @@ using namespace GUI;
 class HistoryView : public CustomDisplayView
 {
 public:
-  HistoryView(const CRect &size, IControlListener *listener, int32_t tag, CBitmap *pBackground);
+  explicit HistoryView(const CRect &size) : CustomDisplayView(size)
+  {};
 
   HistoryView(const HistoryView &c) = default;
 

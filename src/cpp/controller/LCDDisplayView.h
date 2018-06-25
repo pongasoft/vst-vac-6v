@@ -25,7 +25,7 @@ class LCDDisplayView : public HistoryView
 {
 public:
   // Constructor
-  LCDDisplayView(const CRect &size, IControlListener *listener, int32_t tag, CBitmap *pBackground);
+  explicit LCDDisplayView(const CRect &size);
 
   LCDDisplayView(const LCDDisplayView &c) = default;
 

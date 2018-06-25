@@ -5,7 +5,6 @@
 #include "VAC6Controller.h"
 #include "../VAC6CIDs.h"
 #include "../Parameter.h"
-#include "MaxLevelView.h"
 
 namespace pongasoft {
 namespace VST {
@@ -150,16 +149,16 @@ CView *VAC6Controller::verifyView(CView *view,
                                   const IUIDescription * /*description*/,
                                   VST3Editor * /*editor*/)
 {
-  auto control = dynamic_cast<CControl *>(view);
+  auto control = dynamic_cast<CustomDisplayView *>(view);
   if(control != nullptr)
   {
-    switch(control->getTag())
+    switch(control->getCustomViewTag())
     {
-      case kMaxLevelValue:
+      case EVAC6CustomViewTag::kMaxLevelValue:
         fMaxLevelState.assign(dynamic_cast<MaxLevelView *>(control));
         break;
 
-      case kLCD:
+      case EVAC6CustomViewTag::kLCD:
         fLCDDisplayState.assign(dynamic_cast<LCDDisplayView *>(control));
         break;
 

@@ -93,7 +93,87 @@ class CustomViewCreator : public ViewCreatorAdapter
 {
 private:
   /**
-   * Specialization for a color attribute (vst type CColor). The view must have getter and setter as defined by the
+   * Specialization for a tag attribute (vst type int32_t). The view must have getter and setter as defined by the
+   * types below.
+   */
+  class TagAttribute : public ViewAttribute
+  {
+  public:
+    using Getter = int32_t (TView::*)() const;
+    using Setter = void (TView::*)(int32_t);
+
+    TagAttribute(std::string const &iName,
+                 Getter iGetter,
+                 Setter iSetter) :
+      ViewAttribute(iName),
+      fGetter{iGetter},
+      fSetter{iSetter}
+    {
+    }
+
+    // getType
+    IViewCreator::AttrType getType() override
+    {
+      return IViewCreator::kTagType;
+    }
+
+    // apply => set the tag value
+    bool apply(CView *iView, const UIAttributes &iAttributes, const IUIDescription *iDescription) override
+    {
+      auto *tv = dynamic_cast<TView *>(iView);
+      if(tv != nullptr)
+      {
+        int32_t tag = -1;
+        const std::string *controlTagAttr = iAttributes.getAttributeValue(getName());
+        if(controlTagAttr)
+        {
+          if(controlTagAttr->length() != 0)
+          {
+            tag = iDescription->getTagForName(controlTagAttr->c_str());
+            if(tag == -1)
+            {
+              char *endPtr = nullptr;
+              tag = (int32_t) strtol(controlTagAttr->c_str(), &endPtr, 10);
+              if(endPtr == controlTagAttr->c_str())
+              {
+                tag = -1;
+              }
+            }
+          }
+        }
+        (tv->*fSetter)(tag);
+        return true;
+      }
+      return false;
+    }
+
+    // getAttributeValue => get the tag value
+    bool getAttributeValue(CView *iView, const IUIDescription *iDescription, std::string &oStringValue) const override
+    {
+      auto *tv = dynamic_cast<TView *>(iView);
+      if(tv != nullptr)
+      {
+        int32_t tag = (tv->*fGetter)();
+        if(tag != -1)
+        {
+          UTF8StringPtr controlTag = iDescription->lookupControlTagName(tag);
+          if(controlTag)
+          {
+            oStringValue = controlTag;
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+  private:
+    Getter fGetter;
+    Setter fSetter;
+  };
+
+  /**
+   * Specialization for the tag attribute. The view must have getter and setter as defined by the
    * types below.
    */
   class ColorAttribute : public ViewAttribute
@@ -152,9 +232,11 @@ private:
 
 public:
   // Constructor
-  explicit CustomViewCreator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
+  explicit CustomViewCreator(char const *iViewName = nullptr, char const *iDisplayName = nullptr,
+                             char const *iBaseViewName = VSTGUI::UIViewCreator::kCView) :
     fViewName{iViewName},
     fDisplayName{iDisplayName},
+    fBaseViewName{iBaseViewName},
     fAttributes{}
   {
     // this allows for inheritance!
@@ -185,7 +267,7 @@ public:
   // getBaseViewName
   IdStringPtr getBaseViewName() const override
   {
-    return VSTGUI::UIViewCreator::kCControl;
+    return fBaseViewName;
   }
 
   /**
@@ -207,9 +289,17 @@ public:
                               typename ColorAttribute::Getter iGetter,
                               typename ColorAttribute::Setter iSetter)
   {
-    std::shared_ptr<ViewAttribute> cva;
-    cva.reset(new ColorAttribute(iName, iGetter, iSetter));
-    registerAttribute(cva);
+    registerAttribute<ColorAttribute>(iName, iGetter, iSetter);
+  }
+
+  /**
+ * Registers a color attribute with the given name and getter/setter
+ */
+  void registerTagAttribute(std::string const &iName,
+                            typename TagAttribute::Getter iGetter,
+                            typename TagAttribute::Setter iSetter)
+  {
+    registerAttribute<TagAttribute>(iName, iGetter, iSetter);
   }
 
   /**
@@ -218,7 +308,7 @@ public:
   CView *create(const UIAttributes &attributes, const IUIDescription *description) const override
   {
     DLOG_F(INFO, "CustomViewCreator<%s>::create()", getViewName());
-    return new TView(CRect(0, 0, 0, 0), nullptr, -1, nullptr);
+    return new TView(CRect(0, 0, 0, 0));
   }
 
   /**
@@ -301,8 +391,23 @@ private:
     fAttributes[iAttribute->getName()] = iAttribute;
   }
 
+  /**
+   * Generic register attribute
+   */
+  template<typename TViewAttribute>
+  void registerAttribute(std::string const &iName,
+                         typename TViewAttribute::Getter iGetter,
+                         typename TViewAttribute::Setter iSetter)
+  {
+    std::shared_ptr<ViewAttribute> cva;
+    cva.reset(new TViewAttribute(iName, iGetter, iSetter));
+    registerAttribute(cva);
+  }
+
+
   char const *fViewName;
   char const *fDisplayName;
+  char const *fBaseViewName;
 
   // use a map of shared pointers so that they can easily be copied (see registerAttributes)
   std::map<std::string, std::shared_ptr<ViewAttribute>> fAttributes;

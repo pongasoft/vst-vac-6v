@@ -1,6 +1,7 @@
 #include "LCDDisplayView.h"
 #include "../Clock.h"
 #include "../AudioUtils.h"
+#include <vstgui4/vstgui/lib/controls/ccontrol.h>
 
 namespace pongasoft {
 namespace VST {
@@ -95,8 +96,8 @@ void LCDDisplayState::beforeUnassign()
 ///////////////////////////////////////////
 // LCDDisplayView::LCDDisplayView
 ///////////////////////////////////////////
-LCDDisplayView::LCDDisplayView(const CRect &size, IControlListener *listener, int32_t tag, CBitmap *pBackground)
-  : HistoryView(size, listener, tag, pBackground)
+LCDDisplayView::LCDDisplayView(const CRect &size)
+  : HistoryView(size)
 {
 
 }

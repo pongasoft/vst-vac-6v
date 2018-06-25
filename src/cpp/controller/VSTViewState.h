@@ -25,8 +25,6 @@ public:
   void assign(V *view) {
     DCHECK_NOTNULL_F(view, "assign should not receive null pointer");
 
-    DLOG_F(INFO, "VSTViewState::assign(%d)", view->getTag());
-
     if(fView != nullptr)
     {
       fView->unregisterViewListener(this);
@@ -55,8 +53,6 @@ protected:
    */
   void viewWillDelete(CView *view) override {
     DCHECK_EQ_F(view, fView, "should be called with the same object!");
-
-    DLOG_F(INFO, "VSTViewState::viewWillDelete(%d)", fView->getTag());
 
     beforeUnassign();
 

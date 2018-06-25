@@ -1,6 +1,8 @@
 #pragma once
 
 #include "VAC6Views.h"
+#include "VSTViewState.h"
+#include "../Messaging.h"
 
 namespace pongasoft {
 namespace VST {
@@ -16,7 +18,7 @@ class MaxLevelView : public HistoryView
 {
 public:
   // Constructor
-  MaxLevelView(const CRect &size, IControlListener *listener, int32_t tag, CBitmap *pBackground);
+  explicit MaxLevelView(const CRect &size);
 
   MaxLevelView(const MaxLevelView &c) = default;
 

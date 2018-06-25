@@ -12,8 +12,8 @@ using namespace VSTGUI;
 ///////////////////////////////////////////
 // CustomDisplayView::CustomDisplayView
 ///////////////////////////////////////////
-CustomDisplayView::CustomDisplayView(const CRect &size, IControlListener *listener, int32_t tag, CBitmap *pBackground)
-  : CControl(size, listener, tag, pBackground),
+CustomDisplayView::CustomDisplayView(const CRect &size)
+  : CView(size),
     fDrawCallback{nullptr},
     fBackColor{0,0,0}
 {
@@ -25,7 +25,7 @@ CustomDisplayView::CustomDisplayView(const CRect &size, IControlListener *listen
 // CustomDisplayView::CustomDisplayView
 ///////////////////////////////////////////
 CustomDisplayView::CustomDisplayView(const CustomDisplayView &c) :
-  CControl(c),
+  CView(c),
   fDrawCallback{c.fDrawCallback},
   fBackColor{c.fBackColor}
 {

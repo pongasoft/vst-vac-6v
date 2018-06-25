@@ -1,5 +1,6 @@
 #include "MaxLevelView.h"
 #include "../AudioUtils.h"
+#include "DrawContext.h"
 
 namespace pongasoft {
 namespace VST {
@@ -43,8 +44,8 @@ void MaxLevelState::onMessage(Message const &message)
 ///////////////////////////////////////////
 // MaxLevelView::MaxLevelView
 ///////////////////////////////////////////
-MaxLevelView::MaxLevelView(const CRect &size, IControlListener *listener, int32_t tag, CBitmap *pBackground)
-  : HistoryView(size, listener, tag, pBackground)
+MaxLevelView::MaxLevelView(const CRect &size)
+  : HistoryView(size)
 {
 
 }
