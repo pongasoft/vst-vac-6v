@@ -436,23 +436,16 @@ tresult VAC6Processor::setState(IBStream *state)
     newState.fRightChannelOn = savedParam;
   }
 
-  // lcd live view
-  {
-    bool savedParam;
-    if(!streamer.readBool(savedParam))
-      savedParam = true;
-    newState.fLCDLiveView = savedParam;
-  }
+  // lcd live view IGNORED! (does not make sense to not be in live view when loading)
 
   fStateUpdate.push(newState);
 
-  DLOG_F(INFO, "VAC6Processor::setState => fSoftClippingLevel=%f, fZoomFactorX=%f, fMaxLevelAutoResetInSeconds=%d, fLeftChannelOn=%d, fRightChannelOn=%d, fLCDLiveView=%d",
+  DLOG_F(INFO, "VAC6Processor::setState => fSoftClippingLevel=%f, fZoomFactorX=%f, fMaxLevelAutoResetInSeconds=%d, fLeftChannelOn=%d, fRightChannelOn=%d",
          newState.fSoftClippingLevel.getValueInSample(),
          newState.fZoomFactorX,
          newState.fMaxLevelAutoResetInSeconds,
          newState.fLeftChannelOn,
-         newState.fRightChannelOn,
-         newState.fLCDLiveView);
+         newState.fRightChannelOn);
 
   return kResultOk;
 }
@@ -474,15 +467,13 @@ tresult VAC6Processor::getState(IBStream *state)
   streamer.writeInt32(latestState.fMaxLevelAutoResetInSeconds);
   streamer.writeBool(latestState.fLeftChannelOn);
   streamer.writeBool(latestState.fRightChannelOn);
-  streamer.writeBool(latestState.fLCDLiveView);
 
-  DLOG_F(INFO, "VAC6Processor::getState => fSoftClippingLevel=%f, fZoomFactorX=%f, fMaxLevelAutoResetInSeconds=%d, fLeftChannelOn=%d, fRightChannelOn=%d, fLCDLiveView=%d",
+  DLOG_F(INFO, "VAC6Processor::getState => fSoftClippingLevel=%f, fZoomFactorX=%f, fMaxLevelAutoResetInSeconds=%d, fLeftChannelOn=%d, fRightChannelOn=%d",
          latestState.fSoftClippingLevel.getValueInSample(),
          latestState.fZoomFactorX,
          latestState.fMaxLevelAutoResetInSeconds,
          latestState.fLeftChannelOn,
-         latestState.fRightChannelOn,
-         latestState.fLCDLiveView);
+         latestState.fRightChannelOn);
 
   return kResultOk;
 }

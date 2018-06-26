@@ -68,6 +68,9 @@ private:
   // the name of the xml file (relative) which contains the ui description
   char const *const fXmlFile;
 
+  // the vst parameters
+  std::shared_ptr<VSTParameters> fVSTParameters;
+
   // state for max level
   MaxLevelState fMaxLevelState;
 

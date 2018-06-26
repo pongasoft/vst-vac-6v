@@ -1,7 +1,9 @@
 #include "LCDDisplayView.h"
 #include "../Clock.h"
 #include "../AudioUtils.h"
+#include "../VAC6CIDs.h"
 #include <vstgui4/vstgui/lib/controls/ccontrol.h>
+#include <vstgui4/vstgui/lib/cframe.h>
 
 namespace pongasoft {
 namespace VST {
@@ -197,6 +199,13 @@ CMouseEventResult LCDDisplayView::onMouseDown(CPoint &where, const CButtonState 
   RelativePoint relativeWhere = rv.fromAbsolutePoint(where);
 
   DLOG_F(INFO, "LCDDisplayView::onMouseDown(%f,%f)", relativeWhere.x, relativeWhere.y);
+
+  if(fParameters->getBooleanValue(EVAC6ParamID::kLCDLiveView))
+  {
+    DLOG_F(INFO, "LCDDisplayView::onMouseDown() => stopping");
+    fParameters->setBooleanValue(EVAC6ParamID::kLCDLiveView, false);
+  }
+
   return CView::onMouseDown(where, buttons);
 }
 

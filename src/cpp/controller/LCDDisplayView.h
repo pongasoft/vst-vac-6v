@@ -7,6 +7,10 @@
 #include "../Messaging.h"
 #include "../Utils.h"
 #include "VAC6Views.h"
+#include "VSTParameters.h"
+#include "../VAC6CIDs.h"
+#include <memory>
+#include <utility>
 
 namespace pongasoft {
 namespace VST {
@@ -47,6 +51,13 @@ public:
     fState = iState;
   }
 
+  void setParameters(std::shared_ptr<VSTParameters> iParameters)
+  {
+    fParameters = std::move(iParameters);
+  }
+
+public:
+
   // draw => does the actual drawing job
   void draw(CDrawContext *iContext) override;
 
@@ -59,6 +70,9 @@ protected:
 
   // the state
   LCDDisplayState *fState{nullptr};
+
+  // Access to parameters
+  std::shared_ptr<VSTParameters> fParameters;
 };
 
 constexpr long MESSAGE_VISIBLE_DURATION_MS = 2000;
