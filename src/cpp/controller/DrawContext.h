@@ -11,6 +11,7 @@ using namespace VSTGUI;
 
 const CColor WHITE_COLOR = CColor{255, 255, 255};
 const CColor BLACK_COLOR = CColor{0, 0, 0};
+const CColor RED_COLOR = CColor{255, 0, 0};
 
 struct StringDrawContext
 {
@@ -102,19 +103,32 @@ public:
   {
   }
 
-  void drawLine(CCoord x1, CCoord y1, CCoord x2, CCoord y2, CColor const &color)
+  void drawLine(RelativeCoord x1, RelativeCoord y1, RelativeCoord x2, RelativeCoord y2, CColor const &color)
   {
     fDrawContext->setFrameColor(color);
     fDrawContext->drawLine(toAbsolutePoint(x1, y1), toAbsolutePoint(x2, y2));
   }
 
-  void drawString(UTF8String const &iText, CCoord x, CCoord y, CCoord iHeight, StringDrawContext &iSdc)
+  void fillRect(RelativeRect const &iRect, CColor const &iColor)
+  {
+    fDrawContext->setFillColor(iColor);
+    fDrawContext->drawRect(toAbsoluteRect(iRect), kDrawFilled);
+  }
+
+  void fillAndStrokeRect(RelativeRect const &iRect, CColor const &iFillColor, CColor const &iStrokeColor)
+  {
+    fDrawContext->setFillColor(iFillColor);
+    fDrawContext->setFrameColor(iStrokeColor);
+    fDrawContext->drawRect(toAbsoluteRect(iRect), kDrawFilledAndStroked);
+  }
+
+  void drawString(UTF8String const &iText, RelativeCoord x, RelativeCoord y, RelativeCoord iHeight, StringDrawContext &iSdc)
   {
     CRect size{x, y, fDrawContext->getStringWidth(iText.getPlatformString()), iHeight};
     drawString(iText, size, iSdc);
   }
 
-  void drawString(UTF8String const &iText, CRect const &fSize, StringDrawContext &iSdc);
+  void drawString(UTF8String const &iText, RelativeRect const &fSize, StringDrawContext &iSdc);
 
   void drawString(UTF8String const &iText, StringDrawContext &iSdc)
   {

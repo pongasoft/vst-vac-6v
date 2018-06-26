@@ -60,7 +60,9 @@ void MaxLevelView::draw(CDrawContext *iContext)
   if(fState == nullptr)
     return;
 
-  TSample max = std::max(fState->fMaxLevel.fLeftValue, fState->fMaxLevel.fRightValue);
+  TSample leftValue = fParameters->getBooleanValue(EVAC6ParamID::kLCDLeftChannel) ? fState->fMaxLevel.fLeftValue : 0.0;
+  TSample rightValue = fParameters->getBooleanValue(EVAC6ParamID::kLCDRightChannel) ? fState->fMaxLevel.fRightValue : 0.0;
+  TSample max = std::max(leftValue, rightValue);
 
   CColor fontColor = getNoDataColor();
 

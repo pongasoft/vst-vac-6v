@@ -7,7 +7,7 @@ namespace GUI {
 
 using namespace VSTGUI;
 
-void RelativeDrawContext::drawString(UTF8String const &fText, CRect const &fSize, StringDrawContext &sdc)
+void RelativeDrawContext::drawString(UTF8String const &fText, RelativeRect const &fSize, StringDrawContext &sdc)
 {
   if(!(sdc.fStyle & kNoTextStyle))
   {

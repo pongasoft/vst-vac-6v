@@ -1,13 +1,14 @@
 #include "LCDDisplayView.h"
 #include "../Clock.h"
 #include "../AudioUtils.h"
-#include "../VAC6CIDs.h"
 #include <vstgui4/vstgui/lib/controls/ccontrol.h>
-#include <vstgui4/vstgui/lib/cframe.h>
 
 namespace pongasoft {
 namespace VST {
 namespace VAC6 {
+
+const CColor WHITE_COLOR_40 = CColor{255,255,255,40};
+const CColor WHITE_COLOR_60 = CColor{255,255,255,60};
 
 ///////////////////////////////////////////
 // LCDDisplayState::onMessage
@@ -117,13 +118,17 @@ void LCDDisplayView::draw(CDrawContext *iContext)
   auto rdc = GUI::RelativeDrawContext{this, iContext};
 
   auto height = getViewSize().getHeight();
-  CCoord left = 0;
+  auto width = getViewSize().getWidth();
+  RelativeCoord left = 0;
 
   bool leftChannelOn = fState->fLCDData.fLeftChannelOn;
   bool rightChannelOn = fState->fLCDData.fRightChannelOn;
 
   if(leftChannelOn || rightChannelOn)
   {
+    int lcdInputX = fParameters->getDiscreteValue(EVAC6ParamID::kLCDInputX, MAX_LCD_INPUT_X);
+    RelativeCoord lcdInputY = -1; // used when paused
+
     // display every sample in the array as a vertical line (from the bottom)
     for(int i = 0; i < MAX_ARRAY_SIZE; i++)
     {
@@ -133,6 +138,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
       TSample rightSample = rightChannelOn ? fState->fLCDData.fRightSamples[i] : 0;
 
       TSample sample = std::max(leftSample, rightSample);
+      RelativeCoord top = height;
 
       if(sample >= Common::Sample64SilentThreshold)
       {
@@ -143,15 +149,30 @@ void LCDDisplayView::draw(CDrawContext *iContext)
           displayValue = toDisplayValue(sample, height);
         }
 
-        auto top = height - displayValue;
+        top = height - displayValue;
 
         // color of the sample depends on its level
         CColor const &color = computeColor(fState->fLCDData.fSoftClippingLevel, sample);
 
         rdc.drawLine(left, top, left, height, color);
+
       }
 
+      if(lcdInputX == i)
+        lcdInputY = top;
+
       left++;
+    }
+
+    // in pause mode we draw the selection
+    if(!fParameters->getBooleanValue(EVAC6ParamID::kLCDLiveView))
+    {
+      constexpr auto offset = 3.0;
+      rdc.fillRect(RelativeRect{lcdInputX - 5.0, 0, lcdInputX + 5.0, height}, WHITE_COLOR_40);
+      rdc.fillRect(RelativeRect{lcdInputX - 3.0, 0, lcdInputX + 3.0, height}, WHITE_COLOR_60);
+      rdc.drawLine(lcdInputX, 0, lcdInputX, height, WHITE_COLOR);
+      rdc.drawLine(0, lcdInputY, width, lcdInputY, WHITE_COLOR_60);
+      rdc.fillAndStrokeRect(RelativeRect{lcdInputX - offset, lcdInputY - offset, lcdInputX + offset, lcdInputY + offset}, RED_COLOR, WHITE_COLOR);
     }
   }
 
@@ -161,6 +182,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
 
   // draw the soft clipping line
   rdc.drawLine(0, top, getWidth(), top, getSoftClippingLevelColor());
+
 
   // TODO handle font: use default?
   // print the level
@@ -175,7 +197,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
     sdc.fShadowColor.alpha = fState->fLCDSoftClipingLevelMessage->fColor.alpha;
 
     auto textTop = top + 3;
-    rdc.drawString(fState->fLCDSoftClipingLevelMessage->fText, CRect{0, textTop, MAX_ARRAY_SIZE, textTop + 20}, sdc);
+    rdc.drawString(fState->fLCDSoftClipingLevelMessage->fText, RelativeRect{0, textTop, MAX_ARRAY_SIZE, textTop + 20}, sdc);
 
   }
 
@@ -186,7 +208,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
     sdc.fTextInset = {2, 2};
     sdc.fFontColor = fState->fLCDZoomFactorXMessage->fColor;
 
-    rdc.drawString(fState->fLCDZoomFactorXMessage->fText, CRect{0, 0, MAX_ARRAY_SIZE, 20}, sdc);
+    rdc.drawString(fState->fLCDZoomFactorXMessage->fText, RelativeRect{0, 0, MAX_ARRAY_SIZE, 20}, sdc);
   }
 }
 
@@ -206,7 +228,10 @@ CMouseEventResult LCDDisplayView::onMouseDown(CPoint &where, const CButtonState 
     fParameters->setBooleanValue(EVAC6ParamID::kLCDLiveView, false);
   }
 
-  return CView::onMouseDown(where, buttons);
+  int lcdInputX = clamp(static_cast<int>(relativeWhere.x), 0, MAX_LCD_INPUT_X);
+  fParameters->setDiscreteValue(EVAC6ParamID::kLCDInputX, MAX_LCD_INPUT_X, lcdInputX);
+
+  return kMouseEventHandled;
 }
 
 

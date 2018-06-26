@@ -85,26 +85,32 @@ private:
 class VAC6AudioChannelProcessor
 {
 public:
+  // Constructor
   explicit VAC6AudioChannelProcessor(SampleRateBasedClock const &iClock);
 
+  // Destructor
   ~VAC6AudioChannelProcessor();
 
+  // getMaxBuffer
   CircularBuffer<TSample> const &getMaxBuffer() const
   {
     return *fMaxBuffer;
   };
 
+  // getBufferAccumulatorBatchSize
   long getBufferAccumulatorBatchSize() const
   {
     return fMaxAccumulatorForBuffer.getBatchSize();
   }
 
+  // resetMaxLevelAccumulator
   void resetMaxLevelAccumulator()
   {
     fMaxLevelAccumulator.reset();
     fMaxLevel = 0;
   }
 
+  // resetMaxLevelAccumulator
   void resetMaxLevelAccumulator(uint32 iMaxLevelResetInSeconds)
   {
     if(iMaxLevelResetInSeconds == 0)
@@ -119,6 +125,7 @@ public:
       fMaxLevel = 0;
   }
 
+  // getMaxLevel
   TSample getMaxLevel() const
   {
     return fMaxLevel;
@@ -133,7 +140,11 @@ public:
     fZoomMaxAccumulator = fZoomWindow.computeZoomWindow(*fMaxBuffer, *fZoomMaxBuffer);
   }
 
+  // setIsLiveView
   void setIsLiveView(bool iIsLiveView);
+
+  // setPausedZoomMaxBufferOffset
+  void setPausedZoomMaxBufferOffset(int iOffset);
 
   /**
    * @return the duration of the window in milliseconds
@@ -171,6 +182,7 @@ private:
   CircularBuffer<TSample> *const fZoomMaxBuffer;
 
   bool fIsLiveView;
+  int fPausedZoomMaxBufferOffset;
 };
 
 }

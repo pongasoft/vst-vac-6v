@@ -225,6 +225,14 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
     fRightChannelProcessor->setIsLiveView(fState.fLCDLiveView);
   }
 
+  if(fPreviousState.fLCDInputX != fState.fLCDInputX)
+  {
+    // fState.fLCDInputX [0-255] => offset [-256, -1]
+    int newOffset = fState.fLCDInputX - MAX_ARRAY_SIZE;
+    fLeftChannelProcessor->setPausedZoomMaxBufferOffset(newOffset);
+    fRightChannelProcessor->setPausedZoomMaxBufferOffset(newOffset);
+  }
+
   if(fPreviousState.fMaxLevelAutoResetInSeconds != fState.fMaxLevelAutoResetInSeconds)
   {
     fLeftChannelProcessor->resetMaxLevelAccumulator(fState.fMaxLevelAutoResetInSeconds);
@@ -365,6 +373,11 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
           case kLCDLiveView:
             newState.fLCDLiveView = denormalizeBoolValue(value);
             stateChanged = newState.fLCDLiveView != fState.fLCDLiveView;
+            break;
+
+          case kLCDInputX:
+            newState.fLCDInputX = denormalizeDiscreteValue(MAX_LCD_INPUT_X, value);
+            stateChanged = newState.fLCDInputX != fState.fLCDInputX;
             break;
 
           default:

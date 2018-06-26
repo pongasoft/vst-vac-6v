@@ -19,10 +19,11 @@ enum EVAC6ParamID : Steinberg::Vst::ParamID
 
   kSoftClippingLevel = 2000,
 
-  kLCDZoomFactorX = 3010,
-  kLCDLeftChannel = 3020,
-  kLCDRightChannel = 3021,
-  kLCDLiveView = 3030,
+  kLCDZoomFactorX = 3010,  // zoom factor on the X axis (history)
+  kLCDLeftChannel = 3020,  // toggle for showing/hiding left channel
+  kLCDRightChannel = 3021, // toggle for showing/hiding right channel
+  kLCDLiveView = 3030,     // live view/pause toggle
+  kLCDInputX = 3040,       // selected position on the screen when paused
 };
 
 // tags associated to custom views (not associated to params)

@@ -51,7 +51,7 @@ public:
     fState = iState;
   }
 
-  void setParameters(std::shared_ptr<VSTParameters> iParameters)
+  void initParameters(std::shared_ptr<VSTParameters> iParameters)
   {
     fParameters = std::move(iParameters);
   }
@@ -72,7 +72,7 @@ protected:
   LCDDisplayState *fState{nullptr};
 
   // Access to parameters
-  std::shared_ptr<VSTParameters> fParameters;
+  std::shared_ptr<VSTParameters> fParameters{nullptr};
 };
 
 constexpr long MESSAGE_VISIBLE_DURATION_MS = 2000;

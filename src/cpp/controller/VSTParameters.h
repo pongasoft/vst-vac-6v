@@ -241,6 +241,23 @@ public:
   }
 
   /**
+   * @return the parameter as a discrete value
+   */
+  template<typename T>
+  T getDiscreteValue(ParamID iParamID, T iStepCount) const
+  {
+    return Common::denormalizeDiscreteValue(iStepCount, getNormalizedValue(iParamID));
+  }
+
+  /**
+   * Automatically normalize the parameter from a discrete value
+   */
+  tresult setDiscreteValue(ParamID iParamID, int iStepCount, int iDiscreteValue)
+  {
+    return setNormalizedValue(iParamID, Common::normalizeDiscreteValue(iStepCount, iDiscreteValue));
+  }
+
+  /**
    * @return and editor to modify the parameter (see Editor)
    */
   std::unique_ptr<Editor> edit(ParamID iParamID)

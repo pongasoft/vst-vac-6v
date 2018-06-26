@@ -2,7 +2,9 @@
 
 #include "VAC6Views.h"
 #include "VSTViewState.h"
+#include "VSTParameters.h"
 #include "../Messaging.h"
+#include "../VAC6CIDs.h"
 
 namespace pongasoft {
 namespace VST {
@@ -41,10 +43,18 @@ public:
   // draw => does the actual drawing job
   void draw(CDrawContext *iContext) override;
 
+  void initParameters(std::shared_ptr<VSTParameters> iParameters)
+  {
+    fParameters = std::move(iParameters);
+  }
+
   CLASS_METHODS(MaxLevelView, HistoryView)
 
 protected:
   MaxLevelState *fState{nullptr};
+
+  // Access to parameters
+  std::shared_ptr<VSTParameters> fParameters{nullptr};
 
   CColor fNoDataColor{};
 };

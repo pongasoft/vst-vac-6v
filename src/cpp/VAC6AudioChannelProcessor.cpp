@@ -22,7 +22,8 @@ VAC6AudioChannelProcessor::VAC6AudioChannelProcessor(SampleRateBasedClock const 
   fZoomWindow{MAX_ARRAY_SIZE, fMaxBuffer->getSize()},
   fZoomMaxAccumulator{fZoomWindow.setZoomFactor(DEFAULT_ZOOM_FACTOR_X)},
   fZoomMaxBuffer{new CircularBuffer<TSample>(fZoomWindow.getVisibleWindowSizeInPoints())},
-  fIsLiveView{true}
+  fIsLiveView{true},
+  fPausedZoomMaxBufferOffset{-1}
 {
   fMaxBuffer->init(0);
   fZoomMaxBuffer->init(0);
@@ -57,8 +58,20 @@ void VAC6AudioChannelProcessor::setIsLiveView(bool iIsLiveView)
 
   if(!iIsLiveView)
   {
-    // fMaxLevel will be the point on the right in the visible window which is the last sample added to the buffer
-    fMaxLevel = fZoomMaxBuffer->getAt(-1);
+    fMaxLevel = fZoomMaxBuffer->getAt(fPausedZoomMaxBufferOffset);
+  }
+}
+
+/////////////////////////////////////////
+// VAC6AudioChannelProcessor::setPausedZoomMaxBufferOffset
+/////////////////////////////////////////
+void VAC6AudioChannelProcessor::setPausedZoomMaxBufferOffset(int iOffset)
+{
+  fPausedZoomMaxBufferOffset = iOffset;
+
+  if(!fIsLiveView)
+  {
+    fMaxLevel = fZoomMaxBuffer->getAt(fPausedZoomMaxBufferOffset);
   }
 }
 

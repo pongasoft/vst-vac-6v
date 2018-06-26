@@ -15,7 +15,7 @@ constexpr long UI_FRAME_RATE_MS = 40; // 40ms => 25 frames per seconds
 //constexpr long UI_FRAME_RATE_MS = 250; // 4 per seconds for dev
 
 constexpr int MAX_ARRAY_SIZE = 256; // size of LCD window
-constexpr int MAX_INPUT_PAGE_OFFSET = MAX_ARRAY_SIZE - 1;
+constexpr int MAX_LCD_INPUT_X = MAX_ARRAY_SIZE - 1;
 
 // the max will be accumulated for 5ms which is ~221 samples at 44100 sample rate
 constexpr int ACCUMULATOR_BATCH_SIZE_IN_MS = 5;

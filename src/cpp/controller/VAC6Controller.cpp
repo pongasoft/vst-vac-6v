@@ -118,6 +118,16 @@ tresult VAC6Controller::initialize(FUnknown *context)
                           kRootUnitId, // unitID => not using units at this stage
                           STR16 ("Live")); // shortTitle
 
+  // selected position on the screen when paused
+  parameters.addParameter(STR16 ("Graph Select"), // title
+                          nullptr, // units
+                          MAX_ARRAY_SIZE, // stepCount => as many position as elements in the array
+                          1.0, // defaultNormalizedValue => all the way to the right
+                          0, // flags (state is not saved)
+                          EVAC6ParamID::kLCDInputX, // tag
+                          kRootUnitId, // unitID => not using units at this stage
+                          STR16 ("Gph Sel.")); // shortTitle
+
   fVSTParameters = std::make_shared<VSTParameters>(this);
 
   return result;
@@ -157,13 +167,17 @@ CView *VAC6Controller::verifyView(CView *view,
     switch(control->getCustomViewTag())
     {
       case EVAC6CustomViewTag::kMaxLevelValue:
-        fMaxLevelState.assign(dynamic_cast<MaxLevelView *>(control));
+      {
+        auto v = dynamic_cast<MaxLevelView *>(control);
+        v->initParameters(fVSTParameters);
+        fMaxLevelState.assign(v);
         break;
+      }
 
       case EVAC6CustomViewTag::kLCD:
       {
         auto *lcd = dynamic_cast<LCDDisplayView *>(control);
-        lcd->setParameters(fVSTParameters);
+        lcd->initParameters(fVSTParameters);
         fLCDDisplayState.assign(lcd);
         break;
       }
