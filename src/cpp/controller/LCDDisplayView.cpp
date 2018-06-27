@@ -221,9 +221,59 @@ CMouseEventResult LCDDisplayView::onMouseDown(CPoint &where, const CButtonState 
     fLCDLiveViewParameter->setValue(false);
   }
 
-  fLCDInputXParameter->setValue(static_cast<int>(relativeWhere.x));
+  fLCDInputXEditor = fLCDInputXParameter->edit(static_cast<int>(relativeWhere.x));
 
   return kMouseEventHandled;
+}
+
+///////////////////////////////////////////
+// LCDDisplayView::onMouseMoved
+///////////////////////////////////////////
+CMouseEventResult LCDDisplayView::onMouseMoved(CPoint &where, const CButtonState &buttons)
+{
+  RelativeView rv(this);
+  RelativePoint relativeWhere = rv.fromAbsolutePoint(where);
+
+  if(fLCDInputXEditor)
+  {
+    fLCDInputXEditor->setValue(static_cast<int>(relativeWhere.x));
+    return kMouseEventHandled;
+  }
+
+  return kMouseEventNotHandled;
+}
+
+///////////////////////////////////////////
+// LCDDisplayView::onMouseUp
+///////////////////////////////////////////
+CMouseEventResult LCDDisplayView::onMouseUp(CPoint &where, const CButtonState &buttons)
+{
+  RelativeView rv(this);
+  RelativePoint relativeWhere = rv.fromAbsolutePoint(where);
+
+  if(fLCDInputXEditor)
+  {
+    fLCDInputXEditor->commit(static_cast<int>(relativeWhere.x));
+    fLCDInputXEditor = nullptr;
+    return kMouseEventHandled;
+  }
+
+  return kMouseEventNotHandled;
+}
+
+///////////////////////////////////////////
+// LCDDisplayView::onMouseCancel
+///////////////////////////////////////////
+CMouseEventResult LCDDisplayView::onMouseCancel()
+{
+  if(fLCDInputXEditor)
+  {
+    fLCDInputXEditor->rollback();
+    fLCDInputXEditor = nullptr;
+    return kMouseEventHandled;
+  }
+
+  return kMouseEventNotHandled;
 }
 
 ///////////////////////////////////////////
@@ -253,6 +303,7 @@ void LCDDisplayView::onParameterChange(ParamID iParamID, ParamValue iNormalizedV
       break;
   }
 }
+
 
 
 LCDDisplayView::Creator __gLCDDisplayViewCreator("pongasoft::LCDDisplay", "pongasoft - LCD Display");

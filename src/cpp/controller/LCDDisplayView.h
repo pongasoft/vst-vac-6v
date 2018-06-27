@@ -62,6 +62,12 @@ public:
 
   CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override;
 
+  CMouseEventResult onMouseMoved(CPoint &where, const CButtonState &buttons) override;
+
+  CMouseEventResult onMouseUp(CPoint &where, const CButtonState &buttons) override;
+
+  CMouseEventResult onMouseCancel() override;
+
   CLASS_METHODS_NOCOPY(LCDDisplayView, HistoryView)
 
 protected:
@@ -70,8 +76,12 @@ protected:
   // the state
   LCDDisplayState *fState{nullptr};
 
-  std::unique_ptr<BooleanParameter> fLCDLiveViewParameter;
-  std::unique_ptr<DiscreteParameter<MAX_LCD_INPUT_X>> fLCDInputXParameter;
+  std::unique_ptr<BooleanParameter> fLCDLiveViewParameter{nullptr};
+
+  using LCDInputXParameter = DiscreteParameter<MAX_LCD_INPUT_X>;
+
+  std::unique_ptr<LCDInputXParameter> fLCDInputXParameter{nullptr};
+  std::unique_ptr<LCDInputXParameter::Editor> fLCDInputXEditor{nullptr};
 
 public:
   class Creator : public CustomViewCreator<LCDDisplayView>

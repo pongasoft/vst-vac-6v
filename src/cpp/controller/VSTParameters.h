@@ -296,6 +296,17 @@ public:
       return fRawEditor->commit();
     }
 
+    /*
+     * Shortcut to set the value prior to commit
+     * Call when you are done with the modifications.
+     * This has no effect if rollback() has already been called
+     */
+    inline tresult commit(T iValue)
+    {
+      setValue(iValue);
+      return fRawEditor->commit();
+    }
+
     /**
      * Call this if you want to revert to the original value of the parameter (when the editor is created).
      * This has no effect if commit() has already been called
@@ -347,6 +358,18 @@ public:
   std::unique_ptr<Editor> edit()
   {
     return std::make_unique<Editor>(fRawParameter->edit());
+  }
+
+  /**
+   * Shortcut to create an editor and set the value to it
+   *
+   * @return an editor to modify the parameter (see Editor)
+   */
+  std::unique_ptr<Editor> edit(T iValue)
+  {
+    auto editor = std::make_unique<Editor>(fRawParameter->edit());
+    editor->setValue(iValue);
+    return editor;
   }
 
 private:
