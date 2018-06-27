@@ -241,7 +241,13 @@ private:
   ParameterOwner *const fParameterOwner;
 };
 
-template<typename T, T (* Denormalizer)(ParamValue), ParamValue (*Normalizer)(T)>
+template<typename T>
+using VSTParameterDenormalizer = T (*)(ParamValue);
+
+template<typename T>
+using VSTParameterNormalizer = ParamValue (*)(T const &);
+
+template<typename T, VSTParameterDenormalizer<T> Denormalizer, VSTParameterNormalizer<T> Normalizer>
 class VSTParameter
 {
 public:

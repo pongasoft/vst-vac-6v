@@ -80,7 +80,7 @@ public:
 // 0.0  => -24dB => (10^-24/20 => 0.06 sample value)
 // => scl = A * x + B in dB => 10 ^ scl/20 in sample
 
-  inline ParamValue getNormalizedParam()
+  inline ParamValue getNormalizedParam() const
   {
     return (MIN_SOFT_CLIPPING_LEVEL_DB - getValueInDb()) / MIN_SOFT_CLIPPING_LEVEL_DB;
   }
@@ -91,7 +91,7 @@ public:
     return SoftClippingLevel {dbToSample<TSample>(sclIndB)};
   }
 
-  static ParamValue normalize(SoftClippingLevel iSoftClippingLevel)
+  static ParamValue normalize(SoftClippingLevel const &iSoftClippingLevel)
   {
     return iSoftClippingLevel.getNormalizedParam();
   }
