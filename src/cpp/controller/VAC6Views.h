@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../VAC6Model.h"
-#include "CustomDisplayView.h"
+#include "CustomView.h"
 
 namespace pongasoft {
 namespace VST {
@@ -12,13 +12,13 @@ using namespace GUI;
 /**
  * Base class to LCD and MaxLevel
  */
-class HistoryView : public CustomDisplayView
+class HistoryView : public CustomView
 {
 public:
-  explicit HistoryView(const CRect &size) : CustomDisplayView(size)
+  explicit HistoryView(const CRect &size) : CustomView(size)
   {};
 
-  HistoryView(const HistoryView &c) = default;
+  HistoryView(const HistoryView &c) = delete;
 
   // getLevelStateOkColor
   const CColor &getLevelStateOkColor() const
@@ -56,7 +56,7 @@ public:
     fLevelStateHardClippingColor = iLevelStateHardClippingColor;
   }
 
-  CLASS_METHODS(HistoryView, CustomDisplayView)
+  CLASS_METHODS_NOCOPY(HistoryView, CustomView)
 
 protected:
 
@@ -66,30 +66,27 @@ protected:
   CColor fLevelStateOkColor{};
   CColor fLevelStateSoftClippingColor{};
   CColor fLevelStateHardClippingColor{};
-};
 
-/**
- * The factory for HistoryView
- */
-class HistoryViewCreator : public CustomViewCreator<HistoryView>
-{
 public:
-  explicit HistoryViewCreator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
-    CustomViewCreator(iViewName, iDisplayName)
+  class Creator : public CustomViewCreator<HistoryView>
   {
-    registerAttributes(CustomDisplayCreator());
-    registerColorAttribute("level-state-ok-color",
-                           &HistoryView::getLevelStateOkColor,
-                           &HistoryView::setLevelStateOkColor);
-    registerColorAttribute("level-state-soft-clipping-color",
-                           &HistoryView::getLevelStateSoftClippingColor,
-                           &HistoryView::setLevelStateSoftClippingColor);
-    registerColorAttribute("level-state-hard-clipping-color",
-                           &HistoryView::getLevelStateHardClippingColor,
-                           &HistoryView::setLevelStateHardClippingColor);
-  }
+  public:
+    explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
+      CustomViewCreator(iViewName, iDisplayName)
+    {
+      registerAttributes(CustomView::Creator());
+      registerColorAttribute("level-state-ok-color",
+                             &HistoryView::getLevelStateOkColor,
+                             &HistoryView::setLevelStateOkColor);
+      registerColorAttribute("level-state-soft-clipping-color",
+                             &HistoryView::getLevelStateSoftClippingColor,
+                             &HistoryView::setLevelStateSoftClippingColor);
+      registerColorAttribute("level-state-hard-clipping-color",
+                             &HistoryView::getLevelStateHardClippingColor,
+                             &HistoryView::setLevelStateHardClippingColor);
+    }
+  };
 };
-
 
 
 }

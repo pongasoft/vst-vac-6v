@@ -161,7 +161,7 @@ CView *VAC6Controller::verifyView(CView *view,
                                   const IUIDescription * /*description*/,
                                   VST3Editor * /*editor*/)
 {
-  auto control = dynamic_cast<CustomDisplayView *>(view);
+  auto control = dynamic_cast<CustomView *>(view);
   if(control != nullptr)
   {
     switch(control->getCustomViewTag())
@@ -224,7 +224,7 @@ tresult VAC6Controller::setComponentState(IBStream *state)
   if(!streamer.readInt32(savedMaxLevelAutoReset))
     savedMaxLevelAutoReset = DEFAULT_MAX_LEVEL_RESET_IN_SECONDS;
   setParamNormalized(EVAC6ParamID::kMaxLevelAutoReset,
-                     normalizeDiscreteValue(MAX_LEVEL_AUTO_RESET_STEP_COUNT, savedMaxLevelAutoReset));
+                     normalizeDiscreteValue<MAX_LEVEL_AUTO_RESET_STEP_COUNT>(savedMaxLevelAutoReset));
 
   // EVAC6ParamID::kLCDLeftChannel
   bool savedLeftChannelOn;

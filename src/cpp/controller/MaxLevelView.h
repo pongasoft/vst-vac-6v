@@ -22,7 +22,7 @@ public:
   // Constructor
   explicit MaxLevelView(const CRect &size);
 
-  MaxLevelView(const MaxLevelView &c) = default;
+  MaxLevelView(const MaxLevelView &c) = delete;
 
   // setState
   void setState(MaxLevelState *iState)
@@ -43,20 +43,31 @@ public:
   // draw => does the actual drawing job
   void draw(CDrawContext *iContext) override;
 
-  void initParameters(std::shared_ptr<VSTParameters> iParameters)
-  {
-    fParameters = std::move(iParameters);
-  }
+  void registerParameters() override;
 
-  CLASS_METHODS(MaxLevelView, HistoryView)
+  CLASS_METHODS_NOCOPY(MaxLevelView, HistoryView)
 
 protected:
   MaxLevelState *fState{nullptr};
 
-  // Access to parameters
-  std::shared_ptr<VSTParameters> fParameters{nullptr};
+  std::unique_ptr<BooleanParameter> fLCDLeftChannelParameter;
+  std::unique_ptr<BooleanParameter> fLCDRightChannelParameter;
 
   CColor fNoDataColor{};
+
+public:
+  class Creator : public CustomViewCreator<MaxLevelView>
+  {
+  public:
+    explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
+      CustomViewCreator(iViewName, iDisplayName)
+    {
+      registerAttributes(HistoryView::Creator());
+      registerColorAttribute("no-data-color",
+                             &MaxLevelView::getNoDataColor,
+                             &MaxLevelView::setNoDataColor);
+    }
+  };
 };
 
 /**
@@ -88,22 +99,6 @@ private:
   void updateView() const;
 
   MaxLevel fMaxLevel;
-};
-
-/**
- * The factory for MaxLevelView
- */
-class MaxLevelViewCreator : public CustomViewCreator<MaxLevelView>
-{
-public:
-  explicit MaxLevelViewCreator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
-    CustomViewCreator(iViewName, iDisplayName)
-  {
-    registerAttributes(HistoryViewCreator());
-    registerColorAttribute("no-data-color",
-                           &MaxLevelView::getNoDataColor,
-                           &MaxLevelView::setNoDataColor);
-  }
 };
 
 }

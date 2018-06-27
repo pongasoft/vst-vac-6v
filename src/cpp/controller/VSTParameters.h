@@ -12,10 +12,9 @@ namespace GUI {
 using namespace Steinberg;
 using namespace Steinberg::Vst;
 
-/**
- * Encapsulates access to the vst parameters defined in the controller
- */
-class VSTParameters
+using ParameterOwner = EditController;
+
+class RawParameter
 {
 public:
   /**
@@ -27,15 +26,16 @@ public:
     virtual void onParameterChange(ParamID iParamID, ParamValue iNormalizedValue) = 0;
   };
 
+public:
   /**
    * Wrapper to edit a single parameter. Usage:
    *
    * // from a CView::onMouseDown callback
-   * fMyParamEditor = fParameters.edit(myParamID);
-   * fParamEditor->setNormalizedValue(myValue);
+   * fMyParamEditor = fParameter.edit(myParamID);
+   * fParamEditor->setValue(myValue);
    *
    * // from a CView::onMouseMoved callback
-   * fParamEditor->setNormalizedValue(myValue);
+   * fParamEditor->setValue(myValue);
    *
    * // from a CView::onMouseUp/onMouseCancelled callback
    * fMyParamEditor->commit();
@@ -43,13 +43,13 @@ public:
   class Editor
   {
   public:
-    inline Editor(ParamID iParamID, EditController *iController) :
+    inline Editor(ParamID iParamID, ParameterOwner *iParameterOwner) :
       fParamID{iParamID},
-      fController{iController}
+      fParameterOwner{iParameterOwner}
     {
-      DLOG_F(INFO, "VSTParameters::Editor(%d)", fParamID);
-      fIsEditing = fController->beginEdit(fParamID) == kResultOk;
-      fInitialParamValue = fController->getParamNormalized(fParamID);
+      DLOG_F(INFO, "RawParameter::Editor(%d)", fParamID);
+      fIsEditing = fParameterOwner->beginEdit(fParamID) == kResultOk;
+      fInitialParamValue = fParameterOwner->getParamNormalized(fParamID);
     }
 
     Editor(Editor const &) = delete;
@@ -58,22 +58,14 @@ public:
     /**
      * Change the value of the parameter. Note that nothing happens if you have called commit or rollback already
      */
-    inline tresult setNormalizedValue(ParamValue iValue)
+    inline tresult setValue(ParamValue iValue)
     {
       if(fIsEditing)
       {
-        if(fController->setParamNormalized(fParamID, iValue) == kResultOk)
-          return fController->performEdit(fParamID, fController->getParamNormalized(fParamID));
+        if(fParameterOwner->setParamNormalized(fParamID, iValue) == kResultOk)
+          return fParameterOwner->performEdit(fParamID, fParameterOwner->getParamNormalized(fParamID));
       }
       return kResultFalse;
-    }
-
-    /**
-     * Shortcut when you want to set a boolean value
-     */
-    inline tresult setBooleanValue(bool iValue)
-    {
-      return setNormalizedValue(Common::normalizeBoolValue(iValue));
     }
 
     /*
@@ -85,7 +77,7 @@ public:
       if(fIsEditing)
       {
         fIsEditing = false;
-        return fController->endEdit(fParamID);
+        return fParameterOwner->endEdit(fParamID);
       }
       return kResultFalse;
     }
@@ -98,9 +90,9 @@ public:
     {
       if(fIsEditing)
       {
-        setNormalizedValue(fInitialParamValue);
+        setValue(fInitialParamValue);
         fIsEditing = false;
-        return fController->endEdit(fParamID);
+        return fParameterOwner->endEdit(fParamID);
       }
       return kResultFalse;
     }
@@ -110,36 +102,38 @@ public:
      */
     inline ~Editor()
     {
-      DLOG_F(INFO, "~VSTParameter::Editor(%d)", fParamID);
+      DLOG_F(INFO, "~RawParameter::Editor(%d)", fParamID);
       rollback();
     }
 
   private:
     ParamID fParamID;
-    EditController *const fController;
+    ParameterOwner *const fParameterOwner;
 
     ParamValue fInitialParamValue;
     bool fIsEditing;
   };
 
+public:
   /**
-   * Wrapper class which maintains the connection between a parameter and its listener. The connection will be
-   * terminated if close() is called or automatically when the destructor is called.
-   */
+ * Wrapper class which maintains the connection between a parameter and its listener. The connection will be
+ * terminated if close() is called or automatically when the destructor is called.
+ */
   class Connection : public Steinberg::FObject
   {
   public:
-    inline Connection(ParamID iParamID, EditController *iController, IChangeListener *iChangeListener) :
+    inline Connection(ParamID iParamID, ParameterOwner *iParameterOwner, IChangeListener *iChangeListener) :
       fParamID{iParamID},
-      fController{iController},
+      fParameterOwner{iParameterOwner},
       fChangeListener{iChangeListener}
     {
-      DLOG_F(INFO, "VSTParameters::Connection(%d)", fParamID);
+      DLOG_F(INFO, "RawParameter::Connection(%d)", fParamID);
+
+      DCHECK_NOTNULL_F(fParameterOwner);
+
+      fParameter = fParameterOwner->getParameterObject(fParamID);
 
       DCHECK_NOTNULL_F(fParameter);
-
-      fParameter = fController->getParameterObject(fParamID);
-
       DCHECK_NOTNULL_F(fChangeListener);
 
       fParameter->addRef();
@@ -164,7 +158,7 @@ public:
      * Automatically closes the connection and stops listening */
     inline ~Connection() override
     {
-      DLOG_F(INFO, "~VSTParameter::Connection(%d)", fParamID);
+      DLOG_F(INFO, "~RawParameter::Connection(%d)", fParamID);
       close();
     }
 
@@ -172,7 +166,7 @@ public:
     {
       if(iMessage == IDependent::kChanged)
       {
-        fChangeListener->onParameterChange(fParamID, fController->getParamNormalized(fParamID));
+        fChangeListener->onParameterChange(fParamID, fParameterOwner->getParamNormalized(fParamID));
       }
     }
 
@@ -182,101 +176,210 @@ public:
   private:
     ParamID fParamID;
     Parameter *fParameter;
-    EditController *const fController;
+    ParameterOwner *const fParameterOwner;
     IChangeListener *const fChangeListener;
     bool fIsConnected;
   };
 
 public:
-  // Constructor
-  explicit VSTParameters(EditController *iController) :
-    fController{iController}
+  RawParameter(ParamID iParamID, ParameterOwner *iParameterOwner) :
+    fParamID{iParamID},
+    fParameterOwner{iParameterOwner}
   {
-    DCHECK_NOTNULL_F(iController);
-    DLOG_F(INFO, "VSTParameters::VSTParameters()");
+    DLOG_F(INFO, "RawParameter::RawParameter(%d)", fParamID);
+    DCHECK_NOTNULL_F(fParameterOwner);
+
+    fParameter = fParameterOwner->getParameterObject(fParamID);
+    DCHECK_NOTNULL_F(fParameter);
+  }
+
+  ~RawParameter()
+  {
+    DLOG_F(INFO, "RawParameter::~RawParameter(%d)", fParamID);
+  }
+
+  ParamID getParamID() const
+  {
+    return fParamID;
+  }
+
+  ParamValue getValue() const
+  {
+    return fParameterOwner->getParamNormalized(fParamID);
+  }
+
+  /**
+   * Sets the value of this parameter. Note that this is "transactional" and if you want to make
+   * further changes that spans multiple calls (ex: onMouseDown / onMouseMoved / onMouseUp) you should use an editor
+   */
+  tresult setValue(ParamValue iValue)
+  {
+    Editor editor(fParamID, fParameterOwner);
+    editor.setValue(iValue);
+    return editor.commit();
+  }
+
+  /**
+   * @return an editor to modify the parameter (see Editor)
+   */
+  std::unique_ptr<Editor> edit()
+  {
+    return std::make_unique<Editor>(fParamID, fParameterOwner);
+  }
+
+  /**
+   * @return a connection that will listen to parameter changes (see Connection)
+   */
+  std::unique_ptr<Connection> connect(IChangeListener *iChangeListener)
+  {
+    return std::make_unique<Connection>(fParamID, fParameterOwner, iChangeListener);
+  }
+
+private:
+  ParamID fParamID;
+  Parameter *fParameter;
+  ParameterOwner *const fParameterOwner;
+};
+
+template<typename T, T (* Denormalizer)(ParamValue), ParamValue (*Normalizer)(T)>
+class VSTParameter
+{
+public:
+  typedef T value_type;
+  typedef VSTParameter<T, Denormalizer, Normalizer> class_type;
+
+public:
+  /**
+   * Wrapper to edit a single parameter. Usage:
+   *
+   * // from a CView::onMouseDown callback
+   * fMyParamEditor = fParameter.edit(myParamID);
+   * fParamEditor->setValue(myValue);
+   *
+   * // from a CView::onMouseMoved callback
+   * fParamEditor->setValue(myValue);
+   *
+   * // from a CView::onMouseUp/onMouseCancelled callback
+   * fMyParamEditor->commit();
+   */
+  class Editor
+  {
+  public:
+    inline explicit Editor(std::unique_ptr<RawParameter::Editor> iRawEditor) :
+      fRawEditor{std::move(iRawEditor)}
+    {
+    }
+
+    Editor(Editor const &) = delete;
+    Editor& operator=(Editor const &) = delete;
+
+    /**
+     * Change the value of the parameter. Note that nothing happens if you have called commit or rollback already
+     */
+    inline tresult setValue(T iValue)
+    {
+      return fRawEditor->setValue(Normalizer(iValue));
+    }
+
+    /*
+     * Call when you are done with the modifications.
+     * This has no effect if rollback() has already been called
+     */
+    inline tresult commit()
+    {
+      return fRawEditor->commit();
+    }
+
+    /**
+     * Call this if you want to revert to the original value of the parameter (when the editor is created).
+     * This has no effect if commit() has already been called
+     */
+    inline tresult rollback()
+    {
+      return fRawEditor->rollback();
+    }
+
+  private:
+    std::unique_ptr<RawParameter::Editor> fRawEditor;
+  };
+
+public:
+  explicit VSTParameter(std::unique_ptr<RawParameter> iRawParameter) :
+    fRawParameter{std::move(iRawParameter)}
+  {
+    DCHECK_NOTNULL_F(fRawParameter.get());
+    DLOG_F(INFO, "VSTParameter::VSTParameter(%d)", fRawParameter->getParamID());
+  }
+
+  ~VSTParameter()
+  {
+    DLOG_F(INFO, "VSTParameter::~VSTParameter(%d)", fRawParameter->getParamID());
+  }
+
+  ParamID getParamID() const
+  {
+    return fRawParameter->getParamID();
+  }
+
+  T getValue() const
+  {
+    return Denormalizer(fRawParameter->getValue());
+  }
+
+  /**
+   * Sets the value of this parameter. Note that this is "transactional" and if you want to make
+   * further changes that spans multiple calls (ex: onMouseDown / onMouseMoved / onMouseUp) you should use an editor
+   */
+  tresult setValue(T iValue)
+  {
+    return fRawParameter->setValue(Normalizer(iValue));
+  }
+
+  /**
+   * @return an editor to modify the parameter (see Editor)
+   */
+  std::unique_ptr<Editor> edit()
+  {
+    return std::make_unique<Editor>(fRawParameter->edit());
+  }
+
+private:
+  std::unique_ptr<RawParameter> fRawParameter;
+};
+
+/**
+ * Encapsulates access to the vst parameters defined in the controller
+ */
+class VSTParameters
+{
+public:
+  // Constructor
+  explicit VSTParameters(ParameterOwner *iParameterOwner) :
+    fParameterOwner{iParameterOwner}
+  {
+    DCHECK_NOTNULL_F(iParameterOwner);
   };
 
   VSTParameters(VSTParameters const&) = delete;
   VSTParameters& operator=(VSTParameters const &) = delete;
 
   // Destructor
-  ~VSTParameters()
-  {
-    DLOG_F(INFO, "~VSTParameters::VSTParameters()");
-  }
+  ~VSTParameters() = default;
 
-  /**
-   * @return the normalized value of the given parameter id
-   */
-  ParamValue getNormalizedValue(ParamID iParamID) const
+  std::unique_ptr<RawParameter> getRawParameter(ParamID iParamID) const
   {
-    return fController->getParamNormalized(iParamID);
+    return std::make_unique<RawParameter>(iParamID, fParameterOwner);
   }
-
-  /**
-   * Sets the normalized value to the give parameter id. Note that this is transactional and if you want to make
-   * further changes that spans multiple calls (ex: onMouseDown / onMouseMoved / onMouseUp) you should use an editor
-   */
-  tresult setNormalizedValue(ParamID iParamID, ParamValue iValue)
-  {
-    Editor editor(iParamID, fController);
-    editor.setNormalizedValue(iValue);
-    return editor.commit();
-  }
-
-  /**
-   * @return the value of the given parameter id as a boolean (does denormalization automatically)
-   */
-  bool getBooleanValue(ParamID iParamID) const
-  {
-    return Common::denormalizeBoolValue(getNormalizedValue(iParamID));
-  }
-
-  /**
-   * Automatically normalize the parameter from a boolean
-   */
-  tresult setBooleanValue(ParamID iParamID, bool iValue)
-  {
-    return setNormalizedValue(iParamID, Common::normalizeBoolValue(iValue));
-  }
-
-  /**
-   * @return the parameter as a discrete value
-   */
-  template<typename T>
-  T getDiscreteValue(ParamID iParamID, T iStepCount) const
-  {
-    return Common::denormalizeDiscreteValue(iStepCount, getNormalizedValue(iParamID));
-  }
-
-  /**
-   * Automatically normalize the parameter from a discrete value
-   */
-  tresult setDiscreteValue(ParamID iParamID, int iStepCount, int iDiscreteValue)
-  {
-    return setNormalizedValue(iParamID, Common::normalizeDiscreteValue(iStepCount, iDiscreteValue));
-  }
-
-  /**
-   * @return and editor to modify the parameter (see Editor)
-   */
-  std::unique_ptr<Editor> edit(ParamID iParamID)
-  {
-    return std::make_unique<Editor>(iParamID, fController);
-  }
-
-  /**
-   * @return a connection that will listen to parameter changes (see Connection)
-   */
-  std::unique_ptr<Connection> connect(ParamID iParamID, IChangeListener *iChangeListener)
-  {
-    return std::make_unique<Connection>(iParamID, fController, iChangeListener);
-  }
-
 
 private:
-  EditController *const fController;
+  ParameterOwner *const fParameterOwner;
 };
+
+
+using BooleanParameter = VSTParameter<bool, Common::denormalizeBoolValue, Common::normalizeBoolValue>;
+template<int StepCount>
+using DiscreteParameter = VSTParameter<int, Common::denormalizeDiscreteValue<StepCount>, Common::normalizeDiscreteValue<StepCount>>;
+
 
 }
 }

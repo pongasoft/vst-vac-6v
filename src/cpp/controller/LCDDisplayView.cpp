@@ -110,7 +110,7 @@ LCDDisplayView::LCDDisplayView(const CRect &size)
 ///////////////////////////////////////////
 void LCDDisplayView::draw(CDrawContext *iContext)
 {
-  CustomDisplayView::draw(iContext);
+  HistoryView::draw(iContext);
 
   if(fState == nullptr)
     return;
@@ -126,7 +126,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
 
   if(leftChannelOn || rightChannelOn)
   {
-    int lcdInputX = fParameters->getDiscreteValue(EVAC6ParamID::kLCDInputX, MAX_LCD_INPUT_X);
+    int lcdInputX = fLCDInputXParameter->getValue();
     RelativeCoord lcdInputY = -1; // used when paused
 
     // display every sample in the array as a vertical line (from the bottom)
@@ -165,7 +165,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
     }
 
     // in pause mode we draw the selection
-    if(!fParameters->getBooleanValue(EVAC6ParamID::kLCDLiveView))
+    if(!fLCDLiveViewParameter->getValue())
     {
       constexpr auto offset = 3.0;
       rdc.fillRect(RelativeRect{lcdInputX - 5.0, 0, lcdInputX + 5.0, height}, WHITE_COLOR_40);
@@ -222,20 +222,29 @@ CMouseEventResult LCDDisplayView::onMouseDown(CPoint &where, const CButtonState 
 
   DLOG_F(INFO, "LCDDisplayView::onMouseDown(%f,%f)", relativeWhere.x, relativeWhere.y);
 
-  if(fParameters->getBooleanValue(EVAC6ParamID::kLCDLiveView))
+  if(fLCDLiveViewParameter->getValue())
   {
     DLOG_F(INFO, "LCDDisplayView::onMouseDown() => stopping");
-    fParameters->setBooleanValue(EVAC6ParamID::kLCDLiveView, false);
+    fLCDLiveViewParameter->setValue(false);
   }
 
-  int lcdInputX = clamp(static_cast<int>(relativeWhere.x), 0, MAX_LCD_INPUT_X);
-  fParameters->setDiscreteValue(EVAC6ParamID::kLCDInputX, MAX_LCD_INPUT_X, lcdInputX);
+  fLCDInputXParameter->setValue(static_cast<int>(relativeWhere.x));
 
   return kMouseEventHandled;
 }
 
+///////////////////////////////////////////
+// LCDDisplayView::registerParameters
+///////////////////////////////////////////
+void LCDDisplayView::registerParameters()
+{
+  CustomView::registerParameters();
+  fLCDLiveViewParameter = registerBooleanParameter(EVAC6ParamID::kLCDLiveView, false);
+  fLCDInputXParameter = registerDiscreteParameter<MAX_LCD_INPUT_X>(EVAC6ParamID::kLCDInputX, false);
+}
 
-LCDDisplayViewCreator __gLCDDisplayViewCreator("pongasoft::LCDDisplay", "pongasoft - LCD Display");
+
+LCDDisplayView::Creator __gLCDDisplayViewCreator("pongasoft::LCDDisplay", "pongasoft - LCD Display");
 
 }
 }

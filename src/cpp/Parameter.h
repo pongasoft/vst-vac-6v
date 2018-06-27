@@ -3,6 +3,7 @@
 #include <pluginterfaces/vst/vsttypes.h>
 #include <cmath>
 #include <algorithm>
+#include "AudioUtils.h"
 
 namespace pongasoft {
 namespace VST {
@@ -10,15 +11,17 @@ namespace Common {
 
 using namespace Steinberg::Vst;
 
-inline ParamValue normalizeDiscreteValue(int iStepCount, int iDiscreteValue)
+template<int StepCount>
+inline ParamValue normalizeDiscreteValue(int iDiscreteValue)
 {
-  return iDiscreteValue / static_cast<double>(iStepCount);
+  iDiscreteValue = clamp(iDiscreteValue, 0, StepCount);
+  return iDiscreteValue / static_cast<double>(StepCount);
 }
 
-template<typename T>
-inline T denormalizeDiscreteValue(T iStepCount, ParamValue iNormalizedValue)
+template<int StepCount>
+inline int denormalizeDiscreteValue(ParamValue iNormalizedValue)
 {
-  return static_cast<T>(std::floor(std::min(static_cast<ParamValue>(iStepCount), iNormalizedValue * (iStepCount + 1))));
+  return static_cast<int>(std::floor(std::min(static_cast<ParamValue>(StepCount), iNormalizedValue * (StepCount + 1))));
 }
 
 inline ParamValue normalizeBoolValue(bool iValue)

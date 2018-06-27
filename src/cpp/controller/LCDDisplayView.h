@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CustomDisplayView.h"
+#include "CustomView.h"
 #include "VSTViewState.h"
 #include "DrawContext.h"
 #include "../VAC6Model.h"
@@ -31,7 +31,7 @@ public:
   // Constructor
   explicit LCDDisplayView(const CRect &size);
 
-  LCDDisplayView(const LCDDisplayView &c) = default;
+  LCDDisplayView(const LCDDisplayView &c) = delete;
 
   // getSoftClippingLevelColor
   const CColor &getSoftClippingLevelColor() const
@@ -51,19 +51,16 @@ public:
     fState = iState;
   }
 
-  void initParameters(std::shared_ptr<VSTParameters> iParameters)
-  {
-    fParameters = std::move(iParameters);
-  }
-
 public:
 
   // draw => does the actual drawing job
   void draw(CDrawContext *iContext) override;
 
+  void registerParameters() override;
+
   CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override;
 
-  CLASS_METHODS(LCDDisplayView, HistoryView)
+  CLASS_METHODS_NOCOPY(LCDDisplayView, HistoryView)
 
 protected:
   CColor fSoftClippingLevelColor{};
@@ -71,8 +68,23 @@ protected:
   // the state
   LCDDisplayState *fState{nullptr};
 
-  // Access to parameters
-  std::shared_ptr<VSTParameters> fParameters{nullptr};
+  std::unique_ptr<BooleanParameter> fLCDLiveViewParameter;
+  std::unique_ptr<DiscreteParameter<MAX_LCD_INPUT_X>> fLCDInputXParameter;
+
+public:
+  class Creator : public CustomViewCreator<LCDDisplayView>
+  {
+  public:
+    explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
+      CustomViewCreator(iViewName, iDisplayName)
+    {
+      registerAttributes(HistoryView::Creator());
+      registerColorAttribute("soft-clipping-level-color",
+                             &LCDDisplayView::getSoftClippingLevelColor,
+                             &LCDDisplayView::setSoftClippingLevelColor);
+    }
+  };
+
 };
 
 constexpr long MESSAGE_VISIBLE_DURATION_MS = 2000;
@@ -162,22 +174,6 @@ private:
   LCDData fLCDData;
   LCDMessage *fLCDSoftClipingLevelMessage;
   LCDMessage *fLCDZoomFactorXMessage;
-};
-
-/**
- * The factory for LCDDisplayView
- */
-class LCDDisplayViewCreator : public CustomViewCreator<LCDDisplayView>
-{
-public:
-  explicit LCDDisplayViewCreator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
-    CustomViewCreator(iViewName, iDisplayName)
-  {
-    registerAttributes(HistoryViewCreator());
-    registerColorAttribute("soft-clipping-level-color",
-                           &LCDDisplayView::getSoftClippingLevelColor,
-                           &LCDDisplayView::setSoftClippingLevelColor);
-  }
 };
 
 }

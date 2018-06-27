@@ -53,9 +53,9 @@ if (SMTG_CREATE_VST2_VERSION)
 endif()
 
 set(vst_sources
-		${CPP_SOURCES}/controller/CustomDisplayView.h
-		${CPP_SOURCES}/controller/CustomDisplayView.cpp
 		${CPP_SOURCES}/controller/CustomView.h
+		${CPP_SOURCES}/controller/CustomView.cpp
+		${CPP_SOURCES}/controller/CustomViewCreator.h
 		${CPP_SOURCES}/controller/DrawContext.h
 		${CPP_SOURCES}/controller/DrawContext.cpp
 		${CPP_SOURCES}/controller/LCDDisplayView.h

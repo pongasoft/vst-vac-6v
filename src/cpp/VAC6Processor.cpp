@@ -351,7 +351,7 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
             break;
 
           case kMaxLevelAutoReset:
-            newState.fMaxLevelAutoResetInSeconds = denormalizeDiscreteValue(MAX_LEVEL_AUTO_RESET_STEP_COUNT, value);
+            newState.fMaxLevelAutoResetInSeconds = denormalizeDiscreteValue<MAX_LEVEL_AUTO_RESET_STEP_COUNT>(value);
             stateChanged = newState.fMaxLevelAutoResetInSeconds != fState.fMaxLevelAutoResetInSeconds;
             break;
 
@@ -376,7 +376,7 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
             break;
 
           case kLCDInputX:
-            newState.fLCDInputX = denormalizeDiscreteValue(MAX_LCD_INPUT_X, value);
+            newState.fLCDInputX = denormalizeDiscreteValue<MAX_LCD_INPUT_X>(value);
             stateChanged = newState.fLCDInputX != fState.fLCDInputX;
             break;
 

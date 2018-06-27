@@ -55,13 +55,13 @@ MaxLevelView::MaxLevelView(const CRect &size)
 ///////////////////////////////////////////
 void MaxLevelView::draw(CDrawContext *iContext)
 {
-  CustomDisplayView::draw(iContext);
+  HistoryView::draw(iContext);
 
   if(fState == nullptr)
     return;
 
-  TSample leftValue = fParameters->getBooleanValue(EVAC6ParamID::kLCDLeftChannel) ? fState->fMaxLevel.fLeftValue : 0.0;
-  TSample rightValue = fParameters->getBooleanValue(EVAC6ParamID::kLCDRightChannel) ? fState->fMaxLevel.fRightValue : 0.0;
+  TSample leftValue = fLCDLeftChannelParameter->getValue() ? fState->fMaxLevel.fLeftValue : 0.0;
+  TSample rightValue = fLCDRightChannelParameter->getValue() ? fState->fMaxLevel.fRightValue : 0.0;
   TSample max = std::max(leftValue, rightValue);
 
   CColor fontColor = getNoDataColor();
@@ -91,7 +91,18 @@ void MaxLevelView::draw(CDrawContext *iContext)
 
 }
 
-MaxLevelViewCreator __gMaxLevelViewCreator("pongasoft::MaxLevel", "pongasoft - Max Level");
+///////////////////////////////////////////
+// MaxLevelView::registerParameters
+///////////////////////////////////////////
+void MaxLevelView::registerParameters()
+{
+  CustomView::registerParameters();
+
+  fLCDLeftChannelParameter = registerBooleanParameter(EVAC6ParamID::kLCDLeftChannel);
+  fLCDRightChannelParameter = registerBooleanParameter(EVAC6ParamID::kLCDRightChannel);
+}
+
+MaxLevelView::Creator __gMaxLevelViewCreator("pongasoft::MaxLevel", "pongasoft - Max Level");
 
 }
 }
