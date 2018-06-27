@@ -283,7 +283,7 @@ void LCDDisplayView::registerParameters()
 {
   HistoryView::registerParameters();
   fLCDLiveViewParameter = registerBooleanParameter(EVAC6ParamID::kLCDLiveView, false);
-  fLCDInputXParameter = registerDiscreteParameter<MAX_LCD_INPUT_X>(EVAC6ParamID::kLCDInputX, false);
+  fLCDInputXParameter = registerVSTParameter<LCDInputXParameter>(EVAC6ParamID::kLCDInputX, false);
 }
 
 ///////////////////////////////////////////

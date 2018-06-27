@@ -54,9 +54,6 @@ public:
 
   std::unique_ptr<BooleanParameter> registerBooleanParameter(ParamID iParamID, bool iSubscribeToChanges = true);
 
-  template<int StepCount>
-  std::unique_ptr<DiscreteParameter<StepCount>> registerDiscreteParameter(ParamID iParamID, bool iSubscribeToChanges = true);
-
   CLASS_METHODS_NOCOPY(CustomView, CControl)
 
 protected:
@@ -81,16 +78,6 @@ public:
     }
   };
 };
-
-///////////////////////////////////////////
-// CustomView::registerDiscreteParameter
-///////////////////////////////////////////
-template<int StepCount>
-std::unique_ptr<DiscreteParameter<StepCount>>
-CustomView::registerDiscreteParameter(ParamID iParamID, bool iSubscribeToChanges)
-{
-  return registerVSTParameter<DiscreteParameter<StepCount>>(iParamID, iSubscribeToChanges);
-}
 
 }
 }
