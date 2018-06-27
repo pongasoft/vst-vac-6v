@@ -149,15 +149,11 @@ class LCDDisplayState : public VSTViewState<LCDDisplayView>
 
 public:
   // Constructor
-  LCDDisplayState() : fLCDData{}, fLCDSoftClipingLevelMessage{nullptr}, fLCDZoomFactorXMessage{nullptr}
+  LCDDisplayState() : fLCDData{}, fLCDSoftClippingLevelMessage{nullptr}, fLCDZoomFactorXMessage{nullptr}
   {};
 
   // Destructor
-  ~LCDDisplayState() override
-  {
-    delete fLCDZoomFactorXMessage;
-    delete fLCDSoftClipingLevelMessage;
-  }
+  ~LCDDisplayState() override = default;
 
   // onMessage (process message coming from the processor)
   void onMessage(Message const &message);
@@ -176,8 +172,8 @@ private:
   void updateView() const;
 
   LCDData fLCDData;
-  LCDMessage *fLCDSoftClipingLevelMessage;
-  LCDMessage *fLCDZoomFactorXMessage;
+  std::unique_ptr<LCDMessage> fLCDSoftClippingLevelMessage;
+  std::unique_ptr<LCDMessage> fLCDZoomFactorXMessage;
 
 };
 

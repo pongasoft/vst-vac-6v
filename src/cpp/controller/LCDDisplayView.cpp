@@ -24,28 +24,23 @@ void LCDDisplayState::onMessage(Message const &message)
 
   if(previousWindowSize != fLCDData.fWindowSizeInMillis)
   {
-    delete fLCDZoomFactorXMessage;
-
     char text[256];
     sprintf(text, "Zoom: %.1fs", fLCDData.fWindowSizeInMillis / 1000.0);
-
-    fLCDZoomFactorXMessage = new LCDMessage(UTF8String(text), now);
+    fLCDZoomFactorXMessage = std::make_unique<LCDMessage>(UTF8String(text), now);
   }
 
-  if(fLCDSoftClipingLevelMessage != nullptr)
+  if(fLCDSoftClippingLevelMessage)
   {
-    if(fLCDSoftClipingLevelMessage->update(now))
+    if(fLCDSoftClippingLevelMessage->update(now))
     {
-      delete fLCDSoftClipingLevelMessage;
-      fLCDSoftClipingLevelMessage = nullptr;
+      fLCDSoftClippingLevelMessage = nullptr;
     }
   }
 
-  if(fLCDZoomFactorXMessage != nullptr)
+  if(fLCDZoomFactorXMessage)
   {
     if(fLCDZoomFactorXMessage->update(now))
     {
-      delete fLCDZoomFactorXMessage;
       fLCDZoomFactorXMessage = nullptr;
     }
   }
@@ -60,12 +55,10 @@ void LCDDisplayState::onSoftClippingLevelChange(SoftClippingLevel const &iNewVal
 {
   long now = Clock::getCurrentTimeMillis();
 
-  delete fLCDSoftClipingLevelMessage;
-
   char text[256];
   sprintf(text, "%+.2fdB", iNewValue.getValueInDb());
 
-  fLCDSoftClipingLevelMessage = new LCDMessage(UTF8String(text), now);
+  fLCDSoftClippingLevelMessage = std::make_unique<LCDMessage>(UTF8String(text), now);
 }
 
 ///////////////////////////////////////////
@@ -186,22 +179,22 @@ void LCDDisplayView::draw(CDrawContext *iContext)
 
   // TODO handle font: use default?
   // print the level
-  if(fState->fLCDSoftClipingLevelMessage != nullptr)
+  if(fState->fLCDSoftClippingLevelMessage)
   {
     StringDrawContext sdc{};
     sdc.fStyle |= kShadowText;
     sdc.fHoriTxtAlign = kLeftText;
     sdc.fTextInset = {2, 2};
-    sdc.fFontColor = fState->fLCDSoftClipingLevelMessage->fColor;
+    sdc.fFontColor = fState->fLCDSoftClippingLevelMessage->fColor;
     sdc.fShadowColor = BLACK_COLOR;
-    sdc.fShadowColor.alpha = fState->fLCDSoftClipingLevelMessage->fColor.alpha;
+    sdc.fShadowColor.alpha = fState->fLCDSoftClippingLevelMessage->fColor.alpha;
 
     auto textTop = top + 3;
-    rdc.drawString(fState->fLCDSoftClipingLevelMessage->fText, RelativeRect{0, textTop, MAX_ARRAY_SIZE, textTop + 20}, sdc);
+    rdc.drawString(fState->fLCDSoftClippingLevelMessage->fText, RelativeRect{0, textTop, MAX_ARRAY_SIZE, textTop + 20}, sdc);
 
   }
 
-  if(fState->fLCDZoomFactorXMessage != nullptr)
+  if(fState->fLCDZoomFactorXMessage)
   {
     StringDrawContext sdc{};
     sdc.fHoriTxtAlign = kCenterText;
