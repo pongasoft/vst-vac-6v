@@ -1,6 +1,5 @@
 #include "LCDDisplayView.h"
 #include "../Clock.h"
-#include "../AudioUtils.h"
 #include <vstgui4/vstgui/lib/controls/ccontrol.h>
 
 namespace pongasoft {
@@ -15,10 +14,6 @@ const CColor WHITE_COLOR_60 = CColor{255,255,255,60};
 ///////////////////////////////////////////
 void LCDDisplayState::onMessage(Message const &message)
 {
-  auto previousSoftClippingLevel = fLCDData.fSoftClippingLevel.getValueInSample();
-  fLCDData.fSoftClippingLevel = SoftClippingLevel{message.getFloat(LCDDATA_SOFT_CLIPPING_LEVEL_ATTR,
-                                                                   fLCDData.fSoftClippingLevel.getValueInSample())};
-
   auto previousWindowSize = fLCDData.fWindowSizeInMillis;
   fLCDData.fWindowSizeInMillis = message.getInt(LCDDATA_WINDOW_SIZE_MS_ATTR, fLCDData.fWindowSizeInMillis);
 
@@ -26,16 +21,6 @@ void LCDDisplayState::onMessage(Message const &message)
   fLCDData.fRightChannelOn = message.getBinary(LCDDATA_RIGHT_SAMPLES_ATTR, fLCDData.fRightSamples, MAX_ARRAY_SIZE) > -1;
 
   long now = Clock::getCurrentTimeMillis();
-
-  if(previousSoftClippingLevel != fLCDData.fSoftClippingLevel.getValueInSample())
-  {
-    delete fLCDSoftClipingLevelMessage;
-
-    char text[256];
-    sprintf(text, "%+.2fdB", fLCDData.fSoftClippingLevel.getValueInDb());
-
-    fLCDSoftClipingLevelMessage = new LCDMessage(UTF8String(text), now);
-  }
 
   if(previousWindowSize != fLCDData.fWindowSizeInMillis)
   {
@@ -66,6 +51,21 @@ void LCDDisplayState::onMessage(Message const &message)
   }
 
   updateView();
+}
+
+///////////////////////////////////////////
+// LCDDisplayState::onSoftClippingLevelChange
+///////////////////////////////////////////
+void LCDDisplayState::onSoftClippingLevelChange(SoftClippingLevel const &iNewValue)
+{
+  long now = Clock::getCurrentTimeMillis();
+
+  delete fLCDSoftClipingLevelMessage;
+
+  char text[256];
+  sprintf(text, "%+.2fdB", iNewValue.getValueInDb());
+
+  fLCDSoftClipingLevelMessage = new LCDMessage(UTF8String(text), now);
 }
 
 ///////////////////////////////////////////
@@ -152,7 +152,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
         top = height - displayValue;
 
         // color of the sample depends on its level
-        CColor const &color = computeColor(fState->fLCDData.fSoftClippingLevel, sample);
+        CColor const &color = computeColor(fSoftClippingLevelParameter->getValue(), sample);
 
         rdc.drawLine(left, top, left, height, color);
 
@@ -177,7 +177,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
   }
 
   // display the soft clipping level line (which is controlled by a knob)
-  auto softClippingDisplayValue = toDisplayValue(fState->fLCDData.fSoftClippingLevel.getValueInSample(), height);
+  auto softClippingDisplayValue = toDisplayValue(fSoftClippingLevelParameter->getValue().getValueInSample(), height);
   auto top = height - softClippingDisplayValue;
 
   // draw the soft clipping line
@@ -238,9 +238,27 @@ CMouseEventResult LCDDisplayView::onMouseDown(CPoint &where, const CButtonState 
 ///////////////////////////////////////////
 void LCDDisplayView::registerParameters()
 {
-  CustomView::registerParameters();
+  HistoryView::registerParameters();
   fLCDLiveViewParameter = registerBooleanParameter(EVAC6ParamID::kLCDLiveView, false);
   fLCDInputXParameter = registerDiscreteParameter<MAX_LCD_INPUT_X>(EVAC6ParamID::kLCDInputX, false);
+}
+
+///////////////////////////////////////////
+// LCDDisplayView::onParameterChange
+///////////////////////////////////////////
+void LCDDisplayView::onParameterChange(ParamID iParamID, ParamValue iNormalizedValue)
+{
+  CustomView::onParameterChange(iParamID, iNormalizedValue);
+
+  switch(iParamID)
+  {
+    case EVAC6ParamID::kSoftClippingLevel:
+      fState->onSoftClippingLevelChange(fSoftClippingLevelParameter->getValue());
+      break;
+
+    default:
+      break;
+  }
 }
 
 

@@ -1,4 +1,5 @@
 #include "VAC6Views.h"
+#include "../VAC6CIDs.h"
 
 namespace pongasoft {
 namespace VST {
@@ -17,6 +18,15 @@ const CColor &HistoryView::computeColor(SoftClippingLevel iSofClippingLevel, dou
   return color;
 }
 
+///////////////////////////////////////////
+// HistoryView::registerParameters
+///////////////////////////////////////////
+void HistoryView::registerParameters()
+{
+  CustomView::registerParameters();
+
+  fSoftClippingLevelParameter = registerVSTParameter<SoftClippingLevelParameter>(EVAC6ParamID::kSoftClippingLevel);
+}
 
 
 }

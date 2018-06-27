@@ -30,7 +30,6 @@ inline double sampleToDb(SampleType valueInSample)
   return std::log10(valueInSample) * 20.0;
 }
 
-constexpr IAttributeList::AttrID MAX_LEVEL_SOFT_CLIPPING_LEVEL_ATTR = "SCL";
 constexpr IAttributeList::AttrID MAX_LEVEL_LEFT_VALUE_ATTR = "LValue";
 constexpr IAttributeList::AttrID MAX_LEVEL_RIGHT_VALUE_ATTR = "RValue";
 
@@ -86,10 +85,15 @@ public:
     return (MIN_SOFT_CLIPPING_LEVEL_DB - getValueInDb()) / MIN_SOFT_CLIPPING_LEVEL_DB;
   }
 
-  static SoftClippingLevel fromNormalizedParam(ParamValue value)
+  static SoftClippingLevel denormalize(ParamValue value)
   {
     double sclIndB = -MIN_SOFT_CLIPPING_LEVEL_DB * value + MIN_SOFT_CLIPPING_LEVEL_DB;
     return SoftClippingLevel {dbToSample<TSample>(sclIndB)};
+  }
+
+  static ParamValue normalize(SoftClippingLevel iSoftClippingLevel)
+  {
+    return iSoftClippingLevel.getNormalizedParam();
   }
 
 private:
@@ -101,7 +105,6 @@ private:
 ///////////////////////////////////
 struct MaxLevel
 {
-  SoftClippingLevel fSoftClippingLevel{};
   TSample fLeftValue{-1};
   TSample fRightValue{-1};
 };
@@ -111,7 +114,6 @@ struct MaxLevel
 // LCDData
 ///////////////////////////////////
 constexpr IAttributeList::AttrID LCDDATA_WINDOW_SIZE_MS_ATTR = "WSMS";
-constexpr IAttributeList::AttrID LCDDATA_SOFT_CLIPPING_LEVEL_ATTR = "SCL";
 constexpr IAttributeList::AttrID LCDDATA_LEFT_SAMPLES_ATTR = "LSamples";
 constexpr IAttributeList::AttrID LCDDATA_RIGHT_SAMPLES_ATTR = "RSamples";
 
@@ -119,7 +121,6 @@ struct LCDData
 {
   long fWindowSizeInMillis{0};
 
-  SoftClippingLevel fSoftClippingLevel{};
   bool fLeftChannelOn{true};
   TSample fLeftSamples[MAX_ARRAY_SIZE]{};
 

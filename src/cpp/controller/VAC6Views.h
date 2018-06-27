@@ -9,6 +9,8 @@ namespace VAC6 {
 
 using namespace GUI;
 
+using SoftClippingLevelParameter = VSTParameter<SoftClippingLevel, SoftClippingLevel::denormalize, SoftClippingLevel::normalize>;
+
 /**
  * Base class to LCD and MaxLevel
  */
@@ -56,6 +58,9 @@ public:
     fLevelStateHardClippingColor = iLevelStateHardClippingColor;
   }
 
+  // registerParameters
+  void registerParameters() override;
+
   CLASS_METHODS_NOCOPY(HistoryView, CustomView)
 
 protected:
@@ -66,6 +71,8 @@ protected:
   CColor fLevelStateOkColor{};
   CColor fLevelStateSoftClippingColor{};
   CColor fLevelStateHardClippingColor{};
+
+  std::unique_ptr<SoftClippingLevelParameter> fSoftClippingLevelParameter;
 
 public:
   class Creator : public CustomViewCreator<HistoryView>

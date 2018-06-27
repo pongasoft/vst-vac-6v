@@ -58,6 +58,8 @@ public:
 
   void registerParameters() override;
 
+  void onParameterChange(ParamID iParamID, ParamValue iNormalizedValue) override;
+
   CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override;
 
   CLASS_METHODS_NOCOPY(LCDDisplayView, HistoryView)
@@ -166,6 +168,8 @@ public:
   // beforeUnassign
   void beforeUnassign() override;
 
+  void onSoftClippingLevelChange(SoftClippingLevel const &iNewValue);
+
 private:
   friend class LCDDisplayView;
 
@@ -174,6 +178,7 @@ private:
   LCDData fLCDData;
   LCDMessage *fLCDSoftClipingLevelMessage;
   LCDMessage *fLCDZoomFactorXMessage;
+
 };
 
 }

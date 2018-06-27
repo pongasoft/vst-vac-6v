@@ -1,5 +1,4 @@
 #include "MaxLevelView.h"
-#include "../AudioUtils.h"
 #include "DrawContext.h"
 
 namespace pongasoft {
@@ -33,8 +32,6 @@ void MaxLevelState::onMessage(Message const &message)
 {
   MaxLevel maxLevel{};
 
-  maxLevel.fSoftClippingLevel = SoftClippingLevel{message.getFloat(MAX_LEVEL_SOFT_CLIPPING_LEVEL_ATTR,
-                                                                   fMaxLevel.fSoftClippingLevel.getValueInSample())};
   maxLevel.fLeftValue = message.getFloat(MAX_LEVEL_LEFT_VALUE_ATTR, -1);
   maxLevel.fRightValue = message.getFloat(MAX_LEVEL_RIGHT_VALUE_ATTR, -1);
 
@@ -69,7 +66,7 @@ void MaxLevelView::draw(CDrawContext *iContext)
   char text[256];
   if(max > 0)
   {
-    fontColor = computeColor(fState->fMaxLevel.fSoftClippingLevel, max);
+    fontColor = computeColor(fSoftClippingLevelParameter->getValue(), max);
     if(max >= Common::Sample64SilentThreshold)
       sprintf(text, "%+.2f", sampleToDb(max));
     else
@@ -96,7 +93,7 @@ void MaxLevelView::draw(CDrawContext *iContext)
 ///////////////////////////////////////////
 void MaxLevelView::registerParameters()
 {
-  CustomView::registerParameters();
+  HistoryView::registerParameters();
 
   fLCDLeftChannelParameter = registerBooleanParameter(EVAC6ParamID::kLCDLeftChannel);
   fLCDRightChannelParameter = registerBooleanParameter(EVAC6ParamID::kLCDRightChannel);
