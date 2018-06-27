@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VAC6Views.h"
+#include "HistoryView.h"
 #include "VSTViewState.h"
 #include "VSTParameters.h"
 #include "../Messaging.h"

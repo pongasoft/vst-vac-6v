@@ -1,4 +1,4 @@
-#include "VAC6Views.h"
+#include "HistoryView.h"
 #include "../VAC6CIDs.h"
 
 namespace pongasoft {

@@ -58,6 +58,8 @@ set(vst_sources
 		${CPP_SOURCES}/controller/CustomViewCreator.h
 		${CPP_SOURCES}/controller/DrawContext.h
 		${CPP_SOURCES}/controller/DrawContext.cpp
+		${CPP_SOURCES}/controller/HistoryView.h
+		${CPP_SOURCES}/controller/HistoryView.cpp
 		${CPP_SOURCES}/controller/LCDDisplayView.h
 		${CPP_SOURCES}/controller/LCDDisplayView.cpp
 		${CPP_SOURCES}/controller/MaxLevelView.h
@@ -67,8 +69,6 @@ set(vst_sources
 		${CPP_SOURCES}/controller/VAC6Controller.h
 		${CPP_SOURCES}/controller/VAC6Controller.cpp
 		${CPP_SOURCES}/controller/VAC6Controller.h
-		${CPP_SOURCES}/controller/VAC6Views.h
-		${CPP_SOURCES}/controller/VAC6Views.cpp
 		${CPP_SOURCES}/controller/VSTParameters.h
 		${CPP_SOURCES}/controller/VSTViewState.h
 		${CPP_SOURCES}/AudioBuffer.h

@@ -3,7 +3,6 @@
 #include <public.sdk/source/vst/vsteditcontroller.h>
 #include <vstgui4/vstgui/plugin-bindings/vst3editor.h>
 #include "VSTViewState.h"
-#include "VAC6Views.h"
 #include "LCDDisplayView.h"
 #include "MaxLevelView.h"
 
