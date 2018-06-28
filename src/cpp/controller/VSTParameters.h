@@ -12,8 +12,19 @@ namespace GUI {
 using namespace Steinberg;
 using namespace Steinberg::Vst;
 
+// making sure we can easily change this type
 using ParameterOwner = EditController;
 
+///////////////////////////////////////////
+// RawParameter
+///////////////////////////////////////////
+
+/**
+ * Encapsulates a vst parameter and how to access it (read/write) as well as how to "connect" to it in order to be
+ * notified of changes. This "raw" version deals with ParamValue which is the underlying type used by the vst sdk
+ * which is always a number in the range [0.0, 1.0]. The class VSTParameter deals with other types and automatic
+ * normalization/denormalization.
+ */
 class RawParameter
 {
 public:
@@ -52,6 +63,7 @@ public:
       fInitialParamValue = fParameterOwner->getParamNormalized(fParamID);
     }
 
+    // disabling copy
     Editor(Editor const &) = delete;
     Editor& operator=(Editor const &) = delete;
 
@@ -116,9 +128,9 @@ public:
 
 public:
   /**
- * Wrapper class which maintains the connection between a parameter and its listener. The connection will be
- * terminated if close() is called or automatically when the destructor is called.
- */
+   * Wrapper class which maintains the connection between a parameter and its listener. The connection will be
+   * terminated if close() is called or automatically when the destructor is called.
+   */
   class Connection : public Steinberg::FObject
   {
   public:
@@ -162,6 +174,9 @@ public:
       close();
     }
 
+    /**
+     * This is being called when the parameter receives a message... do not call explicitely
+     */
     void PLUGIN_API update(FUnknown *iChangedUnknown, Steinberg::int32 iMessage) SMTG_OVERRIDE
     {
       if(iMessage == IDependent::kChanged)
@@ -170,6 +185,7 @@ public:
       }
     }
 
+    // disabling copy
     Connection(Editor const &) = delete;
     Connection& operator=(Editor const &) = delete;
 
@@ -182,6 +198,7 @@ public:
   };
 
 public:
+  // Constructor
   RawParameter(ParamID iParamID, ParameterOwner *iParameterOwner) :
     fParamID{iParamID},
     fParameterOwner{iParameterOwner}
@@ -193,16 +210,21 @@ public:
     DCHECK_NOTNULL_F(fParameter);
   }
 
+  // Destructor
   ~RawParameter()
   {
     DLOG_F(INFO, "RawParameter::~RawParameter(%d)", fParamID);
   }
 
+  // getParamID
   ParamID getParamID() const
   {
     return fParamID;
   }
 
+  /**
+   * @return the current raw value of the parameter
+   */
   ParamValue getValue() const
   {
     return fParameterOwner->getParamNormalized(fParamID);
@@ -241,12 +263,21 @@ private:
   ParameterOwner *const fParameterOwner;
 };
 
+///////////////////////////////////////////
+// VSTParameter
+///////////////////////////////////////////
+
+// the function pointer type to denormalize a raw value
 template<typename T>
 using VSTParameterDenormalizer = T (*)(ParamValue);
 
+// the function pointer type to normalize a raw value
 template<typename T>
 using VSTParameterNormalizer = ParamValue (*)(T const &);
 
+/**
+ * This class wraps a RawParameter to deal with any type using a Normalizer and Denormalizer functions
+ */
 template<typename T, VSTParameterDenormalizer<T> Denormalizer, VSTParameterNormalizer<T> Normalizer>
 class VSTParameter
 {
@@ -276,6 +307,7 @@ public:
     {
     }
 
+    // disabling copy
     Editor(Editor const &) = delete;
     Editor& operator=(Editor const &) = delete;
 
@@ -304,7 +336,7 @@ public:
     inline tresult commit(T iValue)
     {
       setValue(iValue);
-      return fRawEditor->commit();
+      return commit();
     }
 
     /**
@@ -321,6 +353,7 @@ public:
   };
 
 public:
+  // Constructor
   explicit VSTParameter(std::unique_ptr<RawParameter> iRawParameter) :
     fRawParameter{std::move(iRawParameter)}
   {
@@ -328,16 +361,21 @@ public:
     DLOG_F(INFO, "VSTParameter::VSTParameter(%d)", fRawParameter->getParamID());
   }
 
+  // Destructor
   ~VSTParameter()
   {
     DLOG_F(INFO, "VSTParameter::~VSTParameter(%d)", fRawParameter->getParamID());
   }
 
+  // getParamID
   ParamID getParamID() const
   {
     return fRawParameter->getParamID();
   }
 
+  /**
+   * @return the current value of the parameter as a T (using the Denormalizer)
+   */
   T getValue() const
   {
     return Denormalizer(fRawParameter->getValue());
@@ -389,12 +427,16 @@ public:
     DCHECK_NOTNULL_F(iParameterOwner);
   };
 
+  // disabling copy
   VSTParameters(VSTParameters const&) = delete;
   VSTParameters& operator=(VSTParameters const &) = delete;
 
   // Destructor
   ~VSTParameters() = default;
 
+  /**
+   * @return the raw parameter given its id
+   */
   std::unique_ptr<RawParameter> getRawParameter(ParamID iParamID) const
   {
     return std::make_unique<RawParameter>(iParamID, fParameterOwner);
@@ -403,6 +445,10 @@ public:
 private:
   ParameterOwner *const fParameterOwner;
 };
+
+///////////////////////////////////////////
+// Common types
+///////////////////////////////////////////
 
 
 using BooleanParameter = VSTParameter<bool, Common::denormalizeBoolValue, Common::normalizeBoolValue>;
