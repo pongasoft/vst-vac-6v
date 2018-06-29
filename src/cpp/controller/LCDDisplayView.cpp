@@ -282,8 +282,8 @@ CMouseEventResult LCDDisplayView::onMouseCancel()
 void LCDDisplayView::registerParameters()
 {
   HistoryView::registerParameters();
-  fLCDLiveViewParameter = registerBooleanParameter(EVAC6ParamID::kLCDLiveView, false);
-  fLCDInputXParameter = registerVSTParameter<LCDInputXParameter>(EVAC6ParamID::kLCDInputX, false);
+  fLCDLiveViewParameter = registerBooleanParameter(EVAC6ParamID::kLCDLiveView);
+  fLCDInputXParameter = registerVSTParameter<LCDInputXParameter>(EVAC6ParamID::kLCDInputX);
 }
 
 ///////////////////////////////////////////

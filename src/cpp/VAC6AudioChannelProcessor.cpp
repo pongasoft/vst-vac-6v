@@ -22,6 +22,7 @@ VAC6AudioChannelProcessor::VAC6AudioChannelProcessor(SampleRateBasedClock const 
   fZoomWindow{MAX_ARRAY_SIZE, fMaxBuffer->getSize()},
   fZoomMaxAccumulator{fZoomWindow.setZoomFactor(DEFAULT_ZOOM_FACTOR_X)},
   fZoomMaxBuffer{new CircularBuffer<TSample>(fZoomWindow.getVisibleWindowSizeInPoints())},
+  fNeedToRecomputeZoomMaxBuffer{false},
   fIsLiveView{true},
   fPausedZoomMaxBufferOffset{-1}
 {
@@ -52,6 +53,9 @@ void VAC6AudioChannelProcessor::computeZoomSamples(int iNumSamples, TSample *oSa
 /////////////////////////////////////////
 void VAC6AudioChannelProcessor::setIsLiveView(bool iIsLiveView)
 {
+  if(fIsLiveView == iIsLiveView)
+    return;
+
   fIsLiveView = iIsLiveView;
 
   resetMaxLevelAccumulator();
@@ -60,6 +64,15 @@ void VAC6AudioChannelProcessor::setIsLiveView(bool iIsLiveView)
   {
     fMaxLevel = fZoomMaxBuffer->getAt(fPausedZoomMaxBufferOffset);
   }
+}
+
+/////////////////////////////////////////
+// VAC6AudioChannelProcessor::setLCDInputX
+/////////////////////////////////////////
+void VAC6AudioChannelProcessor::setLCDInputX(int iLCDInputX)
+{
+  // iLCDInputX [0-255] => offset [-256, -1]
+  setPausedZoomMaxBufferOffset(iLCDInputX - MAX_ARRAY_SIZE);
 }
 
 /////////////////////////////////////////
@@ -74,6 +87,25 @@ void VAC6AudioChannelProcessor::setPausedZoomMaxBufferOffset(int iOffset)
     fMaxLevel = fZoomMaxBuffer->getAt(fPausedZoomMaxBufferOffset);
   }
 }
+
+/////////////////////////////////////////
+// VAC6AudioChannelProcessor::setHistoryOffset
+/////////////////////////////////////////
+void VAC6AudioChannelProcessor::setHistoryOffset(double iHistoryOffset)
+{
+  fZoomWindow.setWindowOffset(iHistoryOffset);
+  fNeedToRecomputeZoomMaxBuffer = true;
+}
+
+/////////////////////////////////////////
+// VAC6AudioChannelProcessor::setZoomFactor
+/////////////////////////////////////////
+void VAC6AudioChannelProcessor::setZoomFactor(double iZoomFactorPercent)
+{
+  fZoomWindow.setZoomFactor(iZoomFactorPercent);
+  fNeedToRecomputeZoomMaxBuffer = true;
+}
+
 
 /////////////////////////////////////////
 // VAC6AudioChannelProcessor::genericProcessChannel

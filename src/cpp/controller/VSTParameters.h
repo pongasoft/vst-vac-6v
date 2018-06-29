@@ -59,7 +59,8 @@ public:
       fParameterOwner{iParameterOwner}
     {
       DLOG_F(INFO, "RawParameter::Editor(%d)", fParamID);
-      fIsEditing = fParameterOwner->beginEdit(fParamID) == kResultOk;
+      fParameterOwner->beginEdit(fParamID);
+      fIsEditing = true;
       fInitialParamValue = fParameterOwner->getParamNormalized(fParamID);
     }
 
@@ -72,12 +73,14 @@ public:
      */
     inline tresult setValue(ParamValue iValue)
     {
+      tresult res = kResultFalse;
       if(fIsEditing)
       {
-        if(fParameterOwner->setParamNormalized(fParamID, iValue) == kResultOk)
-          return fParameterOwner->performEdit(fParamID, fParameterOwner->getParamNormalized(fParamID));
+        res = fParameterOwner->setParamNormalized(fParamID, iValue);
+        if(res == kResultOk)
+          fParameterOwner->performEdit(fParamID, fParameterOwner->getParamNormalized(fParamID));
       }
-      return kResultFalse;
+      return res;
     }
 
     /*
@@ -89,7 +92,8 @@ public:
       if(fIsEditing)
       {
         fIsEditing = false;
-        return fParameterOwner->endEdit(fParamID);
+        fParameterOwner->endEdit(fParamID);
+        return kResultOk;
       }
       return kResultFalse;
     }
@@ -104,7 +108,8 @@ public:
       {
         setValue(fInitialParamValue);
         fIsEditing = false;
-        return fParameterOwner->endEdit(fParamID);
+        fParameterOwner->endEdit(fParamID);
+        return kResultOk;
       }
       return kResultFalse;
     }
@@ -451,9 +456,10 @@ private:
 ///////////////////////////////////////////
 
 
-using BooleanParameter = VSTParameter<bool, Common::denormalizeBoolValue, Common::normalizeBoolValue>;
+using BooleanParameter = VSTParameter<bool, Common::BooleanParamConverter::denormalize, Common::BooleanParamConverter::normalize>;
+using PercentParameter = RawParameter;
 template<int StepCount>
-using DiscreteParameter = VSTParameter<int, Common::denormalizeDiscreteValue<StepCount>, Common::normalizeDiscreteValue<StepCount>>;
+using DiscreteParameter = VSTParameter<int, Common::DiscreteValueParamConverter<StepCount>::denormalize, Common::DiscreteValueParamConverter<StepCount>::normalize>;
 
 
 }

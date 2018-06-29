@@ -86,6 +86,14 @@ std::unique_ptr<BooleanParameter> CustomView::registerBooleanParameter(ParamID i
   return registerVSTParameter<BooleanParameter>(iParamID, iSubscribeToChanges);
 }
 
+///////////////////////////////////////////
+// CustomView::registerPercentParameter
+///////////////////////////////////////////
+std::unique_ptr<PercentParameter> CustomView::registerPercentParameter(ParamID iParamID, bool iSubscribeToChanges)
+{
+  return registerRawParameter(iParamID, iSubscribeToChanges);
+}
+
 CustomView::Creator __gCustomDisplayCreator("pongasoft::CustomDisplay", "pongasoft - Custom Display");
 }
 }

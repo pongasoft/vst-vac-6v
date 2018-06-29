@@ -93,6 +93,7 @@ private:
     bool fRightChannelOn{true};
     bool fLCDLiveView{true};
     int fLCDInputX{MAX_LCD_INPUT_X};
+    double fLCDHistoryOffset{MAX_HISTORY_OFFSET};
   };
 
   bool fMaxLevelResetRequested;

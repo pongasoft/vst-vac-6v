@@ -1,14 +1,13 @@
 
 #include "ZoomWindow.h"
 #include "AudioUtils.h"
+#include "Utils.h"
 
 namespace pongasoft {
 namespace VST {
 namespace Common {
 
-const int MIN_HISTORY_OFFSET = 0;
-const int MAX_HISTORY_OFFSET = 10000;
-int const MAX_WINDOW_OFFSET = -1;
+constexpr int MAX_WINDOW_OFFSET = -1;
 
 ////////////////////////////////////////////////////////////
 // ZoomWindow
@@ -32,7 +31,9 @@ ZoomWindow::ZoomWindow(int iVisibleWindowSize, int iBufferSize) :
 ////////////////////////////////////////////////////////////
 TZoom::MaxAccumulator ZoomWindow::setZoomFactor(double iZoomFactorPercent)
 {
-  auto accumulator = fZoom.setZoomFactor(iZoomFactorPercent * (1 - fMaxZoomFactor) + fMaxZoomFactor);
+  DCHECK_F(iZoomFactorPercent >= 0 && iZoomFactorPercent <= 1.0);
+
+  auto accumulator = fZoom.setZoomFactor(Utils::Lerp<double>(fMaxZoomFactor, 1.0).compute(iZoomFactorPercent));
 
   if(fZoom.isNoZoom())
   {
@@ -45,7 +46,7 @@ TZoom::MaxAccumulator ZoomWindow::setZoomFactor(double iZoomFactorPercent)
   }
 
   // should never happen...
-  assert(fMinWindowOffset <= MAX_WINDOW_OFFSET);
+  DCHECK_F(fMinWindowOffset <= MAX_WINDOW_OFFSET);
 
   // we make sure that fWindowOffset remains within its bounds!
   fWindowOffset = clamp(fWindowOffset, fMinWindowOffset, MAX_WINDOW_OFFSET);
@@ -80,11 +81,11 @@ TZoom::MaxAccumulator ZoomWindow::setZoomFactor(double iZoomFactorPercent)
 //
 //  // when we are all the way on the right no need to compute anything
 //  if(windowIdx == MAX_WINDOW_OFFSET)
-//    return MAX_HISTORY_OFFSET;
+//    return MAX_WINDOW_OFFSET;
 //
 //  // when we are all the way on the left no need to compute anything
 //  if(windowIdx == fMinWindowOffset)
-//    return MIN_HISTORY_OFFSET;
+//    return MIN_WINDOW_OFFSET;
 //
 //  // third determine new window offset
 //  if(fZoom.isNoZoom())
@@ -103,7 +104,7 @@ TZoom::MaxAccumulator ZoomWindow::setZoomFactor(double iZoomFactorPercent)
 //
 //  // finally compute new inputHistoryOffset
 //  auto inputHistoryOffset =
-//    static_cast<int>(round((fWindowOffset - fMinWindowOffset) * static_cast<float>(MAX_HISTORY_OFFSET) /
+//    static_cast<int>(round((fWindowOffset - fMinWindowOffset) * static_cast<float>(MAX_WINDOW_OFFSET) /
 //                           (MAX_WINDOW_OFFSET - fMinWindowOffset)));
 //
 //  return inputHistoryOffset;
@@ -121,10 +122,11 @@ TZoom::MaxAccumulator ZoomWindow::computeZoomWindow(CircularBuffer<TSample> cons
   auto accumulator = getMaxAccumulatorFromLeftOfScreen(offset);
 
   TSample max;
-  for(; offset < 0; offset++)
+  for(int i = 0; i < fVisibleWindowSize; i++)
   {
-    if(accumulator.accumulate(iBuffer.getAt(offset), max))
-      oBuffer.push(max);
+    while(!accumulator.accumulate(iBuffer.getAt(offset++), max))
+    {}
+    oBuffer.push(max);
   }
 
   return accumulator;
@@ -226,28 +228,16 @@ TZoom::MaxAccumulator ZoomWindow::getMaxAccumulatorFromLeftOfScreen(int &oOffset
 ////////////////////////////////////////////////////////////
 // ZoomWindow::setWindowOffset
 ////////////////////////////////////////////////////////////
-//void ZoomWindow::setWindowOffset(int iInputHistoryOffset)
-//{
-//  switch(iInputHistoryOffset)
-//  {
-//    case MIN_HISTORY_OFFSET:
-//      fWindowOffset = fMinWindowOffset;
-//      break;
-//
-//    case MAX_HISTORY_OFFSET:
-//      fWindowOffset = MAX_WINDOW_OFFSET;
-//      break;
-//
-//    default:
-//      fWindowOffset = (int)
-//        (static_cast<float>(MAX_WINDOW_OFFSET - fMinWindowOffset) / MAX_HISTORY_OFFSET * iInputHistoryOffset +
-//         fMinWindowOffset);
-//      break;
-//  }
-//
-//  // sanity check
-//  assert(fWindowOffset >= fMinWindowOffset && fWindowOffset <= MAX_WINDOW_OFFSET);
-//}
+void ZoomWindow::setWindowOffset(double iWindowOffsetPercent)
+{
+  DCHECK_F(iWindowOffsetPercent >= 0 && iWindowOffsetPercent <= 1.0);
+
+  auto lerp = Utils::Lerp<double>(fMinWindowOffset, MAX_WINDOW_OFFSET);
+  fWindowOffset = static_cast<int>(lerp.compute(iWindowOffsetPercent));
+
+  // sanity check
+  DCHECK_F(fWindowOffset >= fMinWindowOffset && fWindowOffset <= MAX_WINDOW_OFFSET);
+}
 
 }
 }

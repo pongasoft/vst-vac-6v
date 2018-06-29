@@ -56,7 +56,7 @@ tresult VAC6Controller::initialize(FUnknown *context)
   parameters.addParameter(STR16 ("Max Level Reset"), // title
                           nullptr, // units
                           1, // stepCount => 1 means toggle
-                          normalizeBoolValue(false), // defaultNormalizedValue
+                          BooleanParamConverter::normalize(false), // defaultNormalizedValue
                           ParameterInfo::ParameterFlags::kCanAutomate, // flags
                           EVAC6ParamID::kMaxLevelReset, // tag
                           kRootUnitId, // unitID => not using units at this stage
@@ -92,7 +92,7 @@ tresult VAC6Controller::initialize(FUnknown *context)
   parameters.addParameter(STR16 ("Left Channel"), // title
                           nullptr, // units
                           1, // stepCount => 1 means toggle
-                          normalizeBoolValue(true), // defaultNormalizedValue
+                          BooleanParamConverter::normalize(true), // defaultNormalizedValue
                           ParameterInfo::ParameterFlags::kCanAutomate, // flags
                           EVAC6ParamID::kLCDLeftChannel, // tag
                           kRootUnitId, // unitID => not using units at this stage
@@ -102,7 +102,7 @@ tresult VAC6Controller::initialize(FUnknown *context)
   parameters.addParameter(STR16 ("Right Channel"), // title
                           nullptr, // units
                           1, // stepCount => 1 means toggle
-                          normalizeBoolValue(true), // defaultNormalizedValue
+                          BooleanParamConverter::normalize(true), // defaultNormalizedValue
                           ParameterInfo::ParameterFlags::kCanAutomate, // flags
                           EVAC6ParamID::kLCDRightChannel, // tag
                           kRootUnitId, // unitID => not using units at this stage
@@ -112,7 +112,7 @@ tresult VAC6Controller::initialize(FUnknown *context)
   parameters.addParameter(STR16 ("Live"), // title
                           nullptr, // units
                           1, // stepCount => 1 means toggle
-                          normalizeBoolValue(true), // defaultNormalizedValue
+                          BooleanParamConverter::normalize(true), // defaultNormalizedValue
                           0, // flags (state is not saved)
                           EVAC6ParamID::kLCDLiveView, // tag
                           kRootUnitId, // unitID => not using units at this stage
@@ -127,6 +127,16 @@ tresult VAC6Controller::initialize(FUnknown *context)
                           EVAC6ParamID::kLCDInputX, // tag
                           kRootUnitId, // unitID => not using units at this stage
                           STR16 ("Gph Sel.")); // shortTitle
+
+  // the scroll position (in percent)
+  parameters.addParameter(STR16 ("Graph Scroll"), // title
+                          nullptr, // units
+                          0, // stepCount => continuous
+                          1.0, // defaultNormalizedValue => all the way to the right
+                          0, // flags (state is not saved)
+                          EVAC6ParamID::kLCDHistoryOffset, // tag
+                          kRootUnitId, // unitID => not using units at this stage
+                          STR16 ("Gph Scr.")); // shortTitle
 
   fVSTParameters = std::make_shared<VSTParameters>(this);
 
@@ -161,26 +171,20 @@ CView *VAC6Controller::verifyView(CView *view,
                                   const IUIDescription * /*description*/,
                                   VST3Editor * /*editor*/)
 {
-  auto control = dynamic_cast<CustomView *>(view);
-  if(control != nullptr)
+  auto customView = dynamic_cast<CustomView *>(view);
+  if(customView != nullptr)
   {
-    switch(control->getCustomViewTag())
+    customView->initParameters(fVSTParameters);
+
+    switch(customView->getCustomViewTag())
     {
       case EVAC6CustomViewTag::kMaxLevelValue:
-      {
-        auto v = dynamic_cast<MaxLevelView *>(control);
-        v->initParameters(fVSTParameters);
-        fMaxLevelState.assign(v);
+        fMaxLevelState.assign(dynamic_cast<MaxLevelView *>(customView));
         break;
-      }
 
       case EVAC6CustomViewTag::kLCD:
-      {
-        auto *lcd = dynamic_cast<LCDDisplayView *>(control);
-        lcd->initParameters(fVSTParameters);
-        fLCDDisplayState.assign(lcd);
+        fLCDDisplayState.assign(dynamic_cast<LCDDisplayView *>(customView));
         break;
-      }
 
       default:
         // ignoring other
@@ -224,19 +228,19 @@ tresult VAC6Controller::setComponentState(IBStream *state)
   if(!streamer.readInt32(savedMaxLevelAutoReset))
     savedMaxLevelAutoReset = DEFAULT_MAX_LEVEL_RESET_IN_SECONDS;
   setParamNormalized(EVAC6ParamID::kMaxLevelAutoReset,
-                     normalizeDiscreteValue<MAX_LEVEL_AUTO_RESET_STEP_COUNT>(savedMaxLevelAutoReset));
+                     MaxLevelAutoResetParamConverter::normalize(savedMaxLevelAutoReset));
 
   // EVAC6ParamID::kLCDLeftChannel
   bool savedLeftChannelOn;
   if(!streamer.readBool(savedLeftChannelOn))
     savedLeftChannelOn = true;
-  setParamNormalized(EVAC6ParamID::kLCDLeftChannel, normalizeBoolValue(savedLeftChannelOn));
+  setParamNormalized(EVAC6ParamID::kLCDLeftChannel, BooleanParamConverter::normalize(savedLeftChannelOn));
 
   // EVAC6ParamID::kLCDRightChannel
   bool savedRightChannelOn;
   if(!streamer.readBool(savedRightChannelOn))
     savedRightChannelOn = true;
-  setParamNormalized(EVAC6ParamID::kLCDRightChannel, normalizeBoolValue(savedRightChannelOn));
+  setParamNormalized(EVAC6ParamID::kLCDRightChannel, BooleanParamConverter::normalize(savedRightChannelOn));
 
   DLOG_F(INFO, "VAC6Controller::setComponentState => kSoftClippingLevel=%f, kLCDZoomFactorX=%f, kMaxLevelAutoReset=%d, kLCDLeftChannel=%d, kLCDRightChannel=%d",
          savedParamSoftLevelClipping,

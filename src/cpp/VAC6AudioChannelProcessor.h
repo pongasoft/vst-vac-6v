@@ -134,17 +134,16 @@ public:
   /**
    * @param iZoomFactorPercent zoom factor between 0-1 (where 1 is min zoom, and 0 is max zoom)
    */
-  void setZoomFactor(double iZoomFactorPercent)
-  {
-    fZoomWindow.setZoomFactor(iZoomFactorPercent);
-    fZoomMaxAccumulator = fZoomWindow.computeZoomWindow(*fMaxBuffer, *fZoomMaxBuffer);
-  }
+  void setZoomFactor(double iZoomFactorPercent);
 
   // setIsLiveView
   void setIsLiveView(bool iIsLiveView);
 
-  // setPausedZoomMaxBufferOffset
-  void setPausedZoomMaxBufferOffset(int iOffset);
+  // setLCDInputX
+  void setLCDInputX(int iLCDInputX);
+
+  // setHistoryOffset
+  void setHistoryOffset(double iHistoryOffset);
 
   /**
    * @return the duration of the window in milliseconds
@@ -168,6 +167,10 @@ public:
   bool genericProcessChannel(const typename AudioBuffers<SampleType>::Channel &iIn,
                              typename AudioBuffers<SampleType>::Channel &iOut);
 
+protected:
+  // setPausedZoomMaxBufferOffset
+  void setPausedZoomMaxBufferOffset(int iOffset);
+
 private:
   SampleRateBasedClock fClock;
 
@@ -180,6 +183,7 @@ private:
   ZoomWindow fZoomWindow;
   TZoom::MaxAccumulator fZoomMaxAccumulator;
   CircularBuffer<TSample> *const fZoomMaxBuffer;
+  bool fNeedToRecomputeZoomMaxBuffer;
 
   bool fIsLiveView;
   int fPausedZoomMaxBufferOffset;

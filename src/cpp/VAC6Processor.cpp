@@ -5,7 +5,6 @@
 
 #include "VAC6Processor.h"
 #include "VAC6CIDs.h"
-#include "Parameter.h"
 
 namespace pongasoft {
 namespace VST {
@@ -21,6 +20,12 @@ bool VAC6AudioChannelProcessor::genericProcessChannel(typename AudioBuffers<Samp
                                                       typename AudioBuffers<SampleType>::Channel &iOut)
 {
   DCHECK_EQ_F(iIn.getNumSamples(), iOut.getNumSamples());
+
+  if(fNeedToRecomputeZoomMaxBuffer)
+  {
+    fZoomMaxAccumulator = fZoomWindow.computeZoomWindow(*fMaxBuffer, *fZoomMaxBuffer);
+    fNeedToRecomputeZoomMaxBuffer = false;
+  }
 
   bool silent = true;
 
@@ -219,32 +224,64 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   if(in.getNumChannels() != 2 || out.getNumChannels() != 2)
     return kResultFalse;
 
+  bool isNewLiveView = false;
+
+  // live view/pause has changed
   if(fPreviousState.fLCDLiveView != fState.fLCDLiveView)
   {
     fLeftChannelProcessor->setIsLiveView(fState.fLCDLiveView);
     fRightChannelProcessor->setIsLiveView(fState.fLCDLiveView);
+
+    isNewLiveView = fState.fLCDLiveView;
   }
 
+  // LCDInputX (lcd selection) has changed
   if(fPreviousState.fLCDInputX != fState.fLCDInputX)
   {
-    // fState.fLCDInputX [0-255] => offset [-256, -1]
-    int newOffset = fState.fLCDInputX - MAX_ARRAY_SIZE;
-    fLeftChannelProcessor->setPausedZoomMaxBufferOffset(newOffset);
-    fRightChannelProcessor->setPausedZoomMaxBufferOffset(newOffset);
+    fLeftChannelProcessor->setLCDInputX(fState.fLCDInputX);
+    fRightChannelProcessor->setLCDInputX(fState.fLCDInputX);
   }
 
+  // Max Level Auto reset selection has changed
   if(fPreviousState.fMaxLevelAutoResetInSeconds != fState.fMaxLevelAutoResetInSeconds)
   {
     fLeftChannelProcessor->resetMaxLevelAccumulator(fState.fMaxLevelAutoResetInSeconds);
     fRightChannelProcessor->resetMaxLevelAccumulator(fState.fMaxLevelAutoResetInSeconds);
   }
 
+  // Zoom has changed
   if(fPreviousState.fZoomFactorX != fState.fZoomFactorX)
   {
     fLeftChannelProcessor->setZoomFactor(fState.fZoomFactorX);
     fRightChannelProcessor->setZoomFactor(fState.fZoomFactorX);
   }
 
+  // Scrollbar has been moved (should happen only in pause mode)
+  if(fPreviousState.fLCDHistoryOffset != fState.fLCDHistoryOffset)
+  {
+    fLeftChannelProcessor->setHistoryOffset(fState.fLCDHistoryOffset);
+    fRightChannelProcessor->setHistoryOffset(fState.fLCDHistoryOffset);
+  }
+
+  // after we cancel pause we need to reset LCDInputX and LCDHistoryOffset
+  if(isNewLiveView)
+  {
+    if(fState.fLCDInputX != MAX_LCD_INPUT_X)
+    {
+      fState.fLCDInputX = MAX_LCD_INPUT_X;
+      fLeftChannelProcessor->setLCDInputX(fState.fLCDInputX);
+      fRightChannelProcessor->setLCDInputX(fState.fLCDInputX);
+      addOutputParameterChange(data, EVAC6ParamID::kLCDInputX, LCDInputXParamConverter::normalize(fState.fLCDInputX));
+    }
+
+    if(fState.fLCDHistoryOffset != MAX_HISTORY_OFFSET)
+    {
+      fState.fLCDHistoryOffset = MAX_HISTORY_OFFSET;
+      fLeftChannelProcessor->setHistoryOffset(fState.fLCDHistoryOffset);
+      fRightChannelProcessor->setHistoryOffset(fState.fLCDHistoryOffset);
+      addOutputParameterChange(data, EVAC6ParamID::kLCDHistoryOffset, LCDHistoryOffsetParamConverter::normalize(fState.fLCDHistoryOffset));
+    }
+  }
 
   auto leftChannel = out.getLeftChannel();
   auto rightChannel = out.getRightChannel();
@@ -252,13 +289,14 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   fLeftChannelProcessor->genericProcessChannel<SampleType>(in.getLeftChannel(), leftChannel);
   fRightChannelProcessor->genericProcessChannel<SampleType>(in.getRightChannel(), rightChannel);
 
-
+  // if reset of max level is requested (pressing momentary button) then we need to reset the accumulator
   if(fState.fLCDLiveView && fMaxLevelResetRequested)
   {
     fLeftChannelProcessor->resetMaxLevelAccumulator();
     fRightChannelProcessor->resetMaxLevelAccumulator();
   }
 
+  // is it time to update the UI?
   if(fRateLimiter.shouldUpdate(static_cast<uint32>(data.numSamples)))
   {
     LCDData lcdData{};
@@ -345,11 +383,11 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
             break;
 
           case kMaxLevelReset:
-            fMaxLevelResetRequested = denormalizeBoolValue(value);
+            fMaxLevelResetRequested = BooleanParamConverter::denormalize(value);
             break;
 
           case kMaxLevelAutoReset:
-            newState.fMaxLevelAutoResetInSeconds = static_cast<uint32>(denormalizeDiscreteValue<MAX_LEVEL_AUTO_RESET_STEP_COUNT>(value));
+            newState.fMaxLevelAutoResetInSeconds = static_cast<uint32>(MaxLevelAutoResetParamConverter::denormalize(value));
             stateChanged = newState.fMaxLevelAutoResetInSeconds != fState.fMaxLevelAutoResetInSeconds;
             break;
 
@@ -359,23 +397,28 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
             break;
 
           case kLCDLeftChannel:
-            newState.fLeftChannelOn = denormalizeBoolValue(value);
+            newState.fLeftChannelOn = BooleanParamConverter::denormalize(value);
             stateChanged = newState.fLeftChannelOn != fState.fLeftChannelOn;
             break;
 
           case kLCDRightChannel:
-            newState.fRightChannelOn = denormalizeBoolValue(value);
+            newState.fRightChannelOn = BooleanParamConverter::denormalize(value);
             stateChanged = newState.fRightChannelOn != fState.fRightChannelOn;
             break;
 
           case kLCDLiveView:
-            newState.fLCDLiveView = denormalizeBoolValue(value);
+            newState.fLCDLiveView = BooleanParamConverter::denormalize(value);
             stateChanged = newState.fLCDLiveView != fState.fLCDLiveView;
             break;
 
           case kLCDInputX:
-            newState.fLCDInputX = denormalizeDiscreteValue<MAX_LCD_INPUT_X>(value);
+            newState.fLCDInputX = LCDInputXParamConverter::denormalize(value);
             stateChanged = newState.fLCDInputX != fState.fLCDInputX;
+            break;
+
+          case kLCDHistoryOffset:
+            newState.fLCDHistoryOffset = LCDHistoryOffsetParamConverter::denormalize(value);
+            stateChanged = newState.fLCDHistoryOffset != fState.fLCDHistoryOffset;
             break;
 
           default:

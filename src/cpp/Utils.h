@@ -22,6 +22,11 @@ public:
     return (iX * fA) + fB;
   }
 
+  inline T reverse(T iY) const
+  {
+    return (iY - fB) / fA;
+  }
+
 private:
   const T fA;
   const T fB;

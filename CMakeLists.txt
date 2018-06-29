@@ -62,6 +62,8 @@ set(vst_sources
 		${CPP_SOURCES}/controller/HistoryView.cpp
 		${CPP_SOURCES}/controller/LCDDisplayView.h
 		${CPP_SOURCES}/controller/LCDDisplayView.cpp
+		${CPP_SOURCES}/controller/LCDScrollbarView.h
+		${CPP_SOURCES}/controller/LCDScrollbarView.cpp
 		${CPP_SOURCES}/controller/MaxLevelView.h
 		${CPP_SOURCES}/controller/MaxLevelView.cpp
 		${CPP_SOURCES}/controller/MomentaryButton.h

@@ -23,9 +23,14 @@ class Zoom
 public:
   using class_type = Zoom<batchSize>;
 
+  /**
+   * Class which helps in accumulating samples when zoomed. Zoom::fBatchSizes is used to keep track of how many
+   * samples need to be accumulated to produce the next one.
+   */
   class MaxAccumulator
   {
   public:
+    // Constructor
     explicit MaxAccumulator(class_type const *iZoom) :
       fZoom{iZoom},
       fAccumulatedMax{0},
@@ -34,6 +39,7 @@ public:
     {
     }
 
+    // Constructor when not starting from 0
     MaxAccumulator(class_type const *iZoom, int iBatchSizeIdx) :
       fZoom{iZoom},
       fAccumulatedMax{0},
@@ -42,6 +48,10 @@ public:
     {
     }
 
+    /**
+     * Accumulate the given sample. If a batch is complete (as defined by the Zoom) then it returns true and
+     * populate oMaxSample with the value. Otherwise it returns false and does not modify oMaxSample
+     */
     template<typename SampleType>
     bool accumulate(SampleType iSample, SampleType &oMaxSample)
     {
@@ -76,6 +86,7 @@ public:
 public:
   friend class class_type::MaxAccumulator;
 
+  // Constructor
   explicit Zoom(double iZoomFactor = 1.0)
   {
     setZoomFactor(iZoomFactor);
@@ -132,8 +143,6 @@ private:
 
   friend class ZoomWindow;
 
-  // void reset(TSample iSample, int iPercent);
-
   // zoom factor as an int
   int fZoomFactor;
 
@@ -150,7 +159,6 @@ using TZoom = Zoom<10>;
  */
 class ZoomWindow
 {
-
 public:
   ZoomWindow(int iVisibleWindowSize, int iBufferSize);
 
@@ -158,6 +166,13 @@ public:
    * @param iZoomFactorPercent zoom factor between 0-1 (where 1 is min zoom, and 0 is max zoom)
    */
   TZoom::MaxAccumulator setZoomFactor(double iZoomFactorPercent);
+
+  /**
+   * Changes the window offset. Note that window offset is an "abstract" value given as a percentage so that it does
+   * not depend on the level of zoom. The internal window offset (fWindowOffset) is adjusted to the actual position
+   * in the buffer accounting zoom level.
+   */
+  void setWindowOffset(double iWindowOffsetPercent);
 
   /**
    * Return the visible size of the window (number of points) */
@@ -215,7 +230,7 @@ private:
   int const fBufferSize;
 
   // offset in the zoomed window (with -1 being the right of the LCD screen for most recent point)
-  // this assumes that it corresponds to -1 in fBuffer as well
+  // this is a negative index in the zoomed buffer
   int fWindowOffset;
 
   // the minimum window offset to fit inside the buffer

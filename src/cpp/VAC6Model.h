@@ -4,6 +4,8 @@
 #include <pluginterfaces/vst/ivstattributes.h>
 #include <cmath>
 #include "VAC6Constants.h"
+#include "ZoomWindow.h"
+#include "Parameter.h"
 
 namespace pongasoft {
 namespace VST {
@@ -40,6 +42,10 @@ constexpr double MIN_VOLUME_DB = -60; // -60dB
 constexpr TSample MIN_AUDIO_SAMPLE = 0.001; // dbToSample<TSample>(-60.0)
 constexpr double DEFAULT_ZOOM_FACTOR_X = 0.5;
 constexpr long DEFAULT_MAX_LEVEL_RESET_IN_SECONDS = 5;
+
+using MaxLevelAutoResetParamConverter = Common::DiscreteValueParamConverter<MAX_LEVEL_AUTO_RESET_STEP_COUNT>;
+using LCDInputXParamConverter = Common::DiscreteValueParamConverter<MAX_LCD_INPUT_X>;
+using LCDHistoryOffsetParamConverter = Common::PercentParamConverter;
 
 ///////////////////////////////////////////
 // toDisplayValue
