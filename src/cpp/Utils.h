@@ -24,6 +24,7 @@ public:
 
   inline T reverse(T iY) const
   {
+    DCHECK_F(fA != 0);
     return (iY - fB) / fA;
   }
 

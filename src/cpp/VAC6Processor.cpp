@@ -24,6 +24,10 @@ bool VAC6AudioChannelProcessor::genericProcessChannel(typename AudioBuffers<Samp
   if(fNeedToRecomputeZoomMaxBuffer)
   {
     fZoomMaxAccumulator = fZoomWindow.computeZoomWindow(*fMaxBuffer, *fZoomMaxBuffer);
+    if(!fIsLiveView)
+    {
+      fMaxLevel = fZoomMaxBuffer->getAt(fPausedZoomMaxBufferOffset);
+    }
     fNeedToRecomputeZoomMaxBuffer = false;
   }
 
@@ -379,7 +383,7 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
         {
           case kSoftClippingLevel:
             newState.fSoftClippingLevel = SoftClippingLevel::denormalize(value);
-            stateChanged = newState.fSoftClippingLevel.getValueInSample() != fState.fSoftClippingLevel.getValueInSample();
+            stateChanged |= newState.fSoftClippingLevel.getValueInSample() != fState.fSoftClippingLevel.getValueInSample();
             break;
 
           case kMaxLevelReset:
@@ -388,37 +392,37 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
 
           case kMaxLevelAutoReset:
             newState.fMaxLevelAutoResetInSeconds = static_cast<uint32>(MaxLevelAutoResetParamConverter::denormalize(value));
-            stateChanged = newState.fMaxLevelAutoResetInSeconds != fState.fMaxLevelAutoResetInSeconds;
+            stateChanged |= newState.fMaxLevelAutoResetInSeconds != fState.fMaxLevelAutoResetInSeconds;
             break;
 
           case kLCDZoomFactorX:
-            newState.fZoomFactorX = value;
-            stateChanged = newState.fZoomFactorX != fState.fZoomFactorX;
+            newState.fZoomFactorX = LCDZoomFactorXParamConverter::denormalize(value);
+            stateChanged |= newState.fZoomFactorX != fState.fZoomFactorX;
             break;
 
           case kLCDLeftChannel:
             newState.fLeftChannelOn = BooleanParamConverter::denormalize(value);
-            stateChanged = newState.fLeftChannelOn != fState.fLeftChannelOn;
+            stateChanged |= newState.fLeftChannelOn != fState.fLeftChannelOn;
             break;
 
           case kLCDRightChannel:
             newState.fRightChannelOn = BooleanParamConverter::denormalize(value);
-            stateChanged = newState.fRightChannelOn != fState.fRightChannelOn;
+            stateChanged |= newState.fRightChannelOn != fState.fRightChannelOn;
             break;
 
           case kLCDLiveView:
             newState.fLCDLiveView = BooleanParamConverter::denormalize(value);
-            stateChanged = newState.fLCDLiveView != fState.fLCDLiveView;
+            stateChanged |= newState.fLCDLiveView != fState.fLCDLiveView;
             break;
 
           case kLCDInputX:
             newState.fLCDInputX = LCDInputXParamConverter::denormalize(value);
-            stateChanged = newState.fLCDInputX != fState.fLCDInputX;
+            stateChanged |= newState.fLCDInputX != fState.fLCDInputX;
             break;
 
           case kLCDHistoryOffset:
             newState.fLCDHistoryOffset = LCDHistoryOffsetParamConverter::denormalize(value);
-            stateChanged = newState.fLCDHistoryOffset != fState.fLCDHistoryOffset;
+            stateChanged |= newState.fLCDHistoryOffset != fState.fLCDHistoryOffset;
             break;
 
           default:

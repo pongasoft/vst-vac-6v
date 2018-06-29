@@ -58,7 +58,7 @@ public:
       fParamID{iParamID},
       fParameterOwner{iParameterOwner}
     {
-      DLOG_F(INFO, "RawParameter::Editor(%d)", fParamID);
+      // DLOG_F(INFO, "RawParameter::Editor(%d)", fParamID);
       fParameterOwner->beginEdit(fParamID);
       fIsEditing = true;
       fInitialParamValue = fParameterOwner->getParamNormalized(fParamID);
@@ -98,6 +98,17 @@ public:
       return kResultFalse;
     }
 
+    /*
+     * Shortcut to set the value prior to commit
+     * Call when you are done with the modifications.
+     * This has no effect if rollback() has already been called
+     */
+    inline tresult commit(ParamValue iValue)
+    {
+      setValue(iValue);
+      return commit();
+    }
+
     /**
      * Call this if you want to revert to the original value of the parameter (when the editor is created).
      * This has no effect if commit() has already been called
@@ -119,7 +130,7 @@ public:
      */
     inline ~Editor()
     {
-      DLOG_F(INFO, "~RawParameter::Editor(%d)", fParamID);
+      // DLOG_F(INFO, "~RawParameter::Editor(%d)", fParamID);
       rollback();
     }
 
@@ -144,7 +155,7 @@ public:
       fParameterOwner{iParameterOwner},
       fChangeListener{iChangeListener}
     {
-      DLOG_F(INFO, "RawParameter::Connection(%d)", fParamID);
+      // DLOG_F(INFO, "RawParameter::Connection(%d)", fParamID);
 
       DCHECK_NOTNULL_F(fParameterOwner);
 
@@ -175,7 +186,7 @@ public:
      * Automatically closes the connection and stops listening */
     inline ~Connection() override
     {
-      DLOG_F(INFO, "~RawParameter::Connection(%d)", fParamID);
+      // DLOG_F(INFO, "~RawParameter::Connection(%d)", fParamID);
       close();
     }
 
@@ -208,7 +219,7 @@ public:
     fParamID{iParamID},
     fParameterOwner{iParameterOwner}
   {
-    DLOG_F(INFO, "RawParameter::RawParameter(%d)", fParamID);
+    // DLOG_F(INFO, "RawParameter::RawParameter(%d)", fParamID);
     DCHECK_NOTNULL_F(fParameterOwner);
 
     fParameter = fParameterOwner->getParameterObject(fParamID);
@@ -218,7 +229,7 @@ public:
   // Destructor
   ~RawParameter()
   {
-    DLOG_F(INFO, "RawParameter::~RawParameter(%d)", fParamID);
+    // DLOG_F(INFO, "RawParameter::~RawParameter(%d)", fParamID);
   }
 
   // getParamID
@@ -252,6 +263,18 @@ public:
   std::unique_ptr<Editor> edit()
   {
     return std::make_unique<Editor>(fParamID, fParameterOwner);
+  }
+
+  /**
+   * Shortcut to create an editor and set the value to it
+   *
+   * @return an editor to modify the parameter (see Editor)
+   */
+  std::unique_ptr<Editor> edit(ParamValue iValue)
+  {
+    auto editor = edit();
+    editor->setValue(iValue);
+    return editor;
   }
 
   /**
@@ -363,13 +386,13 @@ public:
     fRawParameter{std::move(iRawParameter)}
   {
     DCHECK_NOTNULL_F(fRawParameter.get());
-    DLOG_F(INFO, "VSTParameter::VSTParameter(%d)", fRawParameter->getParamID());
+    // DLOG_F(INFO, "VSTParameter::VSTParameter(%d)", fRawParameter->getParamID());
   }
 
   // Destructor
   ~VSTParameter()
   {
-    DLOG_F(INFO, "VSTParameter::~VSTParameter(%d)", fRawParameter->getParamID());
+    // DLOG_F(INFO, "VSTParameter::~VSTParameter(%d)", fRawParameter->getParamID());
   }
 
   // getParamID
@@ -410,7 +433,7 @@ public:
    */
   std::unique_ptr<Editor> edit(T iValue)
   {
-    auto editor = std::make_unique<Editor>(fRawParameter->edit());
+    auto editor = edit();
     editor->setValue(iValue);
     return editor;
   }

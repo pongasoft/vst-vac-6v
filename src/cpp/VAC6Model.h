@@ -46,6 +46,7 @@ constexpr long DEFAULT_MAX_LEVEL_RESET_IN_SECONDS = 5;
 using MaxLevelAutoResetParamConverter = Common::DiscreteValueParamConverter<MAX_LEVEL_AUTO_RESET_STEP_COUNT>;
 using LCDInputXParamConverter = Common::DiscreteValueParamConverter<MAX_LCD_INPUT_X>;
 using LCDHistoryOffsetParamConverter = Common::PercentParamConverter;
+using LCDZoomFactorXParamConverter = Common::PercentParamConverter;
 
 ///////////////////////////////////////////
 // toDisplayValue

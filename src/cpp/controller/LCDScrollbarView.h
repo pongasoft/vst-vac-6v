@@ -2,6 +2,8 @@
 
 #include "CustomView.h"
 #include "../VAC6Model.h"
+#include "../Utils.h"
+#include "DrawContext.h"
 
 namespace pongasoft {
 namespace VST {
@@ -25,22 +27,84 @@ public:
 
   void registerParameters() override;
 
+  // onMouseDown
   CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override;
 
-//  CMouseEventResult onMouseMoved(CPoint &where, const CButtonState &buttons) override;
-//
-//  CMouseEventResult onMouseUp(CPoint &where, const CButtonState &buttons) override;
-//
-//  CMouseEventResult onMouseCancel() override;
+  // onMouseMoved
+  CMouseEventResult onMouseMoved(CPoint &where, const CButtonState &buttons) override;
+
+  // onMouseUp
+  CMouseEventResult onMouseUp(CPoint &where, const CButtonState &buttons) override;
+
+  // onMouseCancel
+  CMouseEventResult onMouseCancel() override;
 
 public:
   CLASS_METHODS_NOCOPY(LCDScrollbarView, CustomView)
+
+protected:
+  struct ZoomBox
+  {
+    RelativeCoord fMinCenter;
+    RelativeCoord fMaxCenter;
+    RelativeCoord fCenter;
+    CCoord fHalfWidth;
+
+    bool isFull() const
+    {
+      return fMinCenter == fMaxCenter;
+    }
+
+    RelativeCoord getLeft() const
+    {
+      return fCenter - fHalfWidth;
+    }
+
+    RelativeCoord getRight() const
+    {
+      return getLeft() + getWidth();
+    }
+
+    CCoord getWidth() const
+    {
+      return fHalfWidth * 2.0;
+    }
+
+    RelativeCoord computeCenter(double iPercent) const
+    {
+      return Utils::Lerp<RelativeCoord>(fMinCenter, fMaxCenter).compute(iPercent);
+    }
+
+    double computePercent() const
+    {
+      return Utils::Lerp<double>(fMinCenter, fMaxCenter).reverse(fCenter);
+    }
+
+    void move(CCoord iDeltaX)
+    {
+      fCenter = clamp(fCenter + iDeltaX, fMinCenter, fMaxCenter);
+    }
+
+  };
+protected:
+  inline Utils::Lerp<double> getInputHistoryOffsetLerp() const
+  {
+    return {0, getViewSize().getWidth()};
+  }
+
+  ZoomBox computeZoomBox() const;
 
 protected:
 
   std::unique_ptr<BooleanParameter> fLCDLiveViewParameter{nullptr};
 
   std::unique_ptr<PercentParameter> fLCDInputHistoryOffsetParameter{nullptr};
+
+  std::unique_ptr<PercentParameter> fLCDZoomFactorXParameter{nullptr};
+
+  std::unique_ptr<PercentParameter::Editor> fLCDInputHistoryOffsetEditor{nullptr};
+  std::unique_ptr<ZoomBox> fStartDragGestureZoomBox{nullptr};
+  RelativeCoord fStarDragGestureX{-1.0};
 
 public:
   class Creator : public CustomViewCreator<LCDScrollbarView>

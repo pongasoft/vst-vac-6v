@@ -59,7 +59,7 @@ void CustomView::drawStyleChanged()
 ///////////////////////////////////////////
 void CustomView::onParameterChange(ParamID iParamID, ParamValue iNormalizedValue)
 {
-  DLOG_F(INFO, "CustomView::onParameterChange(%d, %d, %f)", fTag, iParamID, iNormalizedValue);
+  // DLOG_F(INFO, "CustomView::onParameterChange(%d, %d, %f)", fTag, iParamID, iNormalizedValue);
   setDirty(true);
 }
 

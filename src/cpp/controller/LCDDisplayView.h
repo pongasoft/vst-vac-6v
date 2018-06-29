@@ -56,16 +56,22 @@ public:
   // draw => does the actual drawing job
   void draw(CDrawContext *iContext) override;
 
+  // registerParameters
   void registerParameters() override;
 
+  // onParameterChange => overriding to propagate the change to fState
   void onParameterChange(ParamID iParamID, ParamValue iNormalizedValue) override;
 
+  // onMouseDown
   CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override;
 
+  // onMouseMoved
   CMouseEventResult onMouseMoved(CPoint &where, const CButtonState &buttons) override;
 
+  // onMouseUp
   CMouseEventResult onMouseUp(CPoint &where, const CButtonState &buttons) override;
 
+  // onMouseCancel
   CMouseEventResult onMouseCancel() override;
 
   CLASS_METHODS_NOCOPY(LCDDisplayView, HistoryView)

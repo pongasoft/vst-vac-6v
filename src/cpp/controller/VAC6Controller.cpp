@@ -221,7 +221,8 @@ tresult VAC6Controller::setComponentState(IBStream *state)
   double savedParamZoomFactorX = 0.f;
   if(!streamer.readDouble(savedParamZoomFactorX))
     savedParamZoomFactorX = DEFAULT_ZOOM_FACTOR_X;
-  setParamNormalized(EVAC6ParamID::kLCDZoomFactorX, savedParamZoomFactorX);
+  setParamNormalized(EVAC6ParamID::kLCDZoomFactorX,
+                     LCDZoomFactorXParamConverter::normalize(savedParamZoomFactorX));
 
   // EVAC6ParamID::kMaxLevelAutoReset
   int32 savedMaxLevelAutoReset = 0;

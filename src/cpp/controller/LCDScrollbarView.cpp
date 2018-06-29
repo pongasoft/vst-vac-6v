@@ -1,7 +1,5 @@
 #include "LCDScrollbarView.h"
 #include "../VAC6CIDs.h"
-#include "../Utils.h"
-#include "DrawContext.h"
 
 namespace pongasoft {
 namespace VST {
@@ -21,6 +19,23 @@ void LCDScrollbarView::registerParameters()
 {
   fLCDLiveViewParameter = registerBooleanParameter(EVAC6ParamID::kLCDLiveView);
   fLCDInputHistoryOffsetParameter = registerPercentParameter(EVAC6ParamID::kLCDHistoryOffset);
+  fLCDZoomFactorXParameter = registerPercentParameter(EVAC6ParamID::kLCDZoomFactorX);
+}
+
+///////////////////////////////////////////
+// LCDScrollbarView::computeZoomBox
+LCDScrollbarView::ZoomBox LCDScrollbarView::computeZoomBox() const
+{
+  ZoomBox box{};
+
+  CCoord width = getViewSize().getWidth();
+
+  box.fHalfWidth = (width - (239.0 * fLCDZoomFactorXParameter->getValue())) / 2.0;
+  box.fMinCenter = 0 + box.fHalfWidth;
+  box.fMaxCenter = width - box.fHalfWidth;
+  box.fCenter = box.computeCenter(fLCDInputHistoryOffsetParameter->getValue());
+
+  return box;
 }
 
 ///////////////////////////////////////////
@@ -30,34 +45,27 @@ void LCDScrollbarView::draw(CDrawContext *iContext)
 {
   CustomView::draw(iContext);
 
-  // in live view mode we don't show anything...
-  if(fLCDLiveViewParameter->getValue())
-    return;
-
   auto rdc = GUI::RelativeDrawContext{this, iContext};
 
-  auto height = getViewSize().getHeight();
-  auto width = getViewSize().getWidth();
+  auto box = computeZoomBox();
 
-  ParamValue inputHistoryOffsetPercent = fLCDInputHistoryOffsetParameter->getValue();
-  CCoord inputHistoryX = Utils::Lerp<double>(0, width).compute(inputHistoryOffsetPercent);
+  auto verticalMargin = 3.5;
+  auto horizontalMargin = 2.5;
 
-  DLOG_F(INFO, "LCDScrollbarView::draw -> %f / %f ", inputHistoryOffsetPercent, inputHistoryX);
-
-  CCoord inputHistoryY = height / 2.0;
-
-  rdc.fillRect(RelativeRect{inputHistoryX - 3, inputHistoryY - 3, inputHistoryX + 3, inputHistoryY + 3}, WHITE_COLOR);
+  rdc.fillRect(RelativeRect{box.getLeft() + horizontalMargin,
+                            verticalMargin,
+                            box.getRight() - horizontalMargin,
+                            getViewSize().getHeight() - verticalMargin},
+               WHITE_COLOR);
 }
 
 ///////////////////////////////////////////
-// LCDScrollbarView::draw
+// LCDScrollbarView::onMouseDown
 ///////////////////////////////////////////
 CMouseEventResult LCDScrollbarView::onMouseDown(CPoint &where, const CButtonState &buttons)
 {
   RelativeView rv(this);
-  RelativePoint relativeWhere = rv.fromAbsolutePoint(where);
-
-  DLOG_F(INFO, "LCDScrollbarView::onMouseDown(%f,%f)", relativeWhere.x, relativeWhere.y);
+  RelativeCoord x = rv.fromAbsolutePoint(where).x;
 
   if(fLCDLiveViewParameter->getValue())
   {
@@ -65,11 +73,100 @@ CMouseEventResult LCDScrollbarView::onMouseDown(CPoint &where, const CButtonStat
     fLCDLiveViewParameter->setValue(false);
   }
 
-  DLOG_F(INFO, "LCDScrollbarView -> %f", Utils::Lerp<double>(0, getViewSize().getWidth()).reverse(relativeWhere.x));
+  auto box = computeZoomBox();
 
-  fLCDInputHistoryOffsetParameter->setValue(Utils::Lerp<double>(0, getViewSize().getWidth()).reverse(relativeWhere.x));
+  // when the box is completely full we can't really act on it...
+  if(box.isFull())
+    return kMouseEventHandled;
+
+  if(x < box.getLeft())
+  {
+    box.move(-box.getWidth());
+  }
+  else
+  {
+    if(x > box.getRight())
+    {
+      box.move(box.getWidth());
+    }
+    else
+    {
+      // beginning of drag gesture...
+      fLCDInputHistoryOffsetEditor = fLCDInputHistoryOffsetParameter->edit(box.computePercent());
+      fStartDragGestureZoomBox = std::make_unique<ZoomBox>(box);
+      fStarDragGestureX = x;
+      return kMouseEventHandled;
+    }
+  }
+
+  // if after move, the cursor is in the handle => allow for drag
+  if(x >= box.getLeft() and x <= box.getRight())
+  {
+    // beginning of drag gesture...
+    fLCDInputHistoryOffsetEditor = fLCDInputHistoryOffsetParameter->edit(box.computePercent());
+    fStartDragGestureZoomBox = std::make_unique<ZoomBox>(box);
+    fStarDragGestureX = x;
+    return kMouseEventHandled;
+  }
+
+  // no drag gesture
+  fLCDInputHistoryOffsetParameter->setValue(box.computePercent());
 
   return kMouseEventHandled;
+}
+
+///////////////////////////////////////////
+// LCDScrollbarView::onMouseMoved
+///////////////////////////////////////////
+CMouseEventResult LCDScrollbarView::onMouseMoved(CPoint &where, const CButtonState &buttons)
+{
+  if(fLCDInputHistoryOffsetEditor)
+  {
+    RelativeView rv(this);
+    RelativeCoord x = rv.fromAbsolutePoint(where).x;
+
+    auto box = ZoomBox(*fStartDragGestureZoomBox);
+    box.move(x - fStarDragGestureX);
+    fLCDInputHistoryOffsetEditor->setValue(box.computePercent());
+
+    return kMouseEventHandled;
+  }
+
+  return kMouseEventNotHandled;
+}
+
+///////////////////////////////////////////
+// LCDScrollbarView::onMouseUp
+///////////////////////////////////////////
+CMouseEventResult LCDScrollbarView::onMouseUp(CPoint &where, const CButtonState &buttons)
+{
+  if(fLCDInputHistoryOffsetEditor)
+  {
+    fLCDInputHistoryOffsetEditor->commit();
+    fLCDInputHistoryOffsetEditor = nullptr;
+    fStartDragGestureZoomBox = nullptr;
+    fStarDragGestureX = -1;
+    return kMouseEventHandled;
+  }
+
+  return kMouseEventNotHandled;
+}
+
+///////////////////////////////////////////
+// LCDScrollbarView::onMouseCancel
+///////////////////////////////////////////
+CMouseEventResult LCDScrollbarView::onMouseCancel()
+{
+  if(fLCDInputHistoryOffsetEditor)
+  {
+    fLCDInputHistoryOffsetEditor->rollback();
+    fLCDInputHistoryOffsetEditor = nullptr;
+    fStartDragGestureZoomBox = nullptr;
+    fStarDragGestureX = -1;
+    return kMouseEventHandled;
+  }
+
+  return kMouseEventNotHandled;
 }
 
 LCDScrollbarView::Creator __gLCDScrollbarViewCreator("pongasoft::LCDScrollbar", "pongasoft - LCD Scrollbar");
