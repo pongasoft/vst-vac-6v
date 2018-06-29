@@ -19,7 +19,20 @@ public:
   // Constructor
   explicit LCDScrollbarView(const CRect &size);
 
+  // deleting copy constructor
   LCDScrollbarView(const LCDScrollbarView &c) = delete;
+
+  // getScrollbarMinSize
+  int const& getScrollbarMinSize() const
+  {
+    return fScrollbarMinSize;
+  }
+
+  // setScrollbarMinSize
+  void setScrollbarMinSize(int const &iScrollbarMinSize)
+  {
+    fScrollbarMinSize = iScrollbarMinSize;
+  }
 
 public:
   // draw => does the actual drawing job
@@ -87,14 +100,10 @@ protected:
 
   };
 protected:
-  inline Utils::Lerp<double> getInputHistoryOffsetLerp() const
-  {
-    return {0, getViewSize().getWidth()};
-  }
-
   ZoomBox computeZoomBox() const;
 
 protected:
+  int fScrollbarMinSize{17};
 
   std::unique_ptr<BooleanParameter> fLCDLiveViewParameter{nullptr};
 
@@ -114,6 +123,7 @@ public:
       CustomViewCreator(iViewName, iDisplayName)
     {
       registerAttributes(CustomView::Creator());
+      // TODO add min-scrollbar-size and handle-color
     }
   };
 

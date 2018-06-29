@@ -30,7 +30,7 @@ LCDScrollbarView::ZoomBox LCDScrollbarView::computeZoomBox() const
 
   CCoord width = getViewSize().getWidth();
 
-  box.fHalfWidth = (width - (239.0 * fLCDZoomFactorXParameter->getValue())) / 2.0;
+  box.fHalfWidth = (width - ((width - getScrollbarMinSize()) * fLCDZoomFactorXParameter->getValue())) / 2.0;
   box.fMinCenter = 0 + box.fHalfWidth;
   box.fMaxCenter = width - box.fHalfWidth;
   box.fCenter = box.computeCenter(fLCDInputHistoryOffsetParameter->getValue());
