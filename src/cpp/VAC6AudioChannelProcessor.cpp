@@ -106,6 +106,15 @@ void VAC6AudioChannelProcessor::setZoomFactor(double iZoomFactorPercent)
   fNeedToRecomputeZoomMaxBuffer = true;
 }
 
+/////////////////////////////////////////
+// VAC6AudioChannelProcessor::setZoomFactor
+/////////////////////////////////////////
+void VAC6AudioChannelProcessor::setZoomFactor(double iZoomFactorPercent, int iLCDInputX)
+{
+  fZoomWindow.setZoomFactor(iZoomFactorPercent, iLCDInputX);
+  fNeedToRecomputeZoomMaxBuffer = true;
+}
+
 
 /////////////////////////////////////////
 // VAC6AudioChannelProcessor::genericProcessChannel

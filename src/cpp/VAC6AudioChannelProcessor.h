@@ -136,6 +136,12 @@ public:
    */
   void setZoomFactor(double iZoomFactorPercent);
 
+  /**
+   * Called in pause mode to make sure that the zoom happens around the correct point
+   * @param iZoomFactorPercent zoom factor between 0-1 (where 1 is min zoom, and 0 is max zoom)
+   */
+  void setZoomFactor(double iZoomFactorPercent, int iLCDInputX);
+
   // setIsLiveView
   void setIsLiveView(bool iIsLiveView);
 

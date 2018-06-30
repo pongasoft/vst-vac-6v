@@ -20,20 +20,28 @@ ZoomWindow::ZoomWindow(int iVisibleWindowSize, int iBufferSize) :
 {
   DCHECK_GT_F(iVisibleWindowSize, 0);
 
-  fMaxZoomFactor = fBufferSize / iVisibleWindowSize;
+  fMaxZoomFactor = static_cast<double>(fBufferSize) / iVisibleWindowSize;
 
   setZoomFactor(1.0);
 }
 
 ////////////////////////////////////////////////////////////
 // ZoomWindow::setZoomFactor
-// Recomputes the zoom points based on the factor
 ////////////////////////////////////////////////////////////
 TZoom::MaxAccumulator ZoomWindow::setZoomFactor(double iZoomFactorPercent)
 {
   DCHECK_F(iZoomFactorPercent >= 0 && iZoomFactorPercent <= 1.0);
+  return __setRawZoomFactor(Utils::Lerp<double>(fMaxZoomFactor, 1.0).compute(iZoomFactorPercent));
+}
 
-  auto accumulator = fZoom.setZoomFactor(Utils::Lerp<double>(fMaxZoomFactor, 1.0).compute(iZoomFactorPercent));
+////////////////////////////////////////////////////////////
+// ZoomWindow::__setRawZoomFactor
+////////////////////////////////////////////////////////////
+TZoom::MaxAccumulator ZoomWindow::__setRawZoomFactor(double iZoomFactor)
+{
+  DCHECK_F(iZoomFactor >= 1.0 && iZoomFactor <= fMaxZoomFactor);
+
+  auto accumulator = fZoom.setZoomFactor(iZoomFactor);
 
   if(fZoom.isNoZoom())
   {
@@ -56,59 +64,28 @@ TZoom::MaxAccumulator ZoomWindow::setZoomFactor(double iZoomFactorPercent)
 
 ////////////////////////////////////////////////////////////
 // ZoomWindow::setZoomFactor
-// Recomputes the zoom points based on the factor and page offset
 ////////////////////////////////////////////////////////////
-//int ZoomWindow::setZoomFactor(double iZoomFactorPercent, int iInputPageOffset, CircularBuffer<TSample> const &iBuffer)
-//{
-//  // index in the window
-//  int windowIdx = fWindowOffset - fVisibleWindowSize + 1 + iInputPageOffset;
-//
-//  // first determine the offset prior to zooming from the window idx
-//  int bufferOffset;
-//  TSample zoomValue;
-//
-//  if(fZoom.isNoZoom())
-//    bufferOffset = windowIdx;
-//  else
-//  {
-//    const ZoomedBuffer &zoomPoint = zoom(windowIdx);
-//    bufferOffset = zoomPoint.fBufferOffset;
-//    zoomValue = computeZoomValue(zoomPoint, iBuffer);
-//  }
-//
-//  // second apply zoom => this will change fPoints, fMinWindowOffset, etc...
-//  setZoomFactor(iZoomFactorPercent);
-//
-//  // when we are all the way on the right no need to compute anything
-//  if(windowIdx == MAX_WINDOW_OFFSET)
-//    return MAX_WINDOW_OFFSET;
-//
-//  // when we are all the way on the left no need to compute anything
-//  if(windowIdx == fMinWindowOffset)
-//    return MIN_WINDOW_OFFSET;
-//
-//  // third determine new window offset
-//  if(fZoom.isNoZoom())
-//    windowIdx = bufferOffset;
-//  else
-//    windowIdx = findClosestWindowIndex(bufferOffset, zoomValue, iBuffer);
-//
-//  // we compute the window offset from the window index
-//  fWindowOffset = windowIdx - iInputPageOffset + fVisibleWindowSize - 1;
-//
-//  // we make sure that fWindowOffset remains within its bounds!
-//  fWindowOffset = clamp(fWindowOffset, fMinWindowOffset, MAX_WINDOW_OFFSET);
-//
-//  if(fMinWindowOffset == MAX_WINDOW_OFFSET)
-//    return 0;
-//
-//  // finally compute new inputHistoryOffset
-//  auto inputHistoryOffset =
-//    static_cast<int>(round((fWindowOffset - fMinWindowOffset) * static_cast<float>(MAX_WINDOW_OFFSET) /
-//                           (MAX_WINDOW_OFFSET - fMinWindowOffset)));
-//
-//  return inputHistoryOffset;
-//}
+void ZoomWindow::setZoomFactor(double iZoomFactorPercent, int iOffsetFromLeftOfScreen)
+{
+  DCHECK_F(iOffsetFromLeftOfScreen >= 0 && iOffsetFromLeftOfScreen < fVisibleWindowSize);
+
+  // index in the window
+  int windowIdx = fWindowOffset - fVisibleWindowSize + 1 + iOffsetFromLeftOfScreen;
+
+  // we capture the offset prior to zooming
+  int offset = 0;
+  __getMaxAccumulatorFromIndex(windowIdx, offset);
+
+  // we now apply the zoom
+  setZoomFactor(iZoomFactorPercent);
+
+  int zoomPointIndex = fZoom.getZoomPointIndexFromOffset(offset);
+
+  fWindowOffset = zoomPointIndex - fVisibleWindowSize + 1 + iOffsetFromLeftOfScreen;
+
+  // we make sure that fWindowOffset remains within its bounds!
+  fWindowOffset = clamp(fWindowOffset, fMinWindowOffset, MAX_WINDOW_OFFSET);
+}
 
 ////////////////////////////////////////////////////////////
 // ZoomWindow::computeZoomWindow
@@ -119,7 +96,7 @@ TZoom::MaxAccumulator ZoomWindow::computeZoomWindow(CircularBuffer<TSample> cons
   DCHECK_EQ_F(fVisibleWindowSize, oBuffer.getSize());
 
   int offset = 0;
-  auto accumulator = getMaxAccumulatorFromLeftOfScreen(offset);
+  auto accumulator = __getMaxAccumulatorFromLeftOfScreen(offset);
 
   TSample max;
   for(int i = 0; i < fVisibleWindowSize; i++)
@@ -133,11 +110,11 @@ TZoom::MaxAccumulator ZoomWindow::computeZoomWindow(CircularBuffer<TSample> cons
 }
 
 ////////////////////////////////////////////////////////////
-// ZoomWindow::getMaxAccumulatorFromIndex
+// ZoomWindow::__getMaxAccumulatorFromIndex
 ////////////////////////////////////////////////////////////
-TZoom::MaxAccumulator ZoomWindow::getMaxAccumulatorFromIndex(int iIdx, int &oOffset) const
+TZoom::MaxAccumulator ZoomWindow::__getMaxAccumulatorFromIndex(int iIdx, int &oOffset) const
 {
-  DCHECK_F(iIdx >= minWindowIdx() && iIdx <= MAX_WINDOW_OFFSET);
+  DCHECK_F(iIdx >= __getMinWindowIdx() && iIdx <= MAX_WINDOW_OFFSET);
 
   auto accumulator = fZoom.getAccumulatorFromIndex(iIdx, oOffset);
   DCHECK_F(oOffset >= -fBufferSize);
@@ -145,11 +122,11 @@ TZoom::MaxAccumulator ZoomWindow::getMaxAccumulatorFromIndex(int iIdx, int &oOff
 }
 
 ////////////////////////////////////////////////////////////
-// ZoomWindow::getMaxAccumulatorFromLeftOfScreen
+// ZoomWindow::__getMaxAccumulatorFromLeftOfScreen
 ////////////////////////////////////////////////////////////
-TZoom::MaxAccumulator ZoomWindow::getMaxAccumulatorFromLeftOfScreen(int &oOffset) const
+TZoom::MaxAccumulator ZoomWindow::__getMaxAccumulatorFromLeftOfScreen(int &oOffset) const
 {
-  return getMaxAccumulatorFromIndex(fWindowOffset - fVisibleWindowSize + 1, oOffset);
+  return __getMaxAccumulatorFromIndex(fWindowOffset - fVisibleWindowSize + 1, oOffset);
 }
 
 ////////////////////////////////////////////////////////////
@@ -159,7 +136,7 @@ TZoom::MaxAccumulator ZoomWindow::getMaxAccumulatorFromLeftOfScreen(int &oOffset
 //{
 //  DCHECK_EQ_F(fBufferSize, iBuffer.getSize());
 //
-//  int i1 = minWindowIdx();
+//  int i1 = __getMinWindowIdx();
 //  int i2 = MAX_WINDOW_OFFSET;
 //
 //  int mid = MAX_WINDOW_OFFSET;
@@ -193,7 +170,7 @@ TZoom::MaxAccumulator ZoomWindow::getMaxAccumulatorFromLeftOfScreen(int &oOffset
 //  // determine the best point
 //  for(int i = -2; i <= 2; i++)
 //  {
-//    int idx = clamp(mid + i, minWindowIdx(), MAX_WINDOW_OFFSET);
+//    int idx = clamp(mid + i, __getMinWindowIdx(), MAX_WINDOW_OFFSET);
 //
 //    // skipping mid (already done)
 //    if(idx == mid)
@@ -233,11 +210,18 @@ void ZoomWindow::setWindowOffset(double iWindowOffsetPercent)
   DCHECK_F(iWindowOffsetPercent >= 0 && iWindowOffsetPercent <= 1.0);
 
   auto lerp = Utils::Lerp<double>(fMinWindowOffset, MAX_WINDOW_OFFSET);
-  fWindowOffset = static_cast<int>(lerp.compute(iWindowOffsetPercent));
-
-  // sanity check
-  DCHECK_F(fWindowOffset >= fMinWindowOffset && fWindowOffset <= MAX_WINDOW_OFFSET);
+  __setRawWindowOffset(static_cast<int>(lerp.compute(iWindowOffsetPercent)));
 }
+
+////////////////////////////////////////////////////////////
+// ZoomWindow::__setRawWindowOffset
+////////////////////////////////////////////////////////////
+void ZoomWindow::__setRawWindowOffset(int iWindowOffset)
+{
+  DCHECK_F(iWindowOffset >= fMinWindowOffset && iWindowOffset <= MAX_WINDOW_OFFSET);
+  fWindowOffset = iWindowOffset;
+}
+
 
 }
 }

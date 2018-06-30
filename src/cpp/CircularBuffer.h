@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <memory>
 
 namespace pongasoft {
 namespace VST {
@@ -16,6 +17,12 @@ public:
 
     fBuf = new T[iSize];
   };
+
+  CircularBuffer(CircularBuffer const& iOther) : fSize(iOther.fSize), fStart(iOther.fStart)
+  {
+    fBuf = new T[fSize];
+    memcpy(fBuf, iOther.fBuf, fSize * sizeof(T));
+  }
 
   ~CircularBuffer()
   {
@@ -56,6 +63,28 @@ public:
       fBuf[i] = initValue;
     }
   }
+
+  inline void copyToBuffer(int startOffset, T *oBuffer, int iSize)
+  {
+    int adjStartOffset = adjustIndexFromOffset(startOffset);
+
+    if(adjStartOffset + iSize < fSize)
+    {
+      memcpy(oBuffer, &fBuf[adjStartOffset], iSize * sizeof(T));
+    }
+    else
+    {
+      int i = adjStartOffset;
+      for(int k = 0; k < iSize; k++)
+      {
+        oBuffer[k] = fBuf[i];
+        i++;
+        if(i == fSize)
+          i = 0;
+      }
+    }
+  }
+
 
   template<typename U, class BinaryPredicate>
   inline U fold(int startOffset, int endOffset, U initValue, BinaryPredicate &op) const

@@ -256,8 +256,18 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   // Zoom has changed
   if(fPreviousState.fZoomFactorX != fState.fZoomFactorX)
   {
-    fLeftChannelProcessor->setZoomFactor(fState.fZoomFactorX);
-    fRightChannelProcessor->setZoomFactor(fState.fZoomFactorX);
+    if(fState.fLCDLiveView)
+    {
+      fLeftChannelProcessor->setZoomFactor(fState.fZoomFactorX);
+      fRightChannelProcessor->setZoomFactor(fState.fZoomFactorX);
+    }
+    else
+    {
+      fLeftChannelProcessor->setZoomFactor(fState.fZoomFactorX);
+      fRightChannelProcessor->setZoomFactor(fState.fZoomFactorX);
+//      fLeftChannelProcessor->setZoomFactor(fState.fZoomFactorX, fState.fLCDInputX);
+//      fRightChannelProcessor->setZoomFactor(fState.fZoomFactorX, fState.fLCDInputX);
+    }
   }
 
   // Scrollbar has been moved (should happen only in pause mode)
