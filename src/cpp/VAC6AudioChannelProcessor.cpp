@@ -12,16 +12,17 @@ using namespace VST::Common;
 /////////////////////////////////////////
 // VAC6AudioChannelProcessor::VAC6AudioChannelProcessor
 /////////////////////////////////////////
-VAC6AudioChannelProcessor::VAC6AudioChannelProcessor(SampleRateBasedClock const &iClock) :
+VAC6AudioChannelProcessor::VAC6AudioChannelProcessor(const SampleRateBasedClock &iClock,
+                                                     ZoomWindow *iZoomWindow,
+                                                     uint32 iMaxAccumulatorBatchSize,
+                                                     int iMaxBufferSize) :
   fClock{iClock},
-  fMaxAccumulatorForBuffer(fClock.getSampleCountFor(ACCUMULATOR_BATCH_SIZE_IN_MS)),
-  fMaxBuffer{new CircularBuffer<TSample>(
-    static_cast<int>(ceil(fClock.getSampleCountFor(HISTORY_SIZE_IN_SECONDS * 1000) / fMaxAccumulatorForBuffer.getBatchSize())))},
+  fMaxAccumulatorForBuffer(iMaxAccumulatorBatchSize),
+  fMaxBuffer{new CircularBuffer<TSample>(iMaxBufferSize)},
   fMaxLevelAccumulator(fClock.getSampleCountFor(DEFAULT_MAX_LEVEL_RESET_IN_SECONDS * 1000)),
   fMaxLevel{-1},
-  fZoomWindow{MAX_ARRAY_SIZE, fMaxBuffer->getSize()},
-  fZoomMaxAccumulator{fZoomWindow.setZoomFactor(DEFAULT_ZOOM_FACTOR_X)},
-  fZoomMaxBuffer{new CircularBuffer<TSample>(fZoomWindow.getVisibleWindowSizeInPoints())},
+  fZoomMaxAccumulator{iZoomWindow->setZoomFactor(DEFAULT_ZOOM_FACTOR_X)},
+  fZoomMaxBuffer{new CircularBuffer<TSample>(iZoomWindow->getVisibleWindowSizeInPoints())},
   fNeedToRecomputeZoomMaxBuffer{false},
   fIsLiveView{true},
   fPausedZoomMaxBufferOffset{-1}
@@ -89,32 +90,12 @@ void VAC6AudioChannelProcessor::setPausedZoomMaxBufferOffset(int iOffset)
 }
 
 /////////////////////////////////////////
-// VAC6AudioChannelProcessor::setHistoryOffset
+// VAC6AudioChannelProcessor::setDirty
 /////////////////////////////////////////
-void VAC6AudioChannelProcessor::setHistoryOffset(double iHistoryOffset)
+void VAC6AudioChannelProcessor::setDirty()
 {
-  fZoomWindow.setWindowOffset(iHistoryOffset);
   fNeedToRecomputeZoomMaxBuffer = true;
 }
-
-/////////////////////////////////////////
-// VAC6AudioChannelProcessor::setZoomFactor
-/////////////////////////////////////////
-void VAC6AudioChannelProcessor::setZoomFactor(double iZoomFactorPercent)
-{
-  fZoomWindow.setZoomFactor(iZoomFactorPercent);
-  fNeedToRecomputeZoomMaxBuffer = true;
-}
-
-/////////////////////////////////////////
-// VAC6AudioChannelProcessor::setZoomFactor
-/////////////////////////////////////////
-void VAC6AudioChannelProcessor::setZoomFactor(double iZoomFactorPercent, int iLCDInputX)
-{
-  fZoomWindow.setZoomFactor(iZoomFactorPercent, iLCDInputX);
-  fNeedToRecomputeZoomMaxBuffer = true;
-}
-
 
 /////////////////////////////////////////
 // VAC6AudioChannelProcessor::genericProcessChannel

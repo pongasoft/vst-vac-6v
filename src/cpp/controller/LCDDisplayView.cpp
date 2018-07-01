@@ -213,11 +213,8 @@ CMouseEventResult LCDDisplayView::onMouseDown(CPoint &where, const CButtonState 
   RelativeView rv(this);
   RelativePoint relativeWhere = rv.fromAbsolutePoint(where);
 
-  DLOG_F(INFO, "LCDDisplayView::onMouseDown(%f,%f)", relativeWhere.x, relativeWhere.y);
-
   if(fLCDLiveViewParameter->getValue())
   {
-    DLOG_F(INFO, "LCDDisplayView::onMouseDown() => stopping");
     fLCDLiveViewParameter->setValue(false);
   }
 

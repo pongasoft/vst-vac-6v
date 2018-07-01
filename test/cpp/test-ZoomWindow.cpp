@@ -29,7 +29,7 @@ TEST(ZoomTest, NoZoom)
   auto accumulator = zoom.getAccumulatorFromIndex(-1, offset);
 
   ASSERT_EQ(-1, offset);
-//  ASSERT_EQ(-1, zoom.getZoomPointIndexFromOffset(-1));
+  ASSERT_EQ(-1, zoom.getZoomPointIndexFromOffset(-1));
 
   TSample s = -1.0;
 
@@ -42,7 +42,7 @@ TEST(ZoomTest, NoZoom)
 
   zoom.getAccumulatorFromIndex(-73, offset);
   ASSERT_EQ(-73, offset);
-//  ASSERT_EQ(-73, zoom.getZoomPointIndexFromOffset(-73));
+  ASSERT_EQ(-73, zoom.getZoomPointIndexFromOffset(-73));
 }
 
 template <int batchSize = 10>
@@ -62,6 +62,7 @@ void testZoom(double zoomFactor, int iBatchSize, int iBatchSizeInSamples, int co
   int index = -1;
   int batchSizeIndex = batchSize - 1;
   int offset = 0;
+  int previousOffet = 0;
   for(int k = 0; k < 5; k++)
   {
     for(int i = 0; i < batchSize; i++)
@@ -70,6 +71,16 @@ void testZoom(double zoomFactor, int iBatchSize, int iBatchSizeInSamples, int co
       auto accumulator = zoom.getAccumulatorFromIndex(index, offsetComputed);
       ASSERT_EQ(batchSizeIndex, accumulator.getBatchSizeIdx());
       ASSERT_EQ(offsetComputed, iExpectedOffSets[batchSizeIndex] - offset);
+      ASSERT_EQ(index, zoom.getZoomPointIndexFromOffset(offsetComputed));
+
+      // we make sure that all intermediaries also give the same result
+      for(int m = offsetComputed; m < previousOffet; m++)
+      {
+        ASSERT_EQ(index, zoom.getZoomPointIndexFromOffset(m));
+      }
+
+      previousOffet = offsetComputed;
+
       index--;
       batchSizeIndex--;
       if(batchSizeIndex < 0)
@@ -203,7 +214,8 @@ public:
     fBuffer.init(0);
     fZoomBuffer.init(0);
 
-    std::default_random_engine generator;
+    auto seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine generator(seed);
     std::uniform_real_distribution<double> distribution(0.0,1.0);
 
     for(int i = 0; i < BUFFER_SIZE; i++)

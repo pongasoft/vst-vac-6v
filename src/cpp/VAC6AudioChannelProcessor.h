@@ -86,7 +86,10 @@ class VAC6AudioChannelProcessor
 {
 public:
   // Constructor
-  explicit VAC6AudioChannelProcessor(SampleRateBasedClock const &iClock);
+  explicit VAC6AudioChannelProcessor(const SampleRateBasedClock &iClock,
+                                     ZoomWindow *iZoomWindow,
+                                     uint32 iMaxAccumulatorBatchSize,
+                                     int iMaxBufferSize);
 
   // Destructor
   ~VAC6AudioChannelProcessor();
@@ -132,15 +135,9 @@ public:
   }
 
   /**
-   * @param iZoomFactorPercent zoom factor between 0-1 (where 1 is min zoom, and 0 is max zoom)
+   * Mark the channel processor dirty in order to recompute the max zoom buffer
    */
-  void setZoomFactor(double iZoomFactorPercent);
-
-  /**
-   * Called in pause mode to make sure that the zoom happens around the correct point
-   * @param iZoomFactorPercent zoom factor between 0-1 (where 1 is min zoom, and 0 is max zoom)
-   */
-  void setZoomFactor(double iZoomFactorPercent, int iLCDInputX);
+  void setDirty();
 
   // setIsLiveView
   void setIsLiveView(bool iIsLiveView);
@@ -148,20 +145,6 @@ public:
   // setLCDInputX
   void setLCDInputX(int iLCDInputX);
 
-  // setHistoryOffset
-  void setHistoryOffset(double iHistoryOffset);
-
-  /**
-   * @return the duration of the window in milliseconds
-   */
-  long getWindowSizeInMillis()
-  {
-//    DLOG_F(INFO, "getWindowSizeInMillis - %d,%ld",
-//           fZoomWindow.getVisibleWindowSizeInSamples(),
-//           fClock.getTimeForSampleCount(fZoomWindow.getVisibleWindowSizeInSamples()));
-//
-    return fClock.getTimeForSampleCount(fZoomWindow.getVisibleWindowSizeInSamples() * fMaxAccumulatorForBuffer.getBatchSize());
-  }
   /**
    * Copy the zoomed samples into the array provided.
    *
@@ -170,7 +153,8 @@ public:
   void computeZoomSamples(int iNumSamples, TSample *oSamples) const;
 
   template<typename SampleType>
-  bool genericProcessChannel(const typename AudioBuffers<SampleType>::Channel &iIn,
+  bool genericProcessChannel(ZoomWindow const *iZoomWindow,
+                             const typename AudioBuffers<SampleType>::Channel &iIn,
                              typename AudioBuffers<SampleType>::Channel &iOut);
 
 protected:
@@ -186,7 +170,6 @@ private:
   MaxAccumulator fMaxLevelAccumulator;
   TSample fMaxLevel;
 
-  ZoomWindow fZoomWindow;
   TZoom::MaxAccumulator fZoomMaxAccumulator;
   CircularBuffer<TSample> *const fZoomMaxBuffer;
   bool fNeedToRecomputeZoomMaxBuffer;

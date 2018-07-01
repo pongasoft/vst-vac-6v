@@ -83,6 +83,15 @@ protected:
   // from ITimerCallback
   void onTimer(Timer *timer) override;
 
+protected:
+  /**
+   * @return the duration of the window in milliseconds
+   */
+  long getWindowSizeInMillis()
+  {
+    return fClock.getTimeForSampleCount(fZoomWindow->getVisibleWindowSizeInSamples() * fMaxAccumulatorBatchSize);
+  }
+
 private:
   struct State
   {
@@ -94,6 +103,9 @@ private:
     bool fLCDLiveView{true};
     int fLCDInputX{MAX_LCD_INPUT_X};
     double fLCDHistoryOffset{MAX_HISTORY_OFFSET};
+
+    void updateLCDInputX(ProcessData& iData, int iLCDInputX);
+    void updateLCDHistoryOffset(ProcessData& iData, double iLCDHistoryOffset);
   };
 
   bool fMaxLevelResetRequested;
@@ -105,6 +117,9 @@ private:
 
   SpinLock::SingleElementQueue<State> fStateUpdate;
   SpinLock::AtomicValue<State> fLatestState;
+
+  uint32 fMaxAccumulatorBatchSize;
+  ZoomWindow *fZoomWindow;
 
   VAC6AudioChannelProcessor *fLeftChannelProcessor;
   VAC6AudioChannelProcessor *fRightChannelProcessor;

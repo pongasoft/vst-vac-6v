@@ -16,14 +16,15 @@ using namespace VAC6;
 // VAC6AudioChannelProcessor::genericProcessChannel
 /////////////////////////////////////////
 template<typename SampleType>
-bool VAC6AudioChannelProcessor::genericProcessChannel(typename AudioBuffers<SampleType>::Channel const &iIn,
+bool VAC6AudioChannelProcessor::genericProcessChannel(ZoomWindow const *iZoomWindow,
+                                                      typename AudioBuffers<SampleType>::Channel const &iIn,
                                                       typename AudioBuffers<SampleType>::Channel &iOut)
 {
   DCHECK_EQ_F(iIn.getNumSamples(), iOut.getNumSamples());
 
   if(fNeedToRecomputeZoomMaxBuffer)
   {
-    fZoomMaxAccumulator = fZoomWindow.computeZoomWindow(*fMaxBuffer, *fZoomMaxBuffer);
+    fZoomMaxAccumulator = iZoomWindow->computeZoomWindow(*fMaxBuffer, *fZoomMaxBuffer);
     if(!fIsLiveView)
     {
       fMaxLevel = fZoomMaxBuffer->getAt(fPausedZoomMaxBufferOffset);
@@ -88,6 +89,8 @@ VAC6Processor::VAC6Processor() :
   fStateUpdate{},
   fLatestState{fState},
   fClock{44100},
+  fMaxAccumulatorBatchSize{fClock.getSampleCountFor(ACCUMULATOR_BATCH_SIZE_IN_MS)},
+  fZoomWindow{nullptr},
   fLeftChannelProcessor{nullptr},
   fRightChannelProcessor{nullptr},
   fTimer{nullptr},
@@ -108,6 +111,7 @@ VAC6Processor::~VAC6Processor()
 
   delete fRightChannelProcessor;
   delete fLeftChannelProcessor;
+  delete fZoomWindow;
 }
 
 
@@ -157,18 +161,23 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
   // since this method is called multiple times, we make sure that there is no leak...
   delete fRightChannelProcessor;
   delete fLeftChannelProcessor;
+  delete fZoomWindow;
 
-  fLeftChannelProcessor = new VAC6AudioChannelProcessor(fClock);
-  fRightChannelProcessor = new VAC6AudioChannelProcessor(fClock);
+  fMaxAccumulatorBatchSize = fClock.getSampleCountFor(ACCUMULATOR_BATCH_SIZE_IN_MS);
+  auto maxBufferSize = static_cast<int>(ceil(fClock.getSampleCountFor(HISTORY_SIZE_IN_SECONDS * 1000) / fMaxAccumulatorBatchSize));
+
+  fZoomWindow = new ZoomWindow(MAX_ARRAY_SIZE, maxBufferSize);
+  fLeftChannelProcessor = new VAC6AudioChannelProcessor(fClock, fZoomWindow, fMaxAccumulatorBatchSize, maxBufferSize);
+  fRightChannelProcessor = new VAC6AudioChannelProcessor(fClock, fZoomWindow, fMaxAccumulatorBatchSize, maxBufferSize);
 
   DLOG_F(INFO,
-         "VAC6Processor::setupProcessing(processMode=%d, symbolicSampleSize=%d, maxSamplesPerBlock=%d, sampleRate=%f, fMaxBufferSize=%d, accumulatorBatchSize=%ld)",
+         "VAC6Processor::setupProcessing(processMode=%d, symbolicSampleSize=%d, maxSamplesPerBlock=%d, sampleRate=%f, fMaxBufferSize=%d, accumulatorBatchSize=%d)",
          setup.processMode,
          setup.symbolicSampleSize,
          setup.maxSamplesPerBlock,
          setup.sampleRate,
-         fLeftChannelProcessor->getMaxBuffer().getSize(),
-         fLeftChannelProcessor->getBufferAccumulatorBatchSize());
+         maxBufferSize,
+         fMaxAccumulatorBatchSize);
 
   return result;
 }
@@ -258,23 +267,39 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   {
     if(fState.fLCDLiveView)
     {
-      fLeftChannelProcessor->setZoomFactor(fState.fZoomFactorX);
-      fRightChannelProcessor->setZoomFactor(fState.fZoomFactorX);
+      fZoomWindow->setZoomFactor(fState.fZoomFactorX);
     }
     else
     {
-      fLeftChannelProcessor->setZoomFactor(fState.fZoomFactorX);
-      fRightChannelProcessor->setZoomFactor(fState.fZoomFactorX);
-//      fLeftChannelProcessor->setZoomFactor(fState.fZoomFactorX, fState.fLCDInputX);
-//      fRightChannelProcessor->setZoomFactor(fState.fZoomFactorX, fState.fLCDInputX);
+      int newLCDInputX =
+        fZoomWindow->setZoomFactor(fState.fZoomFactorX,
+                                   fState.fLCDInputX,
+                                   { fState.fLeftChannelOn ? &fLeftChannelProcessor->getMaxBuffer() : nullptr,
+                                     fState.fRightChannelOn ? &fRightChannelProcessor->getMaxBuffer() : nullptr });
+
+      if(fState.fLCDInputX != newLCDInputX)
+      {
+        fState.updateLCDInputX(data, newLCDInputX);
+      }
+
+      double newLCDHistoryOffset = fZoomWindow->getWindowOffset();
+
+      if(newLCDHistoryOffset != fState.fLCDHistoryOffset)
+      {
+        fState.updateLCDHistoryOffset(data, newLCDHistoryOffset);
+      }
     }
+
+    fLeftChannelProcessor->setDirty();
+    fRightChannelProcessor->setDirty();
   }
 
   // Scrollbar has been moved (should happen only in pause mode)
   if(fPreviousState.fLCDHistoryOffset != fState.fLCDHistoryOffset)
   {
-    fLeftChannelProcessor->setHistoryOffset(fState.fLCDHistoryOffset);
-    fRightChannelProcessor->setHistoryOffset(fState.fLCDHistoryOffset);
+    fZoomWindow->setWindowOffset(fState.fLCDHistoryOffset);
+    fLeftChannelProcessor->setDirty();
+    fRightChannelProcessor->setDirty();
   }
 
   // after we cancel pause we need to reset LCDInputX and LCDHistoryOffset
@@ -282,26 +307,25 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   {
     if(fState.fLCDInputX != MAX_LCD_INPUT_X)
     {
-      fState.fLCDInputX = MAX_LCD_INPUT_X;
+      fState.updateLCDInputX(data, MAX_LCD_INPUT_X);
       fLeftChannelProcessor->setLCDInputX(fState.fLCDInputX);
       fRightChannelProcessor->setLCDInputX(fState.fLCDInputX);
-      addOutputParameterChange(data, EVAC6ParamID::kLCDInputX, LCDInputXParamConverter::normalize(fState.fLCDInputX));
     }
 
     if(fState.fLCDHistoryOffset != MAX_HISTORY_OFFSET)
     {
-      fState.fLCDHistoryOffset = MAX_HISTORY_OFFSET;
-      fLeftChannelProcessor->setHistoryOffset(fState.fLCDHistoryOffset);
-      fRightChannelProcessor->setHistoryOffset(fState.fLCDHistoryOffset);
-      addOutputParameterChange(data, EVAC6ParamID::kLCDHistoryOffset, LCDHistoryOffsetParamConverter::normalize(fState.fLCDHistoryOffset));
+      fState.updateLCDHistoryOffset(data, MAX_HISTORY_OFFSET);
+      fZoomWindow->setWindowOffset(fState.fLCDHistoryOffset);
+      fLeftChannelProcessor->setDirty();
+      fRightChannelProcessor->setDirty();
     }
   }
 
   auto leftChannel = out.getLeftChannel();
   auto rightChannel = out.getRightChannel();
 
-  fLeftChannelProcessor->genericProcessChannel<SampleType>(in.getLeftChannel(), leftChannel);
-  fRightChannelProcessor->genericProcessChannel<SampleType>(in.getRightChannel(), rightChannel);
+  fLeftChannelProcessor->genericProcessChannel<SampleType>(fZoomWindow, in.getLeftChannel(), leftChannel);
+  fRightChannelProcessor->genericProcessChannel<SampleType>(fZoomWindow, in.getRightChannel(), rightChannel);
 
   // if reset of max level is requested (pressing momentary button) then we need to reset the accumulator
   if(fState.fLCDLiveView && fMaxLevelResetRequested)
@@ -320,7 +344,7 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
     if(fState.fRightChannelOn)
       fRightChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fRightSamples);
     lcdData.fRightChannelOn = fState.fRightChannelOn;
-    lcdData.fWindowSizeInMillis = fLeftChannelProcessor->getWindowSizeInMillis();
+    lcdData.fWindowSizeInMillis = getWindowSizeInMillis();
 
     fMaxLevelUpdate.push(MaxLevel{fLeftChannelProcessor->getMaxLevel(),
                                   fRightChannelProcessor->getMaxLevel()});
@@ -585,6 +609,23 @@ void VAC6Processor::onTimer(Timer * /* timer */)
   }
 }
 
+///////////////////////////////////////////
+// VAC6Processor::State::updateLCDInputX
+///////////////////////////////////////////
+void VAC6Processor::State::updateLCDInputX(ProcessData &iData, int iLCDInputX)
+{
+  fLCDInputX = iLCDInputX;
+  addOutputParameterChange(iData, EVAC6ParamID::kLCDInputX, LCDInputXParamConverter::normalize(fLCDInputX));
+}
 
+///////////////////////////////////////////
+// VAC6Processor::State::updateLCDHistoryOffset
+///////////////////////////////////////////
+void VAC6Processor::State::updateLCDHistoryOffset(ProcessData &iData, double iLCDHistoryOffset)
+{
+  fLCDHistoryOffset = iLCDHistoryOffset;
+  addOutputParameterChange(iData, EVAC6ParamID::kLCDHistoryOffset, LCDHistoryOffsetParamConverter::normalize(fLCDHistoryOffset));
+
+}
 }
 }
