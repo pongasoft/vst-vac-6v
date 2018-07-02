@@ -463,7 +463,7 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
             break;
 
           case kMaxLevelMode:
-            newState.fMaxLevelMode = static_cast<MaxLevelMode>(MaxLevelModeParamConverter::denormalize(value));
+            newState.fMaxLevelMode = MaxLevelModeParamConverter::denormalize(value);
             stateChanged |= newState.fMaxLevelMode != fState.fMaxLevelMode;
             break;
 

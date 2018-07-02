@@ -229,7 +229,7 @@ tresult VAC6Controller::setComponentState(IBStream *state)
   if(!streamer.readInt32(savedMaxLevelMode))
     savedMaxLevelMode = DEFAULT_MAX_LEVEL_MODE;
   setParamNormalized(EVAC6ParamID::kMaxLevelMode,
-                     MaxLevelModeParamConverter::normalize(savedMaxLevelMode));
+                     MaxLevelModeParamConverter::normalize(static_cast<MaxLevelMode>(savedMaxLevelMode)));
 
   // EVAC6ParamID::kLCDLeftChannel
   bool savedLeftChannelOn;

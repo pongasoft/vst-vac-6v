@@ -38,9 +38,7 @@ constexpr double MIN_SOFT_CLIPPING_LEVEL_DB = -24;
 constexpr double MIN_VOLUME_DB = -60; // -60dB
 constexpr TSample MIN_AUDIO_SAMPLE = 0.001; // dbToSample<TSample>(-60.0)
 constexpr double DEFAULT_ZOOM_FACTOR_X = 0.5;
-constexpr long DEFAULT_MAX_LEVEL_RESET_IN_SECONDS = 5;
 
-using MaxLevelModeParamConverter = Common::DiscreteValueParamConverter<1>;
 using LCDInputXParamConverter = Common::DiscreteValueParamConverter<MAX_LCD_INPUT_X>;
 using LCDHistoryOffsetParamConverter = Common::PercentParamConverter;
 using LCDZoomFactorXParamConverter = Common::PercentParamConverter;
@@ -75,6 +73,27 @@ enum MaxLevelMode
 };
 
 constexpr MaxLevelMode DEFAULT_MAX_LEVEL_MODE = MaxLevelMode::kMaxSinceReset;
+
+class MaxLevelModeParamConverter
+{
+private:
+  using DVC = Common::DiscreteValueParamConverter<1>;
+
+public:
+  static inline ParamValue normalize(MaxLevelMode const &iMaxLevelVode)
+  {
+    return DVC::normalize(iMaxLevelVode);
+  }
+
+  static inline MaxLevelMode denormalize(ParamValue iNormalizedValue)
+  {
+    int discreteValue = DVC::denormalize(iNormalizedValue);
+    if(discreteValue == 0)
+      return kMaxSinceReset;
+    else
+      return kMaxInWindow;
+  }
+};
 
 ///////////////////////////////////
 // SoftClippingLevel
