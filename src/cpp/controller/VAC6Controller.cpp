@@ -62,23 +62,23 @@ tresult VAC6Controller::initialize(FUnknown *context)
                           kRootUnitId, // unitID => not using units at this stage
                           STR16 ("Max Lvl Rst")); // shortTitle
 
-  // An option menu to change the auto reset (from OFF to 10s)
-  auto maxLevelAutoResetParam = new StringListParameter(USTRING("Max Level Auto Reset"),
-                                                        EVAC6ParamID::kMaxLevelAutoReset);
-  maxLevelAutoResetParam->appendString(USTRING("OFF"));
-  maxLevelAutoResetParam->appendString(USTRING("1s"));
-  maxLevelAutoResetParam->appendString(USTRING("2s"));
-  maxLevelAutoResetParam->appendString(USTRING("3s"));
-  maxLevelAutoResetParam->appendString(USTRING("4s"));
-  maxLevelAutoResetParam->appendString(USTRING("5s"));
-  maxLevelAutoResetParam->appendString(USTRING("6s"));
-  maxLevelAutoResetParam->appendString(USTRING("7s"));
-  maxLevelAutoResetParam->appendString(USTRING("8s"));
-  maxLevelAutoResetParam->appendString(USTRING("9s"));
-  maxLevelAutoResetParam->appendString(USTRING("10s"));
-  parameters.addParameter(maxLevelAutoResetParam);
+  // the toggle for following
+  parameters.addParameter(STR16 ("Max Level Follow"), // title
+                          nullptr, // units
+                          1, // stepCount => 1 means toggle
+                          BooleanParamConverter::normalize(false), // defaultNormalizedValue
+                          ParameterInfo::ParameterFlags::kCanAutomate, // flags
+                          EVAC6ParamID::kMaxLevelFollow, // tag
+                          kRootUnitId, // unitID => not using units at this stage
+                          STR16 ("Max Lvl Flw")); // shortTitle
 
-  // the momentary button that resets the max level
+  // An option menu to change the auto reset (from OFF to 10s)
+  auto maxLevelModeParam = new StringListParameter(USTRING("Max Level Mode"), EVAC6ParamID::kMaxLevelMode);
+  maxLevelModeParam->appendString(USTRING("Since Reset"));
+  maxLevelModeParam->appendString(USTRING("In Window"));
+  parameters.addParameter(maxLevelModeParam);
+
+  // the zoom level knob
   parameters.addParameter(STR16 ("Zoom Level"), // title
                           nullptr, // units
                           0, // stepCount => continuous
@@ -224,12 +224,12 @@ tresult VAC6Controller::setComponentState(IBStream *state)
   setParamNormalized(EVAC6ParamID::kLCDZoomFactorX,
                      LCDZoomFactorXParamConverter::normalize(savedParamZoomFactorX));
 
-  // EVAC6ParamID::kMaxLevelAutoReset
-  int32 savedMaxLevelAutoReset = 0;
-  if(!streamer.readInt32(savedMaxLevelAutoReset))
-    savedMaxLevelAutoReset = DEFAULT_MAX_LEVEL_RESET_IN_SECONDS;
-  setParamNormalized(EVAC6ParamID::kMaxLevelAutoReset,
-                     MaxLevelAutoResetParamConverter::normalize(savedMaxLevelAutoReset));
+  // EVAC6ParamID::kMaxLevelMode
+  int32 savedMaxLevelMode = 0;
+  if(!streamer.readInt32(savedMaxLevelMode))
+    savedMaxLevelMode = DEFAULT_MAX_LEVEL_MODE;
+  setParamNormalized(EVAC6ParamID::kMaxLevelMode,
+                     MaxLevelModeParamConverter::normalize(savedMaxLevelMode));
 
   // EVAC6ParamID::kLCDLeftChannel
   bool savedLeftChannelOn;
@@ -246,7 +246,7 @@ tresult VAC6Controller::setComponentState(IBStream *state)
   DLOG_F(INFO, "VAC6Controller::setComponentState => kSoftClippingLevel=%f, kLCDZoomFactorX=%f, kMaxLevelAutoReset=%d, kLCDLeftChannel=%d, kLCDRightChannel=%d",
          savedParamSoftLevelClipping,
          savedParamZoomFactorX,
-         savedMaxLevelAutoReset,
+         savedMaxLevelMode,
          savedLeftChannelOn,
          savedRightChannelOn);
 
@@ -265,7 +265,13 @@ tresult VAC6Controller::setState(IBStream *state)
 
   IBStreamer streamer(state, kLittleEndian);
 
-  // TODO
+  // EVAC6ParamID::kMaxLevelFollow
+  {
+    bool savedParam;
+    if(!streamer.readBool(savedParam))
+      savedParam = false;
+    setParamNormalized(EVAC6ParamID::kMaxLevelFollow, BooleanParamConverter::normalize(savedParam));
+  }
 
   return kResultOk;
 }
@@ -281,6 +287,8 @@ tresult VAC6Controller::getState(IBStream *state)
   DLOG_F(INFO, "VAC6Controller::getState()");
 
   IBStreamer streamer(state, kLittleEndian);
+
+  streamer.writeBool(BooleanParamConverter::denormalize(getParamNormalized(EVAC6ParamID::kMaxLevelFollow)));
 
   return kResultOk;
 }

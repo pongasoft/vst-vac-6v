@@ -32,9 +32,6 @@ inline double sampleToDb(SampleType valueInSample)
   return std::log10(valueInSample) * 20.0;
 }
 
-constexpr IAttributeList::AttrID MAX_LEVEL_LEFT_VALUE_ATTR = "LValue";
-constexpr IAttributeList::AttrID MAX_LEVEL_RIGHT_VALUE_ATTR = "RValue";
-
 constexpr TSample DEFAULT_SOFT_CLIPPING_LEVEL = 0.50118723362; // dbToSample<TSample>(-6.0);
 constexpr TSample HARD_CLIPPING_LEVEL = 1.0;
 constexpr double MIN_SOFT_CLIPPING_LEVEL_DB = -24;
@@ -43,7 +40,7 @@ constexpr TSample MIN_AUDIO_SAMPLE = 0.001; // dbToSample<TSample>(-60.0)
 constexpr double DEFAULT_ZOOM_FACTOR_X = 0.5;
 constexpr long DEFAULT_MAX_LEVEL_RESET_IN_SECONDS = 5;
 
-using MaxLevelAutoResetParamConverter = Common::DiscreteValueParamConverter<MAX_LEVEL_AUTO_RESET_STEP_COUNT>;
+using MaxLevelModeParamConverter = Common::DiscreteValueParamConverter<1>;
 using LCDInputXParamConverter = Common::DiscreteValueParamConverter<MAX_LCD_INPUT_X>;
 using LCDHistoryOffsetParamConverter = Common::PercentParamConverter;
 using LCDZoomFactorXParamConverter = Common::PercentParamConverter;
@@ -67,6 +64,17 @@ inline TSample fromDisplayValue(double iDisplayValue, double iHeight)
   return dbToSample<double>((1.0 - (iDisplayValue / iHeight)) * MIN_VOLUME_DB);
 }
 #endif
+
+///////////////////////////////////
+// MaxLevelMode
+///////////////////////////////////
+enum MaxLevelMode
+{
+  kMaxSinceReset = 0,
+  kMaxInWindow = 1
+};
+
+constexpr MaxLevelMode DEFAULT_MAX_LEVEL_MODE = MaxLevelMode::kMaxSinceReset;
 
 ///////////////////////////////////
 // SoftClippingLevel
@@ -107,6 +115,9 @@ private:
   Sample64 fValueInSample;
 };
 
+constexpr IAttributeList::AttrID MAX_LEVEL_LEFT_VALUE_ATTR = "LValue";
+constexpr IAttributeList::AttrID MAX_LEVEL_RIGHT_VALUE_ATTR = "RValue";
+
 ///////////////////////////////////
 // MaxLevel
 ///////////////////////////////////
@@ -121,8 +132,9 @@ struct MaxLevel
 // LCDData
 ///////////////////////////////////
 constexpr IAttributeList::AttrID LCDDATA_WINDOW_SIZE_MS_ATTR = "WSMS";
-constexpr IAttributeList::AttrID LCDDATA_LEFT_SAMPLES_ATTR = "LSamples";
-constexpr IAttributeList::AttrID LCDDATA_RIGHT_SAMPLES_ATTR = "RSamples";
+constexpr IAttributeList::AttrID LCDDATA_LEFT_SAMPLES_ATTR = "LS";
+constexpr IAttributeList::AttrID LCDDATA_RIGHT_SAMPLES_ATTR = "RS";
+constexpr IAttributeList::AttrID LCDDATA_MAX_LEVEL_IDX_ATTR = "MLI";
 
 struct LCDData
 {
@@ -133,6 +145,8 @@ struct LCDData
 
   bool fRightChannelOn{true};
   TSample fRightSamples[MAX_ARRAY_SIZE]{};
+
+  int fMaxLevelIndex{-1};
 };
 
 }

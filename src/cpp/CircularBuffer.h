@@ -85,42 +85,146 @@ public:
     }
   }
 
+  /*
+   * Technically speaking the BinaryPredicate is defined like this
+   *  template<typename U>
+   *  using BinaryPredicate = U (*)(U const&, T const&);
+   *
+   *  BUT it is not really defined in the following methods because of the fact that lambda with capture
+   *  cannot be converted to it... where by defining it loosely this way, it just works...
+   */
 
+  /**
+   * "standard" implementation of the fold algorithm starting at startOffset and ending at endOffsetNotIncluded (which
+   * as the name hinted is NOT included). This implementation works fine whether startOffset is less or more than
+   * endOffsetNotIncluded (in which case the direction of iteration is reversed). It also handles properly wrapping
+   * around the buffer (potentially multiple times...).
+   *
+   * The fold algorithm is the following:
+   * resultValue = initValue;
+   * resultValue = op(resultValue, fBuf[<adjusted start offset>]);
+   * resultValue = op(resultValue, fBuf[<adjusted start offset> + 1]);
+   * ...
+   * return resultValue;
+   */
   template<typename U, class BinaryPredicate>
-  inline U fold(int startOffset, int endOffset, U initValue, BinaryPredicate &op) const
+  inline U fold(int startOffset, int endOffsetNotIncluded, U initValue, BinaryPredicate &op) const
   {
-    if(startOffset == endOffset)
+    if(startOffset == endOffsetNotIncluded)
       return initValue;
-
-    int adjStartOffset = adjustIndexFromOffset(startOffset);
-    int adjEndOffset = adjustIndexFromOffset(endOffset);
 
     U resultValue = initValue;
 
-    int i = adjStartOffset;
-    while(i != adjEndOffset)
+    int i = adjustIndexFromOffset(startOffset);
+
+    if(startOffset < endOffsetNotIncluded)
     {
-      resultValue = op(resultValue, fBuf[i]);
-      if(startOffset < endOffset)
+      int size = endOffsetNotIncluded - startOffset;
+      while(size > 0)
       {
+        resultValue = op(resultValue, fBuf[i]);
         ++i;
         if(i == fSize)
           i = 0;
-      } else
+        size--;
+      }
+    }
+    else
+    {
+      int size = startOffset - endOffsetNotIncluded;
+      while(size > 0)
       {
+        resultValue = op(resultValue, fBuf[i]);
         --i;
         if(i == -1)
           i = fSize - 1;
+        size--;
       }
     }
 
     return resultValue;
   }
 
+  /**
+   * Shortcut with startOffset 0
+   */
   template<typename U, class BinaryPredicate>
-  inline U fold(int endOffset, U initValue, BinaryPredicate &op) const
+  inline U fold(int endOffsetNotIncluded, U initValue, BinaryPredicate &op) const
   {
-    return fold(0, endOffset, initValue, op);
+    return fold(0, endOffsetNotIncluded, initValue, op);
+  }
+
+  /**
+   * Shortcut for entire buffer (starting at startOffset 0)
+   */
+  template<typename U, class BinaryPredicate>
+  inline U fold(U initValue, BinaryPredicate &op) const
+  {
+    return fold(0, fSize, initValue, op);
+  }
+
+  /**
+ * Similar to fold but BinaryPredicateWithIndex is also provided the index (starting at startOffset)
+ *  template<typename U>
+ *  using BinaryPredicateWithIndex = U (*)(int, U const&, T const&);
+ */
+  template<typename U, class BinaryPredicateWithIndex>
+  inline U foldWithIndex(int startOffset, int endOffsetNotIncluded, U initValue, BinaryPredicateWithIndex &op) const
+  {
+    if(startOffset == endOffsetNotIncluded)
+      return initValue;
+
+    U resultValue = initValue;
+
+    int i = adjustIndexFromOffset(startOffset);
+    int index = startOffset;
+
+    if(startOffset < endOffsetNotIncluded)
+    {
+      int size = endOffsetNotIncluded - startOffset;
+      while(size > 0)
+      {
+        resultValue = op(index, resultValue, fBuf[i]);
+        ++i;
+        if(i == fSize)
+          i = 0;
+        size--;
+        index++;
+      }
+    }
+    else
+    {
+      int size = startOffset - endOffsetNotIncluded;
+      while(size > 0)
+      {
+        resultValue = op(index, resultValue, fBuf[i]);
+        --i;
+        if(i == -1)
+          i = fSize - 1;
+        size--;
+        index--;
+      }
+    }
+
+    return resultValue;
+  }
+
+  /**
+   * Shortcut with startOffset = 0
+   */
+  template<typename U, class BinaryPredicateWithIndex>
+  inline U foldWithIndex(int endOffsetNotIncluded, U initValue, BinaryPredicateWithIndex &op) const
+  {
+    return foldWithIndex(0, endOffsetNotIncluded, initValue, op);
+  }
+
+  /**
+   * Shortcut for entire buffer (starting at startOffset 0)
+   */
+  template<typename U, class BinaryPredicateWithIndex>
+  inline U foldWithIndex(U initValue, BinaryPredicateWithIndex &op) const
+  {
+    return foldWithIndex(0, fSize, initValue, op);
   }
 
 private:

@@ -83,6 +83,7 @@ protected:
   LCDDisplayState *fState{nullptr};
 
   std::unique_ptr<BooleanParameter> fLCDLiveViewParameter{nullptr};
+  std::unique_ptr<BooleanParameter> fMaxLevelFollow{nullptr};
 
   using LCDInputXParameter = DiscreteParameter<MAX_LCD_INPUT_X>;
 
@@ -180,17 +181,18 @@ public:
   // beforeUnassign
   void beforeUnassign() override;
 
+  // onSoftClippingLevelChange
   void onSoftClippingLevelChange(SoftClippingLevel const &iNewValue);
 
 private:
   friend class LCDDisplayView;
 
+  // updateView
   void updateView() const;
 
   LCDData fLCDData;
   std::unique_ptr<LCDMessage> fLCDSoftClippingLevelMessage;
   std::unique_ptr<LCDMessage> fLCDZoomFactorXMessage;
-
 };
 
 }

@@ -100,32 +100,12 @@ public:
     return *fMaxBuffer;
   };
 
-  // getBufferAccumulatorBatchSize
-  long getBufferAccumulatorBatchSize() const
-  {
-    return fMaxAccumulatorForBuffer.getBatchSize();
-  }
-
   // resetMaxLevelAccumulator
   void resetMaxLevelAccumulator()
   {
-    fMaxLevelAccumulator.reset();
+    //fMaxLevelAccumulator.reset();
     fMaxLevel = 0;
-  }
-
-  // resetMaxLevelAccumulator
-  void resetMaxLevelAccumulator(uint32 iMaxLevelResetInSeconds)
-  {
-    if(iMaxLevelResetInSeconds == 0)
-      fMaxLevelAccumulator.reset(0);
-    else
-    {
-      // if 0 we still do the same buffering as the other buffer otherwise it would not match
-      fMaxLevelAccumulator.reset(fClock.getSampleCountFor(iMaxLevelResetInSeconds * 1000));
-    }
-
-    if(fIsLiveView)
-      fMaxLevel = 0;
+    fMaxLevelIndex = -1;
   }
 
   // getMaxLevel
@@ -135,15 +115,26 @@ public:
   }
 
   /**
+   * @return the index at which the max level occurred (in window space [0-255]) or -1 if there hasn't been any
+   */
+  int getMaxLevelIndex() const
+  {
+    return fMaxLevelIndex;
+  }
+
+  // setMaxLevelIndex
+  void setMaxLevelIndex(int iMaxLevelIndex);
+
+  // setMaxLevelMode
+  void setMaxLevelMode(MaxLevelMode iMaxLevelMode);
+
+  /**
    * Mark the channel processor dirty in order to recompute the max zoom buffer
    */
   void setDirty();
 
   // setIsLiveView
   void setIsLiveView(bool iIsLiveView);
-
-  // setLCDInputX
-  void setLCDInputX(int iLCDInputX);
 
   /**
    * Copy the zoomed samples into the array provided.
@@ -158,8 +149,14 @@ public:
                              typename AudioBuffers<SampleType>::Channel &iOut);
 
 protected:
-  // setPausedZoomMaxBufferOffset
-  void setPausedZoomMaxBufferOffset(int iOffset);
+  // adjustMaxLevel
+  void adjustMaxLevel();
+
+  // adjustMaxLevelInSinceResetMode
+  void adjustMaxLevelInSinceResetMode();
+
+  // adjustMaxLevelInWindowMode
+  void adjustMaxLevelInWindowMode();
 
 private:
   SampleRateBasedClock fClock;
@@ -167,15 +164,15 @@ private:
   MaxAccumulator fMaxAccumulatorForBuffer;
   CircularBuffer<TSample> *const fMaxBuffer;
 
-  MaxAccumulator fMaxLevelAccumulator;
   TSample fMaxLevel;
+  int fMaxLevelIndex;
+  MaxLevelMode fMaxLevelMode;
 
   TZoom::MaxAccumulator fZoomMaxAccumulator;
   CircularBuffer<TSample> *const fZoomMaxBuffer;
   bool fNeedToRecomputeZoomMaxBuffer;
 
   bool fIsLiveView;
-  int fPausedZoomMaxBufferOffset;
 };
 
 }

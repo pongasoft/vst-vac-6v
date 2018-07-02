@@ -19,13 +19,13 @@ VAC6AudioChannelProcessor::VAC6AudioChannelProcessor(const SampleRateBasedClock 
   fClock{iClock},
   fMaxAccumulatorForBuffer(iMaxAccumulatorBatchSize),
   fMaxBuffer{new CircularBuffer<TSample>(iMaxBufferSize)},
-  fMaxLevelAccumulator(fClock.getSampleCountFor(DEFAULT_MAX_LEVEL_RESET_IN_SECONDS * 1000)),
-  fMaxLevel{-1},
+  fMaxLevel{0},
+  fMaxLevelIndex{-1},
+  fMaxLevelMode{DEFAULT_MAX_LEVEL_MODE},
   fZoomMaxAccumulator{iZoomWindow->setZoomFactor(DEFAULT_ZOOM_FACTOR_X)},
   fZoomMaxBuffer{new CircularBuffer<TSample>(iZoomWindow->getVisibleWindowSizeInPoints())},
   fNeedToRecomputeZoomMaxBuffer{false},
-  fIsLiveView{true},
-  fPausedZoomMaxBufferOffset{-1}
+  fIsLiveView{true}
 {
   fMaxBuffer->init(0);
   fZoomMaxBuffer->init(0);
@@ -54,39 +54,7 @@ void VAC6AudioChannelProcessor::computeZoomSamples(int iNumSamples, TSample *oSa
 /////////////////////////////////////////
 void VAC6AudioChannelProcessor::setIsLiveView(bool iIsLiveView)
 {
-  if(fIsLiveView == iIsLiveView)
-    return;
-
   fIsLiveView = iIsLiveView;
-
-  resetMaxLevelAccumulator();
-
-  if(!iIsLiveView)
-  {
-    fMaxLevel = fZoomMaxBuffer->getAt(fPausedZoomMaxBufferOffset);
-  }
-}
-
-/////////////////////////////////////////
-// VAC6AudioChannelProcessor::setLCDInputX
-/////////////////////////////////////////
-void VAC6AudioChannelProcessor::setLCDInputX(int iLCDInputX)
-{
-  // iLCDInputX [0-255] => offset [-256, -1]
-  setPausedZoomMaxBufferOffset(iLCDInputX - MAX_ARRAY_SIZE);
-}
-
-/////////////////////////////////////////
-// VAC6AudioChannelProcessor::setPausedZoomMaxBufferOffset
-/////////////////////////////////////////
-void VAC6AudioChannelProcessor::setPausedZoomMaxBufferOffset(int iOffset)
-{
-  fPausedZoomMaxBufferOffset = iOffset;
-
-  if(!fIsLiveView)
-  {
-    fMaxLevel = fZoomMaxBuffer->getAt(fPausedZoomMaxBufferOffset);
-  }
 }
 
 /////////////////////////////////////////
@@ -95,6 +63,95 @@ void VAC6AudioChannelProcessor::setPausedZoomMaxBufferOffset(int iOffset)
 void VAC6AudioChannelProcessor::setDirty()
 {
   fNeedToRecomputeZoomMaxBuffer = true;
+}
+
+/////////////////////////////////////////
+// VAC6AudioChannelProcessor::setMaxLevelIndex
+/////////////////////////////////////////
+void VAC6AudioChannelProcessor::setMaxLevelIndex(int iMaxLevelIndex)
+{
+  DCHECK_F(iMaxLevelIndex >= -1 && iMaxLevelIndex < fZoomMaxBuffer->getSize());
+  fMaxLevelIndex = iMaxLevelIndex;
+  fMaxLevel = fZoomMaxBuffer->getAt(fMaxLevelIndex - fZoomMaxBuffer->getSize());
+}
+
+/////////////////////////////////////////
+// VAC6AudioChannelProcessor::setMaxLevelMode
+/////////////////////////////////////////
+void VAC6AudioChannelProcessor::setMaxLevelMode(MaxLevelMode iMaxLevelMode)
+{
+  fMaxLevelMode = iMaxLevelMode;
+  adjustMaxLevel();
+}
+
+/////////////////////////////////////////
+// VAC6AudioChannelProcessor::adjustMaxLevel
+/////////////////////////////////////////
+void VAC6AudioChannelProcessor::adjustMaxLevel()
+{
+  switch(fMaxLevelMode)
+  {
+    case kMaxInWindow:
+      adjustMaxLevelInWindowMode();
+      break;
+
+    case kMaxSinceReset:
+      adjustMaxLevelInSinceResetMode();
+      break;
+
+    default:
+      DCHECK_F(false, "should not be reached");
+      break;
+  }
+}
+
+/////////////////////////////////////////
+// VAC6AudioChannelProcessor::adjustMaxLevelInSinceResetMode
+/////////////////////////////////////////
+void VAC6AudioChannelProcessor::adjustMaxLevelInSinceResetMode()
+{
+  auto maxLevel = fMaxLevel;
+
+  // the purpose is to find the highest index where level == fMaxLevel (the window may not contain it
+  // in which case it will remain -1)
+  auto findIndex = [&maxLevel] (int index, int const &iPreviousIndex, double const &iLevel) -> int {
+    if(iLevel == maxLevel)
+      return index;
+    else
+      return iPreviousIndex;
+  };
+
+  int maxLevelIndex = fZoomMaxBuffer->foldWithIndex<int>(-1, findIndex);
+
+  fMaxLevelIndex = maxLevelIndex;
+
+  // DLOG_F(INFO, "adjustISRM %d -> %d", fMaxLevelIndex, maxLevelIndex);
+}
+
+/////////////////////////////////////////
+// VAC6AudioChannelProcessor::adjustMaxLevelInWindowMode
+/////////////////////////////////////////
+void VAC6AudioChannelProcessor::adjustMaxLevelInWindowMode()
+{
+  TSample maxLevel = 0.0;
+
+  // the purpose is to find the max level in the window and if there is more than one return the highest level
+  auto findIndex = [&maxLevel] (int index, int const &iPreviousIndex, double const &iLevel) -> int {
+    if(iLevel >= maxLevel)
+    {
+      maxLevel = iLevel;
+      return index;
+    }
+    else
+      return iPreviousIndex;
+  };
+
+  int maxLevelIndex = fZoomMaxBuffer->foldWithIndex<int>(-1, findIndex);
+
+  // DLOG_F(INFO, "adjustIWM %d -> %d, %f -> %f", fMaxLevelIndex, maxLevelIndex, fMaxLevel, maxLevel);
+
+  fMaxLevelIndex = maxLevelIndex;
+  fMaxLevel = maxLevel;
 }
 
 /////////////////////////////////////////

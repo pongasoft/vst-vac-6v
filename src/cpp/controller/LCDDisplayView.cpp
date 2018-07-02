@@ -20,6 +20,8 @@ void LCDDisplayState::onMessage(Message const &message)
   fLCDData.fLeftChannelOn = message.getBinary(LCDDATA_LEFT_SAMPLES_ATTR, fLCDData.fLeftSamples, MAX_ARRAY_SIZE) > -1;
   fLCDData.fRightChannelOn = message.getBinary(LCDDATA_RIGHT_SAMPLES_ATTR, fLCDData.fRightSamples, MAX_ARRAY_SIZE) > -1;
 
+  fLCDData.fMaxLevelIndex = static_cast<int>(message.getInt(LCDDATA_MAX_LEVEL_IDX_ATTR, -1));
+
   long now = Clock::getCurrentTimeMillis();
 
   if(previousWindowSize != fLCDData.fWindowSizeInMillis)
@@ -119,7 +121,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
 
   if(leftChannelOn || rightChannelOn)
   {
-    int lcdInputX = fLCDInputXParameter->getValue();
+    int lcdInputX = fState->fLCDData.fMaxLevelIndex;
     RelativeCoord lcdInputY = -1; // used when paused
 
     // display every sample in the array as a vertical line (from the bottom)
@@ -158,7 +160,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
     }
 
     // in pause mode we draw the selection
-    if(!fLCDLiveViewParameter->getValue())
+    if(!fLCDLiveViewParameter->getValue() && lcdInputX >= 0)
     {
       constexpr auto offset = 3.0;
       rdc.fillRect(RelativeRect{lcdInputX - 5.0, 0, lcdInputX + 5.0, height}, WHITE_COLOR_40);
@@ -166,6 +168,14 @@ void LCDDisplayView::draw(CDrawContext *iContext)
       rdc.drawLine(lcdInputX, 0, lcdInputX, height, WHITE_COLOR);
       rdc.drawLine(0, lcdInputY, width, lcdInputY, WHITE_COLOR_60);
       rdc.fillAndStrokeRect(RelativeRect{lcdInputX - offset, lcdInputY - offset, lcdInputX + offset, lcdInputY + offset}, RED_COLOR, WHITE_COLOR);
+    }
+    else
+    {
+      if(fMaxLevelFollow->getValue() && lcdInputX >= 0)
+      {
+        constexpr auto offset = 3.0;
+        rdc.fillAndStrokeRect(RelativeRect{lcdInputX - offset, lcdInputY - offset, lcdInputX + offset, lcdInputY + offset}, RED_COLOR, WHITE_COLOR);
+      }
     }
   }
 
@@ -280,6 +290,7 @@ void LCDDisplayView::registerParameters()
 {
   HistoryView::registerParameters();
   fLCDLiveViewParameter = registerBooleanParameter(EVAC6ParamID::kLCDLiveView);
+  fMaxLevelFollow = registerBooleanParameter(EVAC6ParamID::kMaxLevelFollow);
   fLCDInputXParameter = registerVSTParameter<LCDInputXParameter>(EVAC6ParamID::kLCDInputX);
 }
 
