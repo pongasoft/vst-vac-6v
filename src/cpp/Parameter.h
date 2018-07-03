@@ -42,12 +42,12 @@ class PercentParamConverter
 public:
   inline static ParamValue normalize(double const &iValue)
   {
-    return iValue;
+    return clamp(iValue, 0.0, 1.0);
   }
 
   inline static double denormalize(ParamValue iNormalizedValue)
   {
-    return iNormalizedValue;
+    return clamp(iNormalizedValue, 0.0, 1.0);
   }
 };
 
@@ -63,7 +63,10 @@ public:
 
   static inline int denormalize(ParamValue iNormalizedValue)
   {
-    return static_cast<int>(std::floor(std::min(static_cast<ParamValue>(StepCount), iNormalizedValue * (StepCount + 1))));
+    // ParamValue must remain within its bounds
+    auto value = clamp(iNormalizedValue, 0.0, 1.0);
+    return static_cast<int>(std::floor(std::min(static_cast<ParamValue>(StepCount),
+                                                value * (StepCount + 1))));
   }
 };
 

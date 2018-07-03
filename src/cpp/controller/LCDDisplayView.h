@@ -80,7 +80,10 @@ protected:
   LCDDisplayState *fState{nullptr};
 
   std::unique_ptr<BooleanParameter> fMaxLevelFollow{nullptr};
+  std::unique_ptr<BooleanParameter> fLCDLiveViewParameter{nullptr};
 
+  using LCDInputXParameter = DiscreteParameter<MAX_LCD_INPUT_X>;
+  std::unique_ptr<LCDInputXParameter> fLCDInputXParameter{nullptr};
   std::unique_ptr<LCDInputXParameter::Editor> fLCDInputXEditor{nullptr};
 
 public:

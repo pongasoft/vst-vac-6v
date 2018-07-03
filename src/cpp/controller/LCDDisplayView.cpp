@@ -126,7 +126,6 @@ void LCDDisplayView::draw(CDrawContext *iContext)
     {
       double displayValue;
 
-
       TSample leftSample = leftChannelOn ? lcdData.fLeftChannel.fSamples[i] : 0;
       TSample rightSample = rightChannelOn ? lcdData.fRightChannel.fSamples[i] : 0;
 
@@ -158,21 +157,31 @@ void LCDDisplayView::draw(CDrawContext *iContext)
     }
 
     // in pause mode we draw the selection
-    if(!fLCDLiveViewParameter->getValue() && lcdInputX >= 0)
+    if(!lcdData.isLiveView())
     {
       constexpr auto offset = 3.0;
       rdc.fillRect(RelativeRect{lcdInputX - 5.0, 0, lcdInputX + 5.0, height}, WHITE_COLOR_40);
       rdc.fillRect(RelativeRect{lcdInputX - 3.0, 0, lcdInputX + 3.0, height}, WHITE_COLOR_60);
       rdc.drawLine(lcdInputX, 0, lcdInputX, height, WHITE_COLOR);
       rdc.drawLine(0, lcdInputY, width, lcdInputY, WHITE_COLOR_60);
-      rdc.fillAndStrokeRect(RelativeRect{lcdInputX - offset, lcdInputY - offset, lcdInputX + offset, lcdInputY + offset}, RED_COLOR, WHITE_COLOR);
+      rdc.fillAndStrokeRect(RelativeRect{lcdInputX - offset,
+                                         lcdInputY - offset,
+                                         lcdInputX + offset,
+                                         lcdInputY + offset},
+                            RED_COLOR,
+                            WHITE_COLOR);
     }
     else
     {
-      if(fMaxLevelFollow->getValue() && lcdInputX >= 0)
+      if(fMaxLevelFollow->getValue() && lcdInputX >= 0 && lcdInputY >= 0 && lcdInputY < height)
       {
         constexpr auto offset = 3.0;
-        rdc.fillAndStrokeRect(RelativeRect{lcdInputX - offset, lcdInputY - offset, lcdInputX + offset, lcdInputY + offset}, RED_COLOR, WHITE_COLOR);
+        rdc.fillAndStrokeRect(RelativeRect{lcdInputX - offset,
+                                           lcdInputY - offset,
+                                           lcdInputX + offset,
+                                           lcdInputY + offset},
+                              RED_COLOR,
+                              WHITE_COLOR);
       }
     }
   }
@@ -288,6 +297,8 @@ void LCDDisplayView::registerParameters()
 {
   HistoryView::registerParameters();
   fMaxLevelFollow = registerBooleanParameter(EVAC6ParamID::kMaxLevelFollow);
+  fLCDLiveViewParameter = registerBooleanParameter(EVAC6ParamID::kLCDLiveView);
+  fLCDInputXParameter = registerVSTParameter<LCDInputXParameter>(EVAC6ParamID::kLCDInputX);
 }
 
 ///////////////////////////////////////////

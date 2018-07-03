@@ -12,8 +12,6 @@ using namespace GUI;
 using namespace Common;
 
 using SoftClippingLevelParameter = VSTParameter<SoftClippingLevel, SoftClippingLevel::denormalize, SoftClippingLevel::normalize>;
-using MaxLevelModeParameter = VSTParameter<MaxLevelMode, MaxLevelModeParamConverter::denormalize, MaxLevelModeParamConverter::normalize>;
-using LCDInputXParameter = DiscreteParameter<MAX_LCD_INPUT_X>;
 
 class HistoryState;
 
@@ -83,9 +81,7 @@ protected:
   CColor fLevelStateSoftClippingColor{};
   CColor fLevelStateHardClippingColor{};
 
-  std::unique_ptr<BooleanParameter> fLCDLiveViewParameter{nullptr};
   std::unique_ptr<SoftClippingLevelParameter> fSoftClippingLevelParameter;
-  std::unique_ptr<LCDInputXParameter> fLCDInputXParameter{nullptr};
 
 public:
   class Creator : public CustomViewCreator<HistoryView>
@@ -128,7 +124,6 @@ public:
 
   LCDData fLCDData;
   MaxLevel fMaxLevel{};
-  MaxLevelMode fMaxLevelMode{DEFAULT_MAX_LEVEL_MODE};
 };
 
 }

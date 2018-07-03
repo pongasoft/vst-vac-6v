@@ -26,8 +26,6 @@ void HistoryView::registerParameters()
   CustomView::registerParameters();
 
   fSoftClippingLevelParameter = registerVSTParameter<SoftClippingLevelParameter>(EVAC6ParamID::kSoftClippingLevel);
-  fLCDLiveViewParameter = registerBooleanParameter(EVAC6ParamID::kLCDLiveView);
-  fLCDInputXParameter = registerVSTParameter<LCDInputXParameter>(EVAC6ParamID::kLCDInputX);
 }
 
 ///////////////////////////////////////////
@@ -45,7 +43,7 @@ void HistoryState::onMessage(Message const &message)
 {
   fLCDData.fWindowSizeInMillis = message.getInt(LCDDATA_WINDOW_SIZE_MS_ATTR, fLCDData.fWindowSizeInMillis);
   fLCDData.fLCDInputX = static_cast<int>(message.getInt(LCDDATA_LCD_INPUT_X_ATTR, fLCDData.fLCDInputX));
-  fLCDData.fMaxLevelMode = static_cast<MaxLevelMode>(message.getInt(LCDDATA_LCD_INPUT_X_ATTR, fLCDData.fMaxLevelMode));
+  fLCDData.fMaxLevelMode = static_cast<MaxLevelMode>(message.getInt(LCDDATA_MAX_LEVEL_MODE_ATTR, fLCDData.fMaxLevelMode));
   fLCDData.fLeftChannel.fOn = message.getBinary(LCDDATA_LEFT_SAMPLES_ATTR, fLCDData.fLeftChannel.fSamples, MAX_ARRAY_SIZE) > -1;
   fLCDData.fLeftChannel.fMaxLevelSinceReset = message.getFloat(LCDDATA_LEFT_MAX_LEVEL_SINCE_RESET_ATTR, -1);
 
@@ -53,9 +51,9 @@ void HistoryState::onMessage(Message const &message)
   fLCDData.fRightChannel.fMaxLevelSinceReset = message.getFloat(LCDDATA_RIGHT_MAX_LEVEL_SINCE_RESET_ATTR, -1);
 
   // in live view mode, processing sets this to an invalid value (-1)
-  if(fLCDData.fLCDInputX == -1)
+  if(fLCDData.isLiveView())
   {
-    if(fMaxLevelMode == kMaxInWindow)
+    if(fLCDData.fMaxLevelMode == kMaxInWindow)
     {
       fMaxLevel = MaxLevel::computeMaxLevel(fLCDData.fLeftChannel.computeInWindowMaxLevel(),
                                             fLCDData.fRightChannel.computeInWindowMaxLevel());

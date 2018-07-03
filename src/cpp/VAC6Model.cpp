@@ -5,33 +5,6 @@ namespace VST {
 namespace VAC6 {
 
 ///////////////////////////////////
-// LCDData::Channel::computeMaxLevels
-///////////////////////////////////
-void LCDData::Channel::computeMaxLevels(MaxLevel &oInWindow, MaxLevel &oSinceReset) const
-{
-  oInWindow = {};
-  oSinceReset = {fMaxLevelSinceReset, -1};
-
-  if(fOn)
-  {
-    auto ptr = &fSamples[0];
-    for(int i = 0; i < MAX_ARRAY_SIZE; i++)
-    {
-      TSample sample = *ptr++;
-      if(sample > oInWindow.fValue)
-      {
-        oInWindow.fValue = sample;
-        oInWindow.fIndex = i;
-      }
-      if(sample == fMaxLevelSinceReset)
-      {
-        oSinceReset.fIndex = i;
-      }
-    }
-  }
-}
-
-///////////////////////////////////
 // LCDData::Channel::computeInWindowMaxLevel
 ///////////////////////////////////
 MaxLevel LCDData::Channel::computeInWindowMaxLevel() const
@@ -75,29 +48,6 @@ MaxLevel LCDData::Channel::computeSinceResetMaxLevel() const
   }
 
   return oSinceReset;
-}
-
-///////////////////////////////////
-// LCDData::computeMaxLevels
-///////////////////////////////////
-void LCDData::computeMaxLevels(const LCDData::Channel &iLeftChannel,
-                               const LCDData::Channel &iRightChannel,
-                               MaxLevel &oInWindow,
-                               MaxLevel &oSinceReset)
-{
-  MaxLevel leftInWindow;
-  MaxLevel leftSinceReset;
-  MaxLevel rightInWindow;
-  MaxLevel rightSinceReset;
-
-  iLeftChannel.computeMaxLevels(leftInWindow, leftSinceReset);
-  iRightChannel.computeMaxLevels(rightInWindow, rightSinceReset);
-
-  // handling oInWindow
-  oInWindow = MaxLevel::computeMaxLevel(leftInWindow, rightInWindow);
-
-  // handling oSinceReset
-  oSinceReset = MaxLevel::computeMaxLevel(leftSinceReset, rightSinceReset);
 }
 
 ///////////////////////////////////

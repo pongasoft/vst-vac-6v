@@ -134,9 +134,6 @@ private:
   Sample64 fValueInSample;
 };
 
-constexpr IAttributeList::AttrID MAX_LEVEL_LEFT_VALUE_ATTR = "LValue";
-constexpr IAttributeList::AttrID MAX_LEVEL_RIGHT_VALUE_ATTR = "RValue";
-
 ///////////////////////////////////
 // MaxLevel
 ///////////////////////////////////
@@ -168,7 +165,6 @@ struct LCDData
     TSample fSamples[MAX_ARRAY_SIZE]{};
     TSample fMaxLevelSinceReset{0};
 
-    void computeMaxLevels(MaxLevel &oInWindow, MaxLevel &oSinceReset) const;
     MaxLevel computeInWindowMaxLevel() const;
     MaxLevel computeSinceResetMaxLevel() const;
   };
@@ -180,10 +176,10 @@ struct LCDData
   Channel fLeftChannel;
   Channel fRightChannel;
 
-  static void computeMaxLevels(Channel const &iLeftChannel,
-                               Channel const &iRightChannel,
-                               MaxLevel &oInWindow,
-                               MaxLevel &oSinceReset);
+  bool isLiveView() const
+  {
+    return fLCDInputX == -1;
+  }
 };
 }
 }
