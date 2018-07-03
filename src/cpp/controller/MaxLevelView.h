@@ -64,10 +64,10 @@ public:
 
 /**
  * Handles the max level text label */
-class MaxLevelState : public VSTViewState<MaxLevelView>, HistoryState
+class MaxLevelState : public VSTViewState<MaxLevelView>
 {
 public:
-  MaxLevelState() : HistoryState()
+  explicit MaxLevelState(std::shared_ptr<HistoryState> iHistoryState) : fHistoryState{std::move(iHistoryState)}
   {}
 
   void afterAssign() override
@@ -81,12 +81,14 @@ public:
     fView->setState(nullptr);
   }
 
-  void onMessage(Message const &message) override;
+  void onMessage(Message const &message);
 
 private:
   friend class MaxLevelView;
 
   void updateView() const;
+
+  std::shared_ptr<HistoryState> fHistoryState;
 };
 
 }

@@ -15,8 +15,9 @@ namespace VAC6 {
 ///////////////////////////////////////////
 VAC6Controller::VAC6Controller() : EditController(),
                                    fXmlFile("VAC6.uidesc"),
-                                   fMaxLevelState{},
-                                   fLCDDisplayState{}
+                                   fHistoryState{std::make_shared<HistoryState>()},
+                                   fMaxLevelState{fHistoryState},
+                                   fLCDDisplayState{fHistoryState}
 {
   DLOG_F(INFO, "VAC6Controller::VAC6Controller()");
 }
@@ -307,6 +308,7 @@ tresult VAC6Controller::notify(IMessage *message)
   {
     case kLCDData_MID:
     {
+      fHistoryState->onMessage(m);
       fMaxLevelState.onMessage(m);
       fLCDDisplayState.onMessage(m);
       break;

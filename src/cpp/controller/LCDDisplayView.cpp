@@ -14,17 +14,14 @@ const CColor WHITE_COLOR_60 = CColor{255,255,255,60};
 ///////////////////////////////////////////
 void LCDDisplayState::onMessage(Message const &message)
 {
-  auto previousWindowSize = fLCDData.fWindowSizeInMillis;
-
-  HistoryState::onMessage(message);
-
   long now = Clock::getCurrentTimeMillis();
 
-  if(previousWindowSize != fLCDData.fWindowSizeInMillis)
+  if(fWindowSizeInMillis != fHistoryState->fLCDData.fWindowSizeInMillis)
   {
     char text[256];
-    sprintf(text, "Zoom: %.1fs", fLCDData.fWindowSizeInMillis / 1000.0);
+    sprintf(text, "Zoom: %.1fs", fHistoryState->fLCDData.fWindowSizeInMillis / 1000.0);
     fLCDZoomFactorXMessage = std::make_unique<LCDMessage>(UTF8String(text), now);
+    fWindowSizeInMillis = fHistoryState->fLCDData.fWindowSizeInMillis;
   }
 
   if(fLCDSoftClippingLevelMessage)
@@ -112,8 +109,10 @@ void LCDDisplayView::draw(CDrawContext *iContext)
   auto width = getViewSize().getWidth();
   RelativeCoord left = 0;
 
-  bool leftChannelOn = fState->fLCDData.fLeftChannel.fOn;
-  bool rightChannelOn = fState->fLCDData.fRightChannel.fOn;
+  LCDData &lcdData = fState->fHistoryState->fLCDData;
+
+  bool leftChannelOn = lcdData.fLeftChannel.fOn;
+  bool rightChannelOn = lcdData.fRightChannel.fOn;
 
   if(leftChannelOn || rightChannelOn)
   {
@@ -128,8 +127,8 @@ void LCDDisplayView::draw(CDrawContext *iContext)
       double displayValue;
 
 
-      TSample leftSample = leftChannelOn ? fState->fLCDData.fLeftChannel.fSamples[i] : 0;
-      TSample rightSample = rightChannelOn ? fState->fLCDData.fRightChannel.fSamples[i] : 0;
+      TSample leftSample = leftChannelOn ? lcdData.fLeftChannel.fSamples[i] : 0;
+      TSample rightSample = rightChannelOn ? lcdData.fRightChannel.fSamples[i] : 0;
 
       TSample sample = std::max(leftSample, rightSample);
       RelativeCoord top = height;
@@ -314,8 +313,11 @@ void LCDDisplayView::onParameterChange(ParamID iParamID, ParamValue iNormalizedV
 ///////////////////////////////////////////
 void LCDDisplayView::setState(LCDDisplayState *iState)
 {
-  HistoryView::setState(iState);
   fState = iState;
+  if(iState)
+    fHistoryState = iState->fHistoryState;
+  else
+    fHistoryState = nullptr;
 }
 
 

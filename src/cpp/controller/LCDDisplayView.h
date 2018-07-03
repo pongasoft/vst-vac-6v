@@ -104,7 +104,7 @@ constexpr long MESSAGE_FADE_DURATION_MS = 250;
 
 /**
  * Keeps track of the lcd display sate whether the view is created or not */
-class LCDDisplayState : public VSTViewState<LCDDisplayView>, HistoryState
+class LCDDisplayState : public VSTViewState<LCDDisplayView>
 {
   /**
    * A message to display on the LCD Screen (with auto fade)
@@ -159,14 +159,17 @@ class LCDDisplayState : public VSTViewState<LCDDisplayView>, HistoryState
 
 public:
   // Constructor
-  LCDDisplayState() : HistoryState(), fLCDSoftClippingLevelMessage{nullptr}, fLCDZoomFactorXMessage{nullptr}
+  explicit LCDDisplayState(std::shared_ptr<HistoryState> iHistoryState) :
+    fHistoryState{std::move(iHistoryState)},
+    fLCDSoftClippingLevelMessage{nullptr},
+    fLCDZoomFactorXMessage{nullptr}
   {};
 
   // Destructor
   ~LCDDisplayState() override = default;
 
   // onMessage (process message coming from the processor)
-  void onMessage(Message const &message) override;
+  void onMessage(Message const &message);
 
   // afterAssign
   void afterAssign() override;
@@ -183,6 +186,8 @@ private:
   // updateView
   void updateView() const;
 
+  long fWindowSizeInMillis{0};
+  std::shared_ptr<HistoryState> fHistoryState;
   std::unique_ptr<LCDMessage> fLCDSoftClippingLevelMessage;
   std::unique_ptr<LCDMessage> fLCDZoomFactorXMessage;
 };

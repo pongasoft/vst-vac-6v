@@ -66,16 +66,12 @@ public:
   // registerParameters
   void registerParameters() override;
 
-  // setState
-  void setState(HistoryState *iState)
-  {
-    fState = iState;
-  }
-
   CLASS_METHODS_NOCOPY(HistoryView, CustomView)
 
 protected:
   MaxLevel getMaxLevel() const;
+
+  std::shared_ptr<HistoryState> fHistoryState;
 
 protected:
 
@@ -85,10 +81,6 @@ protected:
   CColor fLevelStateOkColor{};
   CColor fLevelStateSoftClippingColor{};
   CColor fLevelStateHardClippingColor{};
-
-  // the state
-  HistoryState *fState{nullptr};
-
 
   std::unique_ptr<BooleanParameter> fLCDLiveViewParameter{nullptr};
   std::unique_ptr<SoftClippingLevelParameter> fSoftClippingLevelParameter;
@@ -125,16 +117,18 @@ class HistoryState
 {
 public:
   HistoryState() : fLCDData{}
-  {}
+  {
+    DLOG_F(INFO, "HistoryState()");
+  }
+
+  ~HistoryState()
+  {
+    DLOG_F(INFO, "~HistoryState()");
+  }
 
   virtual void onMessage(Message const &message);
 
-  friend class HistoryView;
-
-protected:
-
   LCDData fLCDData;
-
   MaxLevel fMaxLevelInWindow{};
   MaxLevel fMaxLevelSinceReset{};
 };

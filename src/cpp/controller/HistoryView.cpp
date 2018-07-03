@@ -40,19 +40,21 @@ MaxLevel HistoryView::getMaxLevel() const
   {
     // in live mode
     return fMaxLevelModeParameter->getValue() == kMaxInWindow ?
-      fState->fMaxLevelInWindow :
-      fState->fMaxLevelSinceReset;
+           fHistoryState->fMaxLevelInWindow :
+           fHistoryState->fMaxLevelSinceReset;
   }
   else
   {
     // in pause mode
     int index = fLCDInputXParameter->getValue();
 
-    MaxLevel left = fState->fLCDData.fLeftChannel.fOn ?
-      MaxLevel{fState->fLCDData.fLeftChannel.fSamples[index], index} :
+    LCDData &lcdData = fHistoryState->fLCDData;
+
+    MaxLevel left = lcdData.fLeftChannel.fOn ?
+      MaxLevel{lcdData.fLeftChannel.fSamples[index], index} :
       MaxLevel{};
-    MaxLevel right = fState->fLCDData.fRightChannel.fOn ?
-      MaxLevel{fState->fLCDData.fRightChannel.fSamples[index], index} :
+    MaxLevel right = lcdData.fRightChannel.fOn ?
+      MaxLevel{lcdData.fRightChannel.fSamples[index], index} :
       MaxLevel{};
 
     return MaxLevel::computeMaxLevel(left, right);

@@ -21,8 +21,6 @@ void MaxLevelState::updateView() const
 ///////////////////////////////////////////
 void MaxLevelState::onMessage(Message const &message)
 {
-  HistoryState::onMessage(message);
-
   updateView();
 }
 
@@ -81,8 +79,11 @@ void MaxLevelView::draw(CDrawContext *iContext)
 ///////////////////////////////////////////
 void MaxLevelView::setState(MaxLevelState *iState)
 {
-  HistoryView::setState((iState));
   fState = iState;
+  if(iState)
+    fHistoryState = iState->fHistoryState;
+  else
+    fHistoryState = nullptr;
 }
 
 

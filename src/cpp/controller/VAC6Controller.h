@@ -70,6 +70,9 @@ private:
   // the vst parameters
   std::shared_ptr<VSTParameters> fVSTParameters;
 
+  // the history state (shared by fMaxLevelState & fLCDDisplayState)
+  std::shared_ptr<HistoryState> fHistoryState;
+
   // state for max level
   MaxLevelState fMaxLevelState;
 
