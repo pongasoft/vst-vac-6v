@@ -149,6 +149,8 @@ tresult VAC6Controller::initialize(FUnknown *context)
 ///////////////////////////////////////////
 tresult VAC6Controller::terminate()
 {
+  fVSTParameters = nullptr;
+
   return EditController::terminate();
 }
 

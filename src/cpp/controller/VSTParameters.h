@@ -54,15 +54,7 @@ public:
   class Editor
   {
   public:
-    inline Editor(ParamID iParamID, ParameterOwner *iParameterOwner) :
-      fParamID{iParamID},
-      fParameterOwner{iParameterOwner}
-    {
-      // DLOG_F(INFO, "RawParameter::Editor(%d)", fParamID);
-      fParameterOwner->beginEdit(fParamID);
-      fIsEditing = true;
-      fInitialParamValue = fParameterOwner->getParamNormalized(fParamID);
-    }
+    Editor(ParamID iParamID, ParameterOwner *iParameterOwner);
 
     // disabling copy
     Editor(Editor const &) = delete;
@@ -71,32 +63,13 @@ public:
     /**
      * Change the value of the parameter. Note that nothing happens if you have called commit or rollback already
      */
-    inline tresult setValue(ParamValue iValue)
-    {
-      tresult res = kResultFalse;
-      if(fIsEditing)
-      {
-        res = fParameterOwner->setParamNormalized(fParamID, iValue);
-        if(res == kResultOk)
-          fParameterOwner->performEdit(fParamID, fParameterOwner->getParamNormalized(fParamID));
-      }
-      return res;
-    }
+    tresult setValue(ParamValue iValue);
 
     /*
      * Call when you are done with the modifications.
      * This has no effect if rollback() has already been called
      */
-    inline tresult commit()
-    {
-      if(fIsEditing)
-      {
-        fIsEditing = false;
-        fParameterOwner->endEdit(fParamID);
-        return kResultOk;
-      }
-      return kResultFalse;
-    }
+    tresult commit();
 
     /*
      * Shortcut to set the value prior to commit
@@ -113,17 +86,7 @@ public:
      * Call this if you want to revert to the original value of the parameter (when the editor is created).
      * This has no effect if commit() has already been called
      */
-    inline tresult rollback()
-    {
-      if(fIsEditing)
-      {
-        setValue(fInitialParamValue);
-        fIsEditing = false;
-        fParameterOwner->endEdit(fParamID);
-        return kResultOk;
-      }
-      return kResultFalse;
-    }
+    tresult rollback();
 
     /**
      * Destructor which calls rollback by default
@@ -150,37 +113,12 @@ public:
   class Connection : public Steinberg::FObject
   {
   public:
-    inline Connection(ParamID iParamID, ParameterOwner *iParameterOwner, IChangeListener *iChangeListener) :
-      fParamID{iParamID},
-      fParameterOwner{iParameterOwner},
-      fChangeListener{iChangeListener}
-    {
-      // DLOG_F(INFO, "RawParameter::Connection(%d)", fParamID);
-
-      DCHECK_NOTNULL_F(fParameterOwner);
-
-      fParameter = fParameterOwner->getParameterObject(fParamID);
-
-      DCHECK_NOTNULL_F(fParameter);
-      DCHECK_NOTNULL_F(fChangeListener);
-
-      fParameter->addRef();
-      fParameter->addDependent(this);
-      fIsConnected = true;
-    }
+    Connection(ParamID iParamID, ParameterOwner *iParameterOwner, IChangeListener *iChangeListener);
 
     /**
      * Call to stop listening for changes. Also called automatically from the destructor.
      */
-    inline void close()
-    {
-      if(fIsConnected)
-      {
-        fParameter->removeDependent(this);
-        fParameter->release();
-        fIsConnected = false;
-      }
-    }
+    void close();
 
     /**
      * Automatically closes the connection and stops listening */
@@ -193,13 +131,7 @@ public:
     /**
      * This is being called when the parameter receives a message... do not call explicitely
      */
-    void PLUGIN_API update(FUnknown *iChangedUnknown, Steinberg::int32 iMessage) SMTG_OVERRIDE
-    {
-      if(iMessage == IDependent::kChanged)
-      {
-        fChangeListener->onParameterChange(fParamID, fParameterOwner->getParamNormalized(fParamID));
-      }
-    }
+    void PLUGIN_API update(FUnknown *iChangedUnknown, Steinberg::int32 iMessage) SMTG_OVERRIDE;
 
     // disabling copy
     Connection(Editor const &) = delete;
@@ -215,16 +147,7 @@ public:
 
 public:
   // Constructor
-  RawParameter(ParamID iParamID, ParameterOwner *iParameterOwner) :
-    fParamID{iParamID},
-    fParameterOwner{iParameterOwner}
-  {
-    // DLOG_F(INFO, "RawParameter::RawParameter(%d)", fParamID);
-    DCHECK_NOTNULL_F(fParameterOwner);
-
-    fParameter = fParameterOwner->getParameterObject(fParamID);
-    DCHECK_NOTNULL_F(fParameter);
-  }
+  RawParameter(ParamID iParamID, ParameterOwner *iParameterOwner);
 
   // Destructor
   ~RawParameter()
@@ -233,7 +156,7 @@ public:
   }
 
   // getParamID
-  ParamID getParamID() const
+  inline ParamID getParamID() const
   {
     return fParamID;
   }
@@ -241,7 +164,7 @@ public:
   /**
    * @return the current raw value of the parameter
    */
-  ParamValue getValue() const
+  inline ParamValue getValue() const
   {
     return fParameterOwner->getParamNormalized(fParamID);
   }
@@ -250,7 +173,7 @@ public:
    * Sets the value of this parameter. Note that this is "transactional" and if you want to make
    * further changes that spans multiple calls (ex: onMouseDown / onMouseMoved / onMouseUp) you should use an editor
    */
-  tresult setValue(ParamValue iValue)
+  inline tresult setValue(ParamValue iValue)
   {
     Editor editor(fParamID, fParameterOwner);
     editor.setValue(iValue);
@@ -292,7 +215,7 @@ private:
 };
 
 ///////////////////////////////////////////
-// VSTParameter
+// VSTParameter<T>
 ///////////////////////////////////////////
 
 // the function pointer type to denormalize a raw value
@@ -442,6 +365,10 @@ private:
   std::unique_ptr<RawParameter> fRawParameter;
 };
 
+///////////////////////////////////////////
+// class VSTParameters
+///////////////////////////////////////////
+
 /**
  * Encapsulates access to the vst parameters defined in the controller
  */
@@ -483,6 +410,49 @@ using BooleanParameter = VSTParameter<bool, Common::BooleanParamConverter::denor
 using PercentParameter = RawParameter;
 template<int StepCount>
 using DiscreteParameter = VSTParameter<int, Common::DiscreteValueParamConverter<StepCount>::denormalize, Common::DiscreteValueParamConverter<StepCount>::normalize>;
+
+///////////////////////////////////////////
+// class VSTParametersManager
+///////////////////////////////////////////
+
+class VSTParametersManager
+{
+public:
+  explicit VSTParametersManager(std::shared_ptr<VSTParameters> iParameters) :
+                                fParameters{std::move(iParameters)}
+  {}
+
+  /**
+   * Registers a raw parameter (no conversion)
+   */
+  std::unique_ptr<RawParameter> registerRawParameter(ParamID iParamID,
+                                                     RawParameter::IChangeListener *iChangeListener = nullptr);
+
+  /**
+   * Generic register with any kind of conversion
+   */
+  template<typename T>
+  std::unique_ptr<T> registerVSTParameter(ParamID iParamID,
+                                          RawParameter::IChangeListener *iChangeListener = nullptr)
+  {
+    return std::make_unique<T>(registerRawParameter(iParamID, iChangeListener));
+  }
+
+  // shortcut for BooleanParameter
+  std::unique_ptr<BooleanParameter> registerBooleanParameter(ParamID iParamID,
+                                                             RawParameter::IChangeListener *iChangeListener = nullptr);
+
+  // shortcut for PercentParameter
+  std::unique_ptr<PercentParameter> registerPercentParameter(ParamID iParamID,
+                                                             RawParameter::IChangeListener *iChangeListener = nullptr);
+
+private:
+
+  std::shared_ptr<VSTParameters> fParameters;
+
+  // Maintains the connections for the listeners... will be automatically discarded in the destructor
+  std::map<ParamID, std::unique_ptr<RawParameter::Connection>> fParameterConnections;
+};
 
 
 }

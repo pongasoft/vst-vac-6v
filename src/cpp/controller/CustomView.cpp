@@ -15,8 +15,7 @@ using namespace VSTGUI;
 CustomView::CustomView(const CRect &size)
   : CView(size),
     fBackColor{0,0,0},
-    fParameters{nullptr},
-    fParameterConnections{}
+    fParameters{nullptr}
 {
   DLOG_F(INFO, "CustomView::CustomView()");
   setWantsFocus(true);
@@ -68,14 +67,7 @@ void CustomView::onParameterChange(ParamID iParamID, ParamValue iNormalizedValue
 ///////////////////////////////////////////
 std::unique_ptr<RawParameter> CustomView::registerRawParameter(ParamID iParamID, bool iSubscribeToChanges)
 {
-  auto parameter = fParameters->getRawParameter(iParamID);
-
-  if(iSubscribeToChanges)
-  {
-    fParameterConnections[iParamID] = std::move(parameter->connect(this));
-  }
-
-  return parameter;
+  return fParameters->registerRawParameter(iParamID, iSubscribeToChanges ? this : nullptr);
 }
 
 ///////////////////////////////////////////

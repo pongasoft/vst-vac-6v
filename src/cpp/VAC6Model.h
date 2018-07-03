@@ -152,10 +152,12 @@ struct MaxLevel
 ///////////////////////////////////
 // LCDData
 ///////////////////////////////////
-constexpr IAttributeList::AttrID LCDDATA_WINDOW_SIZE_MS_ATTR = "WSMS";
-constexpr IAttributeList::AttrID LCDDATA_LEFT_SAMPLES_ATTR = "LS";
+constexpr IAttributeList::AttrID LCDDATA_WINDOW_SIZE_MS_ATTR = "WSM";
+constexpr IAttributeList::AttrID LCDDATA_LCD_INPUT_X_ATTR = "LIX";
+constexpr IAttributeList::AttrID LCDDATA_MAX_LEVEL_MODE_ATTR = "MLM";
+constexpr IAttributeList::AttrID LCDDATA_LEFT_SAMPLES_ATTR = "LSA";
 constexpr IAttributeList::AttrID LCDDATA_LEFT_MAX_LEVEL_SINCE_RESET_ATTR = "LML";
-constexpr IAttributeList::AttrID LCDDATA_RIGHT_SAMPLES_ATTR = "RS";
+constexpr IAttributeList::AttrID LCDDATA_RIGHT_SAMPLES_ATTR = "RSA";
 constexpr IAttributeList::AttrID LCDDATA_RIGHT_MAX_LEVEL_SINCE_RESET_ATTR = "RML";
 
 struct LCDData
@@ -167,9 +169,13 @@ struct LCDData
     TSample fMaxLevelSinceReset{0};
 
     void computeMaxLevels(MaxLevel &oInWindow, MaxLevel &oSinceReset) const;
+    MaxLevel computeInWindowMaxLevel() const;
+    MaxLevel computeSinceResetMaxLevel() const;
   };
 
   long fWindowSizeInMillis{0};
+  int fLCDInputX{-1};
+  MaxLevelMode fMaxLevelMode{DEFAULT_MAX_LEVEL_MODE};
 
   Channel fLeftChannel;
   Channel fRightChannel;

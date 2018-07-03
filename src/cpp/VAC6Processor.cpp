@@ -288,9 +288,14 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
     fRightChannelProcessor->setDirty();
   }
 
-  // after we cancel pause we need to reset LCDHistoryOffset
+  // after we cancel pause we need to reset LCDInputX and LCDHistoryOffset
   if(isNewLiveView)
   {
+    if(fState.fLCDInputX != MAX_LCD_INPUT_X)
+    {
+      fState.updateLCDInputX(data, MAX_LCD_INPUT_X);
+    }
+
     if(fState.fLCDHistoryOffset != MAX_HISTORY_OFFSET)
     {
       fState.updateLCDHistoryOffset(data, MAX_HISTORY_OFFSET);
@@ -350,6 +355,8 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
     lcdData.fRightChannel.fOn = fState.fRightChannelOn;
 
     lcdData.fWindowSizeInMillis = getWindowSizeInMillis();
+    lcdData.fLCDInputX = fState.fLCDLiveView ? -1 : fState.fLCDInputX;
+    lcdData.fMaxLevelMode = fState.fMaxLevelMode;
 
     fLCDDataUpdate.push(lcdData);
   }
@@ -596,6 +603,8 @@ void VAC6Processor::onTimer(Timer * /* timer */)
       m.setFloat(LCDDATA_RIGHT_MAX_LEVEL_SINCE_RESET_ATTR, lcdData.fRightChannel.fMaxLevelSinceReset);
 
       m.setInt(LCDDATA_WINDOW_SIZE_MS_ATTR, lcdData.fWindowSizeInMillis);
+      m.setInt(LCDDATA_LCD_INPUT_X_ATTR, lcdData.fLCDInputX);
+      m.setInt(LCDDATA_MAX_LEVEL_MODE_ATTR, lcdData.fMaxLevelMode);
 
       sendMessage(message);
     }
@@ -612,7 +621,7 @@ int VAC6Processor::computeLCDInputX() const
   if(res == -1)
     res = fZoomWindow->getVisibleWindowSizeInPoints() - 1;
 
-  res = clamp(res, 0, fZoomWindow->getVisibleWindowSizeInPoints() - 1);
+  DCHECK_F(res >= 0 && res < fZoomWindow->getVisibleWindowSizeInPoints());
 
   return res;
 }
@@ -622,24 +631,23 @@ int VAC6Processor::computeLCDInputX() const
 ///////////////////////////////////////////
 int VAC6Processor::computeMaxLevelIndex() const
 {
-  MaxLevel leftMaxLevel{};
-  MaxLevel rightMaxLevel{};
-
-  if(fState.fLeftChannelOn)
+  if(fState.fMaxLevelMode == kMaxInWindow)
   {
-    leftMaxLevel = fState.fMaxLevelMode == kMaxInWindow ?
-      fLeftChannelProcessor->computeMaxLevelInWindowMode() :
-      fLeftChannelProcessor->computeMaxLevelInSinceResetMode();
+    return MaxLevel::computeMaxLevel(fLeftChannelProcessor->computeMaxLevelInWindowMode(),
+                                     fRightChannelProcessor->computeMaxLevelInWindowMode()).fIndex;
   }
-
-  if(fState.fRightChannelOn)
+  else
   {
-    rightMaxLevel = fState.fMaxLevelMode == kMaxInWindow ?
-                    fRightChannelProcessor->computeMaxLevelInWindowMode() :
-                    fRightChannelProcessor->computeMaxLevelInSinceResetMode();
-  }
+    int maxLevel =
+      MaxLevel::computeMaxLevel(fLeftChannelProcessor->computeMaxLevelInSinceResetMode(),
+                                fRightChannelProcessor->computeMaxLevelInSinceResetMode()).fIndex;
+    // possible that max level since reset does not exist is outside the window => compute max level in window
+    if(maxLevel == -1)
+      maxLevel = MaxLevel::computeMaxLevel(fLeftChannelProcessor->computeMaxLevelInWindowMode(),
+                                           fRightChannelProcessor->computeMaxLevelInWindowMode()).fIndex;
 
-  return MaxLevel::computeMaxLevel(leftMaxLevel, rightMaxLevel).fIndex;
+    return maxLevel;
+  }
 }
 
 ///////////////////////////////////////////

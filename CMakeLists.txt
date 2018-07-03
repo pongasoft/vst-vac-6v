@@ -72,6 +72,7 @@ set(vst_sources
 		${CPP_SOURCES}/controller/VAC6Controller.cpp
 		${CPP_SOURCES}/controller/VAC6Controller.h
 		${CPP_SOURCES}/controller/VSTParameters.h
+		${CPP_SOURCES}/controller/VSTParameters.cpp
 		${CPP_SOURCES}/controller/VSTViewState.h
 		${CPP_SOURCES}/AudioBuffer.h
 		${CPP_SOURCES}/AudioUtils.h

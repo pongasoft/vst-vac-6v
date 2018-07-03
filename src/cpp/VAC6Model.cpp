@@ -32,6 +32,52 @@ void LCDData::Channel::computeMaxLevels(MaxLevel &oInWindow, MaxLevel &oSinceRes
 }
 
 ///////////////////////////////////
+// LCDData::Channel::computeInWindowMaxLevel
+///////////////////////////////////
+MaxLevel LCDData::Channel::computeInWindowMaxLevel() const
+{
+  MaxLevel res = {};
+
+  if(fOn)
+  {
+    auto ptr = &fSamples[0];
+    for(int i = 0; i < MAX_ARRAY_SIZE; i++)
+    {
+      TSample sample = *ptr++;
+      if(sample > res.fValue)
+      {
+        res.fValue = sample;
+        res.fIndex = i;
+      }
+    }
+  }
+  return res;
+}
+
+///////////////////////////////////
+// LCDData::Channel::computeSinceResetMaxLevel
+///////////////////////////////////
+MaxLevel LCDData::Channel::computeSinceResetMaxLevel() const
+{
+  MaxLevel oSinceReset = {fMaxLevelSinceReset, -1};
+
+  if(fOn)
+  {
+    auto ptr = &fSamples[0];
+    for(int i = 0; i < MAX_ARRAY_SIZE; i++)
+    {
+      TSample sample = *ptr++;
+      if(sample == fMaxLevelSinceReset)
+      {
+        oSinceReset.fIndex = i;
+      }
+    }
+  }
+
+  return oSinceReset;
+}
+
+///////////////////////////////////
 // LCDData::computeMaxLevels
 ///////////////////////////////////
 void LCDData::computeMaxLevels(const LCDData::Channel &iLeftChannel,

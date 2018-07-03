@@ -13,6 +13,7 @@ using namespace Common;
 
 using SoftClippingLevelParameter = VSTParameter<SoftClippingLevel, SoftClippingLevel::denormalize, SoftClippingLevel::normalize>;
 using MaxLevelModeParameter = VSTParameter<MaxLevelMode, MaxLevelModeParamConverter::denormalize, MaxLevelModeParamConverter::normalize>;
+using LCDInputXParameter = DiscreteParameter<MAX_LCD_INPUT_X>;
 
 class HistoryState;
 
@@ -84,9 +85,6 @@ protected:
 
   std::unique_ptr<BooleanParameter> fLCDLiveViewParameter{nullptr};
   std::unique_ptr<SoftClippingLevelParameter> fSoftClippingLevelParameter;
-  std::unique_ptr<MaxLevelModeParameter> fMaxLevelModeParameter;
-
-  using LCDInputXParameter = DiscreteParameter<MAX_LCD_INPUT_X>;
   std::unique_ptr<LCDInputXParameter> fLCDInputXParameter{nullptr};
 
 public:
@@ -129,8 +127,8 @@ public:
   virtual void onMessage(Message const &message);
 
   LCDData fLCDData;
-  MaxLevel fMaxLevelInWindow{};
-  MaxLevel fMaxLevelSinceReset{};
+  MaxLevel fMaxLevel{};
+  MaxLevelMode fMaxLevelMode{DEFAULT_MAX_LEVEL_MODE};
 };
 
 }

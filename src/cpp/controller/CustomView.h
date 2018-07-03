@@ -115,7 +115,7 @@ public:
    */
   virtual void initParameters(std::shared_ptr<VSTParameters> iParameters)
   {
-    fParameters = std::move(iParameters);
+    fParameters = std::make_unique<VSTParametersManager>(std::move(iParameters));
     registerParameters();
   }
 
@@ -154,10 +154,7 @@ protected:
   CColor fBackColor;
 
   // Access to parameters
-  std::shared_ptr<VSTParameters> fParameters;
-
-  // Maintains the connections for the listeners... will be automatically discarded in the destructor
-  std::map<ParamID, std::unique_ptr<RawParameter::Connection>> fParameterConnections;
+  std::unique_ptr<VSTParametersManager> fParameters;
 
 public:
   class Creator : public CustomViewCreator<CustomView>
