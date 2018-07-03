@@ -46,10 +46,7 @@ public:
   }
 
   // setState
-  void setState(LCDDisplayState *iState)
-  {
-    fState = iState;
-  }
+  void setState(LCDDisplayState *iState);
 
 public:
 
@@ -82,12 +79,8 @@ protected:
   // the state
   LCDDisplayState *fState{nullptr};
 
-  std::unique_ptr<BooleanParameter> fLCDLiveViewParameter{nullptr};
   std::unique_ptr<BooleanParameter> fMaxLevelFollow{nullptr};
 
-  using LCDInputXParameter = DiscreteParameter<MAX_LCD_INPUT_X>;
-
-  std::unique_ptr<LCDInputXParameter> fLCDInputXParameter{nullptr};
   std::unique_ptr<LCDInputXParameter::Editor> fLCDInputXEditor{nullptr};
 
 public:
@@ -111,7 +104,7 @@ constexpr long MESSAGE_FADE_DURATION_MS = 250;
 
 /**
  * Keeps track of the lcd display sate whether the view is created or not */
-class LCDDisplayState : public VSTViewState<LCDDisplayView>
+class LCDDisplayState : public VSTViewState<LCDDisplayView>, HistoryState
 {
   /**
    * A message to display on the LCD Screen (with auto fade)
@@ -166,14 +159,14 @@ class LCDDisplayState : public VSTViewState<LCDDisplayView>
 
 public:
   // Constructor
-  LCDDisplayState() : fLCDData{}, fLCDSoftClippingLevelMessage{nullptr}, fLCDZoomFactorXMessage{nullptr}
+  LCDDisplayState() : HistoryState(), fLCDSoftClippingLevelMessage{nullptr}, fLCDZoomFactorXMessage{nullptr}
   {};
 
   // Destructor
   ~LCDDisplayState() override = default;
 
   // onMessage (process message coming from the processor)
-  void onMessage(Message const &message);
+  void onMessage(Message const &message) override;
 
   // afterAssign
   void afterAssign() override;
@@ -190,7 +183,6 @@ private:
   // updateView
   void updateView() const;
 
-  LCDData fLCDData;
   std::unique_ptr<LCDMessage> fLCDSoftClippingLevelMessage;
   std::unique_ptr<LCDMessage> fLCDZoomFactorXMessage;
 };

@@ -100,30 +100,17 @@ public:
     return *fMaxBuffer;
   };
 
-  // resetMaxLevelAccumulator
-  void resetMaxLevelAccumulator()
+  // resetMaxLevelSinceLastReset
+  void resetMaxLevelSinceLastReset()
   {
-    //fMaxLevelAccumulator.reset();
-    fMaxLevel = 0;
-    fMaxLevelIndex = -1;
+    fMaxLevelSinceLastReset = 0;
   }
 
-  // getMaxLevel
-  TSample getMaxLevel() const
+  // getMaxLevelSinceLastReset
+  TSample getMaxLevelSinceLastReset() const
   {
-    return fMaxLevel;
+    return fMaxLevelSinceLastReset;
   }
-
-  /**
-   * @return the index at which the max level occurred (in window space [0-255]) or -1 if there hasn't been any
-   */
-  int getMaxLevelIndex() const
-  {
-    return fMaxLevelIndex;
-  }
-
-  // setMaxLevelIndex
-  void setMaxLevelIndex(int iMaxLevelIndex);
 
   // setMaxLevelMode
   void setMaxLevelMode(MaxLevelMode iMaxLevelMode);
@@ -135,6 +122,12 @@ public:
 
   // setIsLiveView
   void setIsLiveView(bool iIsLiveView);
+
+  // computeMaxLevelInSinceResetMode
+  MaxLevel computeMaxLevelInSinceResetMode() const;
+
+  // computeMaxLevelInWindowMode
+  MaxLevel computeMaxLevelInWindowMode() const;
 
   /**
    * Copy the zoomed samples into the array provided.
@@ -148,24 +141,13 @@ public:
                              const typename AudioBuffers<SampleType>::Channel &iIn,
                              typename AudioBuffers<SampleType>::Channel &iOut);
 
-protected:
-  // adjustMaxLevel
-  void adjustMaxLevel();
-
-  // adjustMaxLevelInSinceResetMode
-  void adjustMaxLevelInSinceResetMode();
-
-  // adjustMaxLevelInWindowMode
-  void adjustMaxLevelInWindowMode();
-
 private:
   SampleRateBasedClock fClock;
 
   MaxAccumulator fMaxAccumulatorForBuffer;
   CircularBuffer<TSample> *const fMaxBuffer;
 
-  TSample fMaxLevel;
-  int fMaxLevelIndex;
+  TSample fMaxLevelSinceLastReset;
   MaxLevelMode fMaxLevelMode;
 
   TZoom::MaxAccumulator fZoomMaxAccumulator;

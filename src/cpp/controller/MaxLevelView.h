@@ -25,10 +25,7 @@ public:
   MaxLevelView(const MaxLevelView &c) = delete;
 
   // setState
-  void setState(MaxLevelState *iState)
-  {
-    fState = iState;
-  }
+  void setState(MaxLevelState *iState);
 
   const CColor &getNoDataColor() const
   {
@@ -43,15 +40,10 @@ public:
   // draw => does the actual drawing job
   void draw(CDrawContext *iContext) override;
 
-  void registerParameters() override;
-
   CLASS_METHODS_NOCOPY(MaxLevelView, HistoryView)
 
 protected:
   MaxLevelState *fState{nullptr};
-
-  std::unique_ptr<BooleanParameter> fLCDLeftChannelParameter;
-  std::unique_ptr<BooleanParameter> fLCDRightChannelParameter;
 
   CColor fNoDataColor{};
 
@@ -72,13 +64,11 @@ public:
 
 /**
  * Handles the max level text label */
-class MaxLevelState : public VSTViewState<MaxLevelView>
+class MaxLevelState : public VSTViewState<MaxLevelView>, HistoryState
 {
 public:
-  MaxLevelState() : fMaxLevel{}
+  MaxLevelState() : HistoryState()
   {}
-
-  void setMaxLevel(MaxLevel const &maxLevel);
 
   void afterAssign() override
   {
@@ -91,14 +81,12 @@ public:
     fView->setState(nullptr);
   }
 
-  void onMessage(Message const &message);
+  void onMessage(Message const &message) override;
 
 private:
   friend class MaxLevelView;
 
   void updateView() const;
-
-  MaxLevel fMaxLevel;
 };
 
 }

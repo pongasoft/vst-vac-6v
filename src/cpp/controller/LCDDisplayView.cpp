@@ -15,12 +15,8 @@ const CColor WHITE_COLOR_60 = CColor{255,255,255,60};
 void LCDDisplayState::onMessage(Message const &message)
 {
   auto previousWindowSize = fLCDData.fWindowSizeInMillis;
-  fLCDData.fWindowSizeInMillis = message.getInt(LCDDATA_WINDOW_SIZE_MS_ATTR, fLCDData.fWindowSizeInMillis);
 
-  fLCDData.fLeftChannelOn = message.getBinary(LCDDATA_LEFT_SAMPLES_ATTR, fLCDData.fLeftSamples, MAX_ARRAY_SIZE) > -1;
-  fLCDData.fRightChannelOn = message.getBinary(LCDDATA_RIGHT_SAMPLES_ATTR, fLCDData.fRightSamples, MAX_ARRAY_SIZE) > -1;
-
-  fLCDData.fMaxLevelIndex = static_cast<int>(message.getInt(LCDDATA_MAX_LEVEL_IDX_ATTR, -1));
+  HistoryState::onMessage(message);
 
   long now = Clock::getCurrentTimeMillis();
 
@@ -116,12 +112,14 @@ void LCDDisplayView::draw(CDrawContext *iContext)
   auto width = getViewSize().getWidth();
   RelativeCoord left = 0;
 
-  bool leftChannelOn = fState->fLCDData.fLeftChannelOn;
-  bool rightChannelOn = fState->fLCDData.fRightChannelOn;
+  bool leftChannelOn = fState->fLCDData.fLeftChannel.fOn;
+  bool rightChannelOn = fState->fLCDData.fRightChannel.fOn;
 
   if(leftChannelOn || rightChannelOn)
   {
-    int lcdInputX = fState->fLCDData.fMaxLevelIndex;
+    auto maxLevel = getMaxLevel();
+
+    int lcdInputX = maxLevel.fIndex;
     RelativeCoord lcdInputY = -1; // used when paused
 
     // display every sample in the array as a vertical line (from the bottom)
@@ -129,8 +127,9 @@ void LCDDisplayView::draw(CDrawContext *iContext)
     {
       double displayValue;
 
-      TSample leftSample = leftChannelOn ? fState->fLCDData.fLeftSamples[i] : 0;
-      TSample rightSample = rightChannelOn ? fState->fLCDData.fRightSamples[i] : 0;
+
+      TSample leftSample = leftChannelOn ? fState->fLCDData.fLeftChannel.fSamples[i] : 0;
+      TSample rightSample = rightChannelOn ? fState->fLCDData.fRightChannel.fSamples[i] : 0;
 
       TSample sample = std::max(leftSample, rightSample);
       RelativeCoord top = height;
@@ -289,9 +288,7 @@ CMouseEventResult LCDDisplayView::onMouseCancel()
 void LCDDisplayView::registerParameters()
 {
   HistoryView::registerParameters();
-  fLCDLiveViewParameter = registerBooleanParameter(EVAC6ParamID::kLCDLiveView);
   fMaxLevelFollow = registerBooleanParameter(EVAC6ParamID::kMaxLevelFollow);
-  fLCDInputXParameter = registerVSTParameter<LCDInputXParameter>(EVAC6ParamID::kLCDInputX);
 }
 
 ///////////////////////////////////////////
@@ -312,6 +309,14 @@ void LCDDisplayView::onParameterChange(ParamID iParamID, ParamValue iNormalizedV
   }
 }
 
+///////////////////////////////////////////
+// LCDDisplayView::setState
+///////////////////////////////////////////
+void LCDDisplayView::setState(LCDDisplayState *iState)
+{
+  HistoryView::setState(iState);
+  fState = iState;
+}
 
 
 LCDDisplayView::Creator __gLCDDisplayViewCreator("pongasoft::LCDDisplay", "pongasoft - LCD Display");

@@ -25,15 +25,6 @@ bool VAC6AudioChannelProcessor::genericProcessChannel(ZoomWindow const *iZoomWin
   if(fNeedToRecomputeZoomMaxBuffer)
   {
     fZoomMaxAccumulator = iZoomWindow->computeZoomWindow(*fMaxBuffer, *fZoomMaxBuffer);
-    if(!fIsLiveView)
-    {
-      if(fMaxLevelIndex > -1)
-        fMaxLevel = fZoomMaxBuffer->getAt(fMaxLevelIndex - fZoomMaxBuffer->getSize());
-    }
-    else
-    {
-      adjustMaxLevel();
-    }
     fNeedToRecomputeZoomMaxBuffer = false;
   }
 
@@ -59,23 +50,9 @@ bool VAC6AudioChannelProcessor::genericProcessChannel(ZoomWindow const *iZoomWin
         if(fZoomMaxAccumulator.accumulate(max, zoomedMax))
         {
           fZoomMaxBuffer->push(zoomedMax);
-          if(zoomedMax >= fMaxLevel)
+          if(zoomedMax > fMaxLevelSinceLastReset)
           {
-            // DLOG_F(INFO, "detected MaxLevel %d -> %d, %f -> %f", fMaxLevelIndex, fZoomMaxBuffer->getSize() - 1, fMaxLevel, zoomedMax);
-            fMaxLevel = zoomedMax;
-            fMaxLevelIndex = fZoomMaxBuffer->getSize() - 1;
-          }
-          else
-          {
-            if(fMaxLevelIndex > 0)
-              fMaxLevelIndex--;
-            else
-            {
-              if(fMaxLevelMode == kMaxSinceReset)
-                fMaxLevelIndex = -1;
-              else
-                adjustMaxLevelInWindowMode();
-            }
+            fMaxLevelSinceLastReset = zoomedMax;
           }
         }
       }
@@ -109,7 +86,6 @@ VAC6Processor::VAC6Processor() :
   fRightChannelProcessor{nullptr},
   fTimer{nullptr},
   fRateLimiter{},
-  fMaxLevelUpdate{},
   fLCDDataUpdate{}
 {
   setControllerClass(VAC6ControllerUID);
@@ -264,13 +240,6 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
     isNewPause =!isNewLiveView;
   }
 
-  // LCDInputX (lcd selection) has changed
-  if(fPreviousState.fLCDInputX != fState.fLCDInputX)
-  {
-    fLeftChannelProcessor->setMaxLevelIndex(fState.fLCDInputX);
-    fRightChannelProcessor->setMaxLevelIndex(fState.fLCDInputX);
-  }
-
   // Max Level Mode changed
   if(fPreviousState.fMaxLevelMode != fState.fMaxLevelMode)
   {
@@ -296,8 +265,6 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
       if(fState.fLCDInputX != newLCDInputX)
       {
         fState.updateLCDInputX(data, newLCDInputX);
-        fLeftChannelProcessor->setMaxLevelIndex(fState.fLCDInputX);
-        fRightChannelProcessor->setMaxLevelIndex(fState.fLCDInputX);
       }
 
       double newLCDHistoryOffset = fZoomWindow->getWindowOffset();
@@ -350,16 +317,14 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
         fState.updateLCDInputX(data, newLCDInputX);
         DLOG_F(INFO, "updating LCDInputX on pause to %d", newLCDInputX);
       }
-      fLeftChannelProcessor->setMaxLevelIndex(fState.fLCDInputX);
-      fRightChannelProcessor->setMaxLevelIndex(fState.fLCDInputX);
     }
   }
 
   // if reset of max level is requested (pressing momentary button) then we need to reset the accumulator
   if(fState.fLCDLiveView && fMaxLevelResetRequested)
   {
-    fLeftChannelProcessor->resetMaxLevelAccumulator();
-    fRightChannelProcessor->resetMaxLevelAccumulator();
+    fLeftChannelProcessor->resetMaxLevelSinceLastReset();
+    fRightChannelProcessor->resetMaxLevelSinceLastReset();
   }
 
   // is it time to update the UI?
@@ -369,23 +334,23 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
 
     // left
     if(fState.fLeftChannelOn)
-      fLeftChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fLeftSamples);
-    lcdData.fLeftChannelOn = fState.fLeftChannelOn;
+    {
+      fLeftChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fLeftChannel.fSamples);
+      lcdData.fLeftChannel.fMaxLevelSinceReset = fLeftChannelProcessor->getMaxLevelSinceLastReset();
+    }
+    lcdData.fLeftChannel.fOn = fState.fLeftChannelOn;
+
 
     // right
     if(fState.fRightChannelOn)
-      fRightChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fRightSamples);
-    lcdData.fRightChannelOn = fState.fRightChannelOn;
+    {
+      fRightChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fRightChannel.fSamples);
+      lcdData.fRightChannel.fMaxLevelSinceReset = fRightChannelProcessor->getMaxLevelSinceLastReset();
+    }
+    lcdData.fRightChannel.fOn = fState.fRightChannelOn;
 
     lcdData.fWindowSizeInMillis = getWindowSizeInMillis();
 
-    if(fState.fLCDLiveView)
-      lcdData.fMaxLevelIndex = computeMaxLevelIndex();
-    else
-      lcdData.fMaxLevelIndex = fState.fLCDInputX;
-
-    fMaxLevelUpdate.push(MaxLevel{fLeftChannelProcessor->getMaxLevel(),
-                                  fRightChannelProcessor->getMaxLevel()});
     fLCDDataUpdate.push(lcdData);
   }
 
@@ -613,21 +578,6 @@ tresult VAC6Processor::getState(IBStream *state)
 ///////////////////////////////////////////
 void VAC6Processor::onTimer(Timer * /* timer */)
 {
-  MaxLevel maxLevel{};
-  if(fMaxLevelUpdate.pop(maxLevel))
-  {
-    if(auto message = owned(allocateMessage()))
-    {
-      Message m{message};
-
-      m.setMessageID(kMaxLevel_MID);
-      m.setFloat(MAX_LEVEL_LEFT_VALUE_ATTR, maxLevel.fLeftValue);
-      m.setFloat(MAX_LEVEL_RIGHT_VALUE_ATTR, maxLevel.fRightValue);
-
-      sendMessage(message);
-    }
-  }
-
   LCDData lcdData{};
   if(fLCDDataUpdate.pop(lcdData))
   {
@@ -636,12 +586,16 @@ void VAC6Processor::onTimer(Timer * /* timer */)
       Message m{message};
 
       m.setMessageID(kLCDData_MID);
-      if(lcdData.fLeftChannelOn)
-        m.setBinary(LCDDATA_LEFT_SAMPLES_ATTR, lcdData.fLeftSamples, MAX_ARRAY_SIZE);
-      if(lcdData.fRightChannelOn)
-        m.setBinary(LCDDATA_RIGHT_SAMPLES_ATTR, lcdData.fRightSamples, MAX_ARRAY_SIZE);
+
+      if(lcdData.fLeftChannel.fOn)
+        m.setBinary(LCDDATA_LEFT_SAMPLES_ATTR, lcdData.fLeftChannel.fSamples, MAX_ARRAY_SIZE);
+      m.setFloat(LCDDATA_LEFT_MAX_LEVEL_SINCE_RESET_ATTR, lcdData.fLeftChannel.fMaxLevelSinceReset);
+
+      if(lcdData.fRightChannel.fOn)
+        m.setBinary(LCDDATA_RIGHT_SAMPLES_ATTR, lcdData.fRightChannel.fSamples, MAX_ARRAY_SIZE);
+      m.setFloat(LCDDATA_RIGHT_MAX_LEVEL_SINCE_RESET_ATTR, lcdData.fRightChannel.fMaxLevelSinceReset);
+
       m.setInt(LCDDATA_WINDOW_SIZE_MS_ATTR, lcdData.fWindowSizeInMillis);
-      m.setInt(LCDDATA_MAX_LEVEL_IDX_ATTR, lcdData.fMaxLevelIndex);
 
       sendMessage(message);
     }
@@ -668,36 +622,24 @@ int VAC6Processor::computeLCDInputX() const
 ///////////////////////////////////////////
 int VAC6Processor::computeMaxLevelIndex() const
 {
-  if(!fState.fLeftChannelOn)
-  {
-    return fState.fRightChannelOn ? fRightChannelProcessor->getMaxLevelIndex() : -1;
-  }
+  MaxLevel leftMaxLevel{};
+  MaxLevel rightMaxLevel{};
 
-  // here left channel is on
+  if(fState.fLeftChannelOn)
+  {
+    leftMaxLevel = fState.fMaxLevelMode == kMaxInWindow ?
+      fLeftChannelProcessor->computeMaxLevelInWindowMode() :
+      fLeftChannelProcessor->computeMaxLevelInSinceResetMode();
+  }
 
   if(fState.fRightChannelOn)
   {
-    // both channels are on
-
-    if(fLeftChannelProcessor->getMaxLevel() == fRightChannelProcessor->getMaxLevel())
-    {
-      // in case the levels are the same returns the highest index
-      return std::max(fLeftChannelProcessor->getMaxLevelIndex(), fRightChannelProcessor->getMaxLevelIndex());
-    }
-
-    if(fLeftChannelProcessor->getMaxLevel() < fRightChannelProcessor->getMaxLevel())
-    {
-      return fRightChannelProcessor->getMaxLevelIndex();
-    }
-    else
-    {
-      return fLeftChannelProcessor->getMaxLevelIndex();
-    }
+    rightMaxLevel = fState.fMaxLevelMode == kMaxInWindow ?
+                    fRightChannelProcessor->computeMaxLevelInWindowMode() :
+                    fRightChannelProcessor->computeMaxLevelInSinceResetMode();
   }
-  else
-  {
-    return fLeftChannelProcessor->getMaxLevelIndex();
-  }
+
+  return MaxLevel::computeMaxLevel(leftMaxLevel, rightMaxLevel).fIndex;
 }
 
 ///////////////////////////////////////////

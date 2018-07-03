@@ -19,8 +19,7 @@ VAC6AudioChannelProcessor::VAC6AudioChannelProcessor(const SampleRateBasedClock 
   fClock{iClock},
   fMaxAccumulatorForBuffer(iMaxAccumulatorBatchSize),
   fMaxBuffer{new CircularBuffer<TSample>(iMaxBufferSize)},
-  fMaxLevel{0},
-  fMaxLevelIndex{-1},
+  fMaxLevelSinceLastReset{0},
   fMaxLevelMode{DEFAULT_MAX_LEVEL_MODE},
   fZoomMaxAccumulator{iZoomWindow->setZoomFactor(DEFAULT_ZOOM_FACTOR_X)},
   fZoomMaxBuffer{new CircularBuffer<TSample>(iZoomWindow->getVisibleWindowSizeInPoints())},
@@ -66,92 +65,56 @@ void VAC6AudioChannelProcessor::setDirty()
 }
 
 /////////////////////////////////////////
-// VAC6AudioChannelProcessor::setMaxLevelIndex
-/////////////////////////////////////////
-void VAC6AudioChannelProcessor::setMaxLevelIndex(int iMaxLevelIndex)
-{
-  DCHECK_F(iMaxLevelIndex >= -1 && iMaxLevelIndex < fZoomMaxBuffer->getSize());
-  fMaxLevelIndex = iMaxLevelIndex;
-  fMaxLevel = fZoomMaxBuffer->getAt(fMaxLevelIndex - fZoomMaxBuffer->getSize());
-}
-
-/////////////////////////////////////////
 // VAC6AudioChannelProcessor::setMaxLevelMode
 /////////////////////////////////////////
 void VAC6AudioChannelProcessor::setMaxLevelMode(MaxLevelMode iMaxLevelMode)
 {
   fMaxLevelMode = iMaxLevelMode;
-  adjustMaxLevel();
+  fMaxLevelSinceLastReset = 0;
 }
 
 /////////////////////////////////////////
-// VAC6AudioChannelProcessor::adjustMaxLevel
+// VAC6AudioChannelProcessor::computeMaxLevelInSinceResetMode
 /////////////////////////////////////////
-void VAC6AudioChannelProcessor::adjustMaxLevel()
+MaxLevel VAC6AudioChannelProcessor::computeMaxLevelInSinceResetMode() const
 {
-  switch(fMaxLevelMode)
-  {
-    case kMaxInWindow:
-      adjustMaxLevelInWindowMode();
-      break;
+  MaxLevel maxLevel{fMaxLevelSinceLastReset, -1};
 
-    case kMaxSinceReset:
-      adjustMaxLevelInSinceResetMode();
-      break;
-
-    default:
-      DCHECK_F(false, "should not be reached");
-      break;
-  }
-}
-
-/////////////////////////////////////////
-// VAC6AudioChannelProcessor::adjustMaxLevelInSinceResetMode
-/////////////////////////////////////////
-void VAC6AudioChannelProcessor::adjustMaxLevelInSinceResetMode()
-{
-  auto maxLevel = fMaxLevel;
-
-  // the purpose is to find the highest index where level == fMaxLevel (the window may not contain it
+  // the purpose is to find the highest index where level == fMaxLevelSinceLastReset (the window may not contain it
   // in which case it will remain -1)
   auto findIndex = [&maxLevel] (int index, int const &iPreviousIndex, double const &iLevel) -> int {
-    if(iLevel == maxLevel)
+    if(iLevel == maxLevel.fValue)
       return index;
     else
       return iPreviousIndex;
   };
 
-  int maxLevelIndex = fZoomMaxBuffer->foldWithIndex<int>(-1, findIndex);
+  maxLevel.fIndex = fZoomMaxBuffer->foldWithIndex<int>(-1, findIndex);
 
-  fMaxLevelIndex = maxLevelIndex;
-
-  // DLOG_F(INFO, "adjustISRM %d -> %d", fMaxLevelIndex, maxLevelIndex);
+  return maxLevel;
 }
 
 /////////////////////////////////////////
-// VAC6AudioChannelProcessor::adjustMaxLevelInWindowMode
+// VAC6AudioChannelProcessor::computeMaxLevelInWindowMode
 /////////////////////////////////////////
-void VAC6AudioChannelProcessor::adjustMaxLevelInWindowMode()
+MaxLevel VAC6AudioChannelProcessor::computeMaxLevelInWindowMode() const
 {
-  TSample maxLevel = 0.0;
+  MaxLevel maxLevel{};
 
   // the purpose is to find the max level in the window and if there is more than one return the highest level
   auto findIndex = [&maxLevel] (int index, int const &iPreviousIndex, double const &iLevel) -> int {
-    if(iLevel >= maxLevel)
+    if(iLevel >= maxLevel.fValue)
     {
-      maxLevel = iLevel;
+      maxLevel.fValue = iLevel;
       return index;
     }
     else
       return iPreviousIndex;
   };
 
-  int maxLevelIndex = fZoomMaxBuffer->foldWithIndex<int>(-1, findIndex);
+  maxLevel.fIndex = fZoomMaxBuffer->foldWithIndex<int>(-1, findIndex);
 
-  // DLOG_F(INFO, "adjustIWM %d -> %d, %f -> %f", fMaxLevelIndex, maxLevelIndex, fMaxLevel, maxLevel);
-
-  fMaxLevelIndex = maxLevelIndex;
-  fMaxLevel = maxLevel;
+  return maxLevel;
 }
 
 /////////////////////////////////////////

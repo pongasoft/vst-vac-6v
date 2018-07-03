@@ -142,8 +142,10 @@ constexpr IAttributeList::AttrID MAX_LEVEL_RIGHT_VALUE_ATTR = "RValue";
 ///////////////////////////////////
 struct MaxLevel
 {
-  TSample fLeftValue{-1};
-  TSample fRightValue{-1};
+  TSample fValue{0};
+  int fIndex{-1};
+
+  static MaxLevel computeMaxLevel(MaxLevel const &iLeftMaxLevel, MaxLevel const &iRightMaxLevel);
 };
 
 
@@ -152,22 +154,31 @@ struct MaxLevel
 ///////////////////////////////////
 constexpr IAttributeList::AttrID LCDDATA_WINDOW_SIZE_MS_ATTR = "WSMS";
 constexpr IAttributeList::AttrID LCDDATA_LEFT_SAMPLES_ATTR = "LS";
+constexpr IAttributeList::AttrID LCDDATA_LEFT_MAX_LEVEL_SINCE_RESET_ATTR = "LML";
 constexpr IAttributeList::AttrID LCDDATA_RIGHT_SAMPLES_ATTR = "RS";
-constexpr IAttributeList::AttrID LCDDATA_MAX_LEVEL_IDX_ATTR = "MLI";
+constexpr IAttributeList::AttrID LCDDATA_RIGHT_MAX_LEVEL_SINCE_RESET_ATTR = "RML";
 
 struct LCDData
 {
+  struct Channel
+  {
+    bool fOn{true};
+    TSample fSamples[MAX_ARRAY_SIZE]{};
+    TSample fMaxLevelSinceReset{0};
+
+    void computeMaxLevels(MaxLevel &oInWindow, MaxLevel &oSinceReset) const;
+  };
+
   long fWindowSizeInMillis{0};
 
-  bool fLeftChannelOn{true};
-  TSample fLeftSamples[MAX_ARRAY_SIZE]{};
+  Channel fLeftChannel;
+  Channel fRightChannel;
 
-  bool fRightChannelOn{true};
-  TSample fRightSamples[MAX_ARRAY_SIZE]{};
-
-  int fMaxLevelIndex{-1};
+  static void computeMaxLevels(Channel const &iLeftChannel,
+                               Channel const &iRightChannel,
+                               MaxLevel &oInWindow,
+                               MaxLevel &oSinceReset);
 };
-
 }
 }
 }

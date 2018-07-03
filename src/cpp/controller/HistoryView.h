@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../VAC6Model.h"
+#include "../Messaging.h"
 #include "CustomView.h"
 
 namespace pongasoft {
@@ -8,8 +9,12 @@ namespace VST {
 namespace VAC6 {
 
 using namespace GUI;
+using namespace Common;
 
 using SoftClippingLevelParameter = VSTParameter<SoftClippingLevel, SoftClippingLevel::denormalize, SoftClippingLevel::normalize>;
+using MaxLevelModeParameter = VSTParameter<MaxLevelMode, MaxLevelModeParamConverter::denormalize, MaxLevelModeParamConverter::normalize>;
+
+class HistoryState;
 
 /**
  * Base class to LCD and MaxLevel
@@ -61,7 +66,16 @@ public:
   // registerParameters
   void registerParameters() override;
 
+  // setState
+  void setState(HistoryState *iState)
+  {
+    fState = iState;
+  }
+
   CLASS_METHODS_NOCOPY(HistoryView, CustomView)
+
+protected:
+  MaxLevel getMaxLevel() const;
 
 protected:
 
@@ -72,7 +86,16 @@ protected:
   CColor fLevelStateSoftClippingColor{};
   CColor fLevelStateHardClippingColor{};
 
+  // the state
+  HistoryState *fState{nullptr};
+
+
+  std::unique_ptr<BooleanParameter> fLCDLiveViewParameter{nullptr};
   std::unique_ptr<SoftClippingLevelParameter> fSoftClippingLevelParameter;
+  std::unique_ptr<MaxLevelModeParameter> fMaxLevelModeParameter;
+
+  using LCDInputXParameter = DiscreteParameter<MAX_LCD_INPUT_X>;
+  std::unique_ptr<LCDInputXParameter> fLCDInputXParameter{nullptr};
 
 public:
   class Creator : public CustomViewCreator<HistoryView>
@@ -95,6 +118,26 @@ public:
   };
 };
 
+/**
+ * Base class for HistoryState
+ */
+class HistoryState
+{
+public:
+  HistoryState() : fLCDData{}
+  {}
+
+  virtual void onMessage(Message const &message);
+
+  friend class HistoryView;
+
+protected:
+
+  LCDData fLCDData;
+
+  MaxLevel fMaxLevelInWindow{};
+  MaxLevel fMaxLevelSinceReset{};
+};
 
 }
 }

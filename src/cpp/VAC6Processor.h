@@ -130,7 +130,6 @@ private:
 
   Timer *fTimer;
   SampleRateBasedClock::RateLimiter fRateLimiter;
-  SpinLock::SingleElementQueue<MaxLevel> fMaxLevelUpdate;
   SpinLock::SingleElementQueue<LCDData> fLCDDataUpdate;
 
 };

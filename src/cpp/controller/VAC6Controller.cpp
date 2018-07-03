@@ -305,14 +305,9 @@ tresult VAC6Controller::notify(IMessage *message)
 
   switch(static_cast<EVAC6MessageID>(m.getMessageID()))
   {
-    case kMaxLevel_MID:
-    {
-      fMaxLevelState.onMessage(m);
-      break;
-    }
-
     case kLCDData_MID:
     {
+      fMaxLevelState.onMessage(m);
       fLCDDisplayState.onMessage(m);
       break;
     }

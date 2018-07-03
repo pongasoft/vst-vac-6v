@@ -6,15 +6,6 @@ namespace VST {
 namespace VAC6 {
 
 ///////////////////////////////////////////
-// MaxLevelState::setMaxLevel
-///////////////////////////////////////////
-void MaxLevelState::setMaxLevel(MaxLevel const &maxLevel)
-{
-  fMaxLevel = maxLevel;
-  updateView();
-}
-
-///////////////////////////////////////////
 // MaxLevelState::updateView
 ///////////////////////////////////////////
 void MaxLevelState::updateView() const
@@ -30,12 +21,9 @@ void MaxLevelState::updateView() const
 ///////////////////////////////////////////
 void MaxLevelState::onMessage(Message const &message)
 {
-  MaxLevel maxLevel{};
+  HistoryState::onMessage(message);
 
-  maxLevel.fLeftValue = message.getFloat(MAX_LEVEL_LEFT_VALUE_ATTR, -1);
-  maxLevel.fRightValue = message.getFloat(MAX_LEVEL_RIGHT_VALUE_ATTR, -1);
-
-  setMaxLevel(maxLevel);
+  updateView();
 }
 
 ///////////////////////////////////////////
@@ -48,7 +36,7 @@ MaxLevelView::MaxLevelView(const CRect &size)
 }
 
 ///////////////////////////////////////////
-// MaxLevelState::draw
+// MaxLevelView::draw
 ///////////////////////////////////////////
 void MaxLevelView::draw(CDrawContext *iContext)
 {
@@ -57,9 +45,9 @@ void MaxLevelView::draw(CDrawContext *iContext)
   if(fState == nullptr)
     return;
 
-  TSample leftValue = fLCDLeftChannelParameter->getValue() ? fState->fMaxLevel.fLeftValue : 0.0;
-  TSample rightValue = fLCDRightChannelParameter->getValue() ? fState->fMaxLevel.fRightValue : 0.0;
-  TSample max = std::max(leftValue, rightValue);
+  auto maxLevel = getMaxLevel();
+
+  TSample max = maxLevel.fValue;
 
   CColor fontColor = getNoDataColor();
 
@@ -89,15 +77,14 @@ void MaxLevelView::draw(CDrawContext *iContext)
 }
 
 ///////////////////////////////////////////
-// MaxLevelView::registerParameters
+// MaxLevelView::setState
 ///////////////////////////////////////////
-void MaxLevelView::registerParameters()
+void MaxLevelView::setState(MaxLevelState *iState)
 {
-  HistoryView::registerParameters();
-
-  fLCDLeftChannelParameter = registerBooleanParameter(EVAC6ParamID::kLCDLeftChannel);
-  fLCDRightChannelParameter = registerBooleanParameter(EVAC6ParamID::kLCDRightChannel);
+  HistoryView::setState((iState));
+  fState = iState;
 }
+
 
 MaxLevelView::Creator __gMaxLevelViewCreator("pongasoft::MaxLevel", "pongasoft - Max Level");
 
