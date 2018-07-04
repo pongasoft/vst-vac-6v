@@ -11,10 +11,8 @@
 #include <memory>
 #include "../logging/loguru.hpp"
 
-#ifndef NDEBUG
-#define EDITOR_MODE
-#else
-#undef EDITOR_MODE
+#if VSTGUI_LIVE_EDITING
+#define EDITOR_MODE 1
 #endif
 
 namespace pongasoft {

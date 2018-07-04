@@ -78,7 +78,7 @@ public:
 protected:
   int computeLCDInputX(CPoint &where) const;
 
-#ifdef EDITOR_MODE
+#if EDITOR_MODE
 public:
   void onEditorModeChanged() override;
 #endif
@@ -124,7 +124,7 @@ class LCDDisplayState : public VSTViewState<LCDDisplayView>
   struct LCDMessage
   {
     LCDMessage(UTF8String iText, long iTime,
-               CColor const &iColor = WHITE_COLOR,
+               CColor const &iColor = kWhiteCColor,
                long iVisibleDuration = MESSAGE_VISIBLE_DURATION_MS,
                long iFadeDuration = MESSAGE_FADE_DURATION_MS) :
       fText(std::move(iText)),

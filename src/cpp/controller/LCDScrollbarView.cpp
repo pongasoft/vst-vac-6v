@@ -56,7 +56,7 @@ void LCDScrollbarView::draw(CDrawContext *iContext)
                             verticalMargin,
                             box.getRight() - horizontalMargin,
                             getViewSize().getHeight() - verticalMargin},
-               WHITE_COLOR);
+               kWhiteCColor);
 }
 
 ///////////////////////////////////////////

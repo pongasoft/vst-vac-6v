@@ -142,7 +142,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
           displayValue = toDisplayValue(sample, height);
         }
 
-        top = clamp<RelativeCoord>(height - displayValue, 0, height);
+        top = clamp<RelativeCoord>(height - displayValue, -0.5, height);
 
         // color of the sample depends on its level
         CColor const &color = computeColor(fSoftClippingLevelParameter->getValue(), sample);
@@ -170,24 +170,24 @@ void LCDDisplayView::draw(CDrawContext *iContext)
                                          maxLevelY - offset,
                                          maxLevelX + offset,
                                          maxLevelY + offset},
-                            RED_COLOR,
-                            WHITE_COLOR);
+                            kRedCColor,
+                            kWhiteCColor);
     }
 
     int lcdInputX = lcdInputXMaxLevel.fIndex;
-    if(lcdInputX >= 0 && lcdInputY >= 0)
+    if(lcdInputX >= 0 && lcdInputY > -1)
     {
       constexpr auto offset = 3.0;
       rdc.fillRect(RelativeRect{lcdInputX - 5.0, 0, lcdInputX + 5.0, height}, WHITE_COLOR_40);
       rdc.fillRect(RelativeRect{lcdInputX - 3.0, 0, lcdInputX + 3.0, height}, WHITE_COLOR_60);
-      rdc.drawLine(lcdInputX, 0, lcdInputX, height, WHITE_COLOR);
+      rdc.drawLine(lcdInputX, 0, lcdInputX, height, kWhiteCColor);
       rdc.drawLine(0, lcdInputY, width, lcdInputY, WHITE_COLOR_60);
       rdc.fillAndStrokeRect(RelativeRect{lcdInputX - offset,
                                          lcdInputY - offset,
                                          lcdInputX + offset,
                                          lcdInputY + offset},
-                            BLUE_COLOR,
-                            WHITE_COLOR);
+                            kBlueCColor,
+                            kWhiteCColor);
 
       constexpr auto textHeight = 20.0;
 
@@ -198,8 +198,8 @@ void LCDDisplayView::draw(CDrawContext *iContext)
       sdc.fStyle |= kShadowText;
       sdc.fHoriTxtAlign = kLeftText;
       sdc.fTextInset = {2, 2};
-      sdc.fFontColor = WHITE_COLOR;
-      sdc.fShadowColor = BLACK_COLOR;
+      sdc.fFontColor = kWhiteCColor;
+      sdc.fShadowColor = kBlackCColor;
 
       rdc.drawString(lcdInputXMaxLevel.toDbString(), RelativeRect{0, textTop, MAX_ARRAY_SIZE, height}, sdc);
     }
@@ -223,7 +223,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
     sdc.fHoriTxtAlign = kLeftText;
     sdc.fTextInset = {2, 2};
     sdc.fFontColor = fState->fLCDSoftClippingLevelMessage->fColor;
-    sdc.fShadowColor = BLACK_COLOR;
+    sdc.fShadowColor = kBlackCColor;
     sdc.fShadowColor.alpha = fState->fLCDSoftClippingLevelMessage->fColor.alpha;
 
     auto textTop = top + 3;
@@ -352,12 +352,12 @@ void LCDDisplayView::setState(LCDDisplayState *iState)
   else
     fHistoryState = nullptr;
 
-#ifdef EDITOR_MODE
+#if EDITOR_MODE
   onEditorModeChanged();
 #endif
 }
 
-#ifdef EDITOR_MODE
+#if EDITOR_MODE
 ///////////////////////////////////////////
 // LCDDisplayView::onEditorModeChanged
 ///////////////////////////////////////////

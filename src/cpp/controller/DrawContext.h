@@ -9,18 +9,13 @@ namespace GUI {
 
 using namespace VSTGUI;
 
-const CColor WHITE_COLOR = CColor{255, 255, 255};
-const CColor BLACK_COLOR = CColor{0, 0, 0};
-const CColor RED_COLOR = CColor{255, 0, 0};
-const CColor BLUE_COLOR = CColor{0, 0, 255};
-
 struct StringDrawContext
 {
   CHoriTxtAlign fHoriTxtAlign{kCenterText};
   int32_t fStyle{0};
   CFontRef fFontID{nullptr};
-  CColor fFontColor{WHITE_COLOR};
-  CColor fShadowColor{BLACK_COLOR};
+  CColor fFontColor{kWhiteCColor};
+  CColor fShadowColor{kBlackCColor};
   CPoint fTextInset{0, 0};
   CPoint fShadowTextOffset{1., 1.};
   bool fAntialias{true};

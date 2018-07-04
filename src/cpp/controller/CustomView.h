@@ -99,7 +99,7 @@ public:
   /**
    * Implement this if you want to have a specific behavior when editor mode is changed.
    */
-#ifdef EDITOR_MODE
+#if EDITOR_MODE
   virtual void onEditorModeChanged() {}
 #endif
 
@@ -176,7 +176,7 @@ public:
       CustomViewCreator(iViewName, iDisplayName)
     {
       registerTagAttribute("custom-view-tag", &CustomView::getCustomViewTag, &CustomView::setCustomViewTag);
-#ifdef EDITOR_MODE
+#if EDITOR_MODE
       registerBooleanAttribute("editor-mode", &CustomView::getEditorMode, &CustomView::setEditorMode);
 #endif
       registerColorAttribute(UIViewCreator::kAttrBackColor, &CustomView::getBackColor, &CustomView::setBackColor);

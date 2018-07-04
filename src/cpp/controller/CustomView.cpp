@@ -95,7 +95,7 @@ std::unique_ptr<PercentParameter> CustomView::registerPercentParameter(ParamID i
 ///////////////////////////////////////////
 void CustomView::setEditorMode(bool iEditorMode)
 {
-#ifdef EDITOR_MODE
+#if EDITOR_MODE
   if(fEditorMode != iEditorMode)
   {
     fEditorMode = iEditorMode;
@@ -111,7 +111,7 @@ void CustomView::setEditorMode(bool iEditorMode)
 ///////////////////////////////////////////
 bool CustomView::getEditorMode() const
 {
-#ifdef EDITOR_MODE
+#if EDITOR_MODE
   return fEditorMode;
 #else
   return false;
