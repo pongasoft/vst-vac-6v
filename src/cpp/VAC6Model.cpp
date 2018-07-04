@@ -90,7 +90,7 @@ std::string MaxLevel::toDbString() const
 {
   // TODO use OStringStream instead
 
-  if(isUndefined() < 0)
+  if(isUndefined())
   {
     return "---.--";
   }

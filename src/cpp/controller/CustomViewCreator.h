@@ -296,7 +296,8 @@ private:
 
 public:
   // Constructor
-  explicit CustomViewCreator(char const *iViewName = nullptr, char const *iDisplayName = nullptr,
+  explicit CustomViewCreator(char const *iViewName = nullptr,
+                             char const *iDisplayName = nullptr,
                              char const *iBaseViewName = VSTGUI::UIViewCreator::kCView) :
     fViewName{iViewName},
     fDisplayName{iDisplayName},

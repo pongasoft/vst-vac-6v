@@ -142,7 +142,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
           displayValue = toDisplayValue(sample, height);
         }
 
-        top = height - displayValue;
+        top = clamp<RelativeCoord>(height - displayValue, 0, height);
 
         // color of the sample depends on its level
         CColor const &color = computeColor(fSoftClippingLevelParameter->getValue(), sample);
@@ -374,9 +374,15 @@ void LCDDisplayView::onEditorModeChanged()
 
     for(int i = 0; i < MAX_ARRAY_SIZE; i++)
     {
-      auto sample = dbToSample<TSample>(dbLerp.compute(i));
+      auto sample = i >= 10 && i < 13 ? 0.0: dbToSample<TSample>(dbLerp.compute(i));
       lcdData.fLeftChannel.fSamples[i] = sample;
       lcdData.fRightChannel.fSamples[MAX_ARRAY_SIZE - i - 1] = sample;
+    }
+
+    for(int i = 100; i < 103; i++)
+    {
+      lcdData.fLeftChannel.fSamples[i] = 0.0;
+      lcdData.fRightChannel.fSamples[i] = 0.0;
     }
   }
 }
