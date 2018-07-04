@@ -22,6 +22,8 @@ using namespace GUI;
 
 class LCDDisplayState;
 
+using LCDInputXParameter = VSTParameterFromType<int, LCDInputXParamConverter>;
+
 /**
  * The view that will show the volume history as a graph
  */
@@ -74,6 +76,14 @@ public:
   CLASS_METHODS_NOCOPY(LCDDisplayView, HistoryView)
 
 protected:
+  int computeLCDInputX(CPoint &where) const;
+
+#ifdef EDITOR_MODE
+public:
+  void onEditorModeChanged() override;
+#endif
+
+protected:
   CColor fSoftClippingLevelColor{};
 
   // the state
@@ -82,7 +92,6 @@ protected:
   std::unique_ptr<BooleanParameter> fMaxLevelFollow{nullptr};
   std::unique_ptr<BooleanParameter> fLCDLiveViewParameter{nullptr};
 
-  using LCDInputXParameter = DiscreteParameter<MAX_LCD_INPUT_X>;
   std::unique_ptr<LCDInputXParameter> fLCDInputXParameter{nullptr};
   std::unique_ptr<LCDInputXParameter::Editor> fLCDInputXEditor{nullptr};
 

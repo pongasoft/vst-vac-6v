@@ -92,6 +92,17 @@ public:
   void setCustomViewTag (int32_t iTag) { fTag = iTag; }
   int32_t getCustomViewTag () const { return fTag; }
 
+  // setEditorMode / getEditorMode
+  void setEditorMode(bool iEditorMode);
+  bool getEditorMode() const;
+
+  /**
+   * Implement this if you want to have a specific behavior when editor mode is changed.
+   */
+#ifdef EDITOR_MODE
+  virtual void onEditorModeChanged() {}
+#endif
+
   /**
    * The basic draw method which will erase the background with the back color. You override this method
    * to implement your additional own logic.
@@ -151,6 +162,7 @@ public:
 
 protected:
   int32_t fTag;
+  bool fEditorMode;
   CColor fBackColor;
 
   // Access to parameters
@@ -164,6 +176,9 @@ public:
       CustomViewCreator(iViewName, iDisplayName)
     {
       registerTagAttribute("custom-view-tag", &CustomView::getCustomViewTag, &CustomView::setCustomViewTag);
+#ifdef EDITOR_MODE
+      registerBooleanAttribute("editor-mode", &CustomView::getEditorMode, &CustomView::setEditorMode);
+#endif
       registerColorAttribute(UIViewCreator::kAttrBackColor, &CustomView::getBackColor, &CustomView::setBackColor);
     }
   };

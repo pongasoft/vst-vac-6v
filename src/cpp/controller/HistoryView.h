@@ -11,7 +11,8 @@ namespace VAC6 {
 using namespace GUI;
 using namespace Common;
 
-using SoftClippingLevelParameter = VSTParameter<SoftClippingLevel, SoftClippingLevel::denormalize, SoftClippingLevel::normalize>;
+using SoftClippingLevelParameter = VSTParameterFromClass<SoftClippingLevel>;
+using MaxLevelModeParameter = VSTParameterFromType<MaxLevelMode, MaxLevelModeParamConverter>;
 
 class HistoryState;
 
@@ -82,6 +83,7 @@ protected:
   CColor fLevelStateHardClippingColor{};
 
   std::unique_ptr<SoftClippingLevelParameter> fSoftClippingLevelParameter;
+  std::unique_ptr<MaxLevelModeParameter> fMaxLevelModeParameter;
 
 public:
   class Creator : public CustomViewCreator<HistoryView>
@@ -123,7 +125,8 @@ public:
   virtual void onMessage(Message const &message);
 
   LCDData fLCDData;
-  MaxLevel fMaxLevel{};
+  MaxLevel fMaxLevelInWindow{};
+  MaxLevel fMaxLevelSinceReset{};
 };
 
 }

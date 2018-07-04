@@ -50,10 +50,8 @@ void LCDDisplayState::onSoftClippingLevelChange(SoftClippingLevel const &iNewVal
 {
   long now = Clock::getCurrentTimeMillis();
 
-  char text[256];
-  sprintf(text, "%+.2fdB", iNewValue.getValueInDb());
-
-  fLCDSoftClippingLevelMessage = std::make_unique<LCDMessage>(UTF8String(text), now);
+  fLCDSoftClippingLevelMessage =
+    std::make_unique<LCDMessage>(toDbString(iNewValue.getValueInSample()), now);
 }
 
 ///////////////////////////////////////////
@@ -118,8 +116,11 @@ void LCDDisplayView::draw(CDrawContext *iContext)
   {
     auto maxLevel = getMaxLevel();
 
-    int lcdInputX = maxLevel.fIndex;
-    RelativeCoord lcdInputY = -1; // used when paused
+    MaxLevel lcdInputXMaxLevel{-1, fLCDInputXParameter->getValue()};
+    RelativeCoord lcdInputY = -1;
+
+    RelativeCoord maxLevelX = maxLevel.fIndex;
+    RelativeCoord maxLevelY = -1;
 
     // display every sample in the array as a vertical line (from the bottom)
     for(int i = 0; i < MAX_ARRAY_SIZE; i++)
@@ -150,14 +151,31 @@ void LCDDisplayView::draw(CDrawContext *iContext)
 
       }
 
-      if(lcdInputX == i)
+      if(lcdInputXMaxLevel.fIndex == i)
+      {
+        lcdInputXMaxLevel.fValue = sample;
         lcdInputY = top;
+      }
+
+      if(maxLevelX == i)
+        maxLevelY = top;
 
       left++;
     }
 
-    // in pause mode we draw the selection
-    if(!lcdData.isLiveView())
+    if(fMaxLevelFollow->getValue() && maxLevelX >= 0 && maxLevelY >= 0 && maxLevelY < height)
+    {
+      constexpr auto offset = 3.0;
+      rdc.fillAndStrokeRect(RelativeRect{maxLevelX - offset,
+                                         maxLevelY - offset,
+                                         maxLevelX + offset,
+                                         maxLevelY + offset},
+                            RED_COLOR,
+                            WHITE_COLOR);
+    }
+
+    int lcdInputX = lcdInputXMaxLevel.fIndex;
+    if(lcdInputX >= 0 && lcdInputY >= 0)
     {
       constexpr auto offset = 3.0;
       rdc.fillRect(RelativeRect{lcdInputX - 5.0, 0, lcdInputX + 5.0, height}, WHITE_COLOR_40);
@@ -168,22 +186,24 @@ void LCDDisplayView::draw(CDrawContext *iContext)
                                          lcdInputY - offset,
                                          lcdInputX + offset,
                                          lcdInputY + offset},
-                            RED_COLOR,
+                            BLUE_COLOR,
                             WHITE_COLOR);
+
+      constexpr auto textHeight = 20.0;
+
+      auto textTop = height - textHeight;
+
+      rdc.fillRect(RelativeRect{0, textTop, MAX_ARRAY_SIZE, height}, CColor{0,0,0,40});
+      StringDrawContext sdc{};
+      sdc.fStyle |= kShadowText;
+      sdc.fHoriTxtAlign = kLeftText;
+      sdc.fTextInset = {2, 2};
+      sdc.fFontColor = WHITE_COLOR;
+      sdc.fShadowColor = BLACK_COLOR;
+
+      rdc.drawString(lcdInputXMaxLevel.toDbString(), RelativeRect{0, textTop, MAX_ARRAY_SIZE, height}, sdc);
     }
-    else
-    {
-      if(fMaxLevelFollow->getValue() && lcdInputX >= 0 && lcdInputY >= 0 && lcdInputY < height)
-      {
-        constexpr auto offset = 3.0;
-        rdc.fillAndStrokeRect(RelativeRect{lcdInputX - offset,
-                                           lcdInputY - offset,
-                                           lcdInputX + offset,
-                                           lcdInputY + offset},
-                              RED_COLOR,
-                              WHITE_COLOR);
-      }
-    }
+
   }
 
   // display the soft clipping level line (which is controlled by a knob)
@@ -208,7 +228,6 @@ void LCDDisplayView::draw(CDrawContext *iContext)
 
     auto textTop = top + 3;
     rdc.drawString(fState->fLCDSoftClippingLevelMessage->fText, RelativeRect{0, textTop, MAX_ARRAY_SIZE, textTop + 20}, sdc);
-
   }
 
   if(fState->fLCDZoomFactorXMessage)
@@ -223,19 +242,26 @@ void LCDDisplayView::draw(CDrawContext *iContext)
 }
 
 ///////////////////////////////////////////
+// LCDDisplayView::computeLCDInputX
+///////////////////////////////////////////
+int LCDDisplayView::computeLCDInputX(CPoint &where) const
+{
+  RelativeView rv(this);
+  int mouseX = static_cast<int>(rv.fromAbsolutePoint(where).x);
+  return clamp<int>(mouseX, 0, MAX_LCD_INPUT_X);
+}
+
+///////////////////////////////////////////
 // LCDDisplayView::onMouseDown
 ///////////////////////////////////////////
 CMouseEventResult LCDDisplayView::onMouseDown(CPoint &where, const CButtonState &buttons)
 {
-  RelativeView rv(this);
-  RelativePoint relativeWhere = rv.fromAbsolutePoint(where);
-
   if(fLCDLiveViewParameter->getValue())
   {
     fLCDLiveViewParameter->setValue(false);
   }
 
-  fLCDInputXEditor = fLCDInputXParameter->edit(static_cast<int>(relativeWhere.x));
+  fLCDInputXEditor = fLCDInputXParameter->edit(computeLCDInputX(where));
 
   return kMouseEventHandled;
 }
@@ -245,12 +271,9 @@ CMouseEventResult LCDDisplayView::onMouseDown(CPoint &where, const CButtonState 
 ///////////////////////////////////////////
 CMouseEventResult LCDDisplayView::onMouseMoved(CPoint &where, const CButtonState &buttons)
 {
-  RelativeView rv(this);
-  RelativePoint relativeWhere = rv.fromAbsolutePoint(where);
-
   if(fLCDInputXEditor)
   {
-    fLCDInputXEditor->setValue(static_cast<int>(relativeWhere.x));
+    fLCDInputXEditor->setValue(computeLCDInputX(where));
     return kMouseEventHandled;
   }
 
@@ -262,12 +285,9 @@ CMouseEventResult LCDDisplayView::onMouseMoved(CPoint &where, const CButtonState
 ///////////////////////////////////////////
 CMouseEventResult LCDDisplayView::onMouseUp(CPoint &where, const CButtonState &buttons)
 {
-  RelativeView rv(this);
-  RelativePoint relativeWhere = rv.fromAbsolutePoint(where);
-
   if(fLCDInputXEditor)
   {
-    fLCDInputXEditor->commit(static_cast<int>(relativeWhere.x));
+    fLCDInputXEditor->commit(computeLCDInputX(where));
     fLCDInputXEditor = nullptr;
     return kMouseEventHandled;
   }
@@ -326,11 +346,41 @@ void LCDDisplayView::setState(LCDDisplayState *iState)
 {
   fState = iState;
   if(iState)
+  {
     fHistoryState = iState->fHistoryState;
+  }
   else
     fHistoryState = nullptr;
+
+#ifdef EDITOR_MODE
+  onEditorModeChanged();
+#endif
 }
 
+#ifdef EDITOR_MODE
+///////////////////////////////////////////
+// LCDDisplayView::onEditorModeChanged
+///////////////////////////////////////////
+void LCDDisplayView::onEditorModeChanged()
+{
+  DLOG_F(INFO, "onEditorModeChanged %s", fState ? "<fState>" : "nullptr");
+  if(fState && getEditorMode())
+  {
+    LCDData &lcdData = fState->fHistoryState->fLCDData;
+    lcdData.fLeftChannel.fOn = true;
+    lcdData.fRightChannel.fOn = true;
+
+    auto dbLerp = Utils::Lerp<double>(0, -65.0, MAX_ARRAY_SIZE - 1, +0.5);
+
+    for(int i = 0; i < MAX_ARRAY_SIZE; i++)
+    {
+      auto sample = dbToSample<TSample>(dbLerp.compute(i));
+      lcdData.fLeftChannel.fSamples[i] = sample;
+      lcdData.fRightChannel.fSamples[MAX_ARRAY_SIZE - i - 1] = sample;
+    }
+  }
+}
+#endif
 
 LCDDisplayView::Creator __gLCDDisplayViewCreator("pongasoft::LCDDisplay", "pongasoft - LCD Display");
 

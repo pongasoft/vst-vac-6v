@@ -405,6 +405,11 @@ private:
 // Common types
 ///////////////////////////////////////////
 
+template<typename T, typename U>
+using VSTParameterFromType = VSTParameter<T, U::denormalize, U::normalize>;
+
+template<typename T>
+using VSTParameterFromClass = VSTParameterFromType<T, T>;
 
 using BooleanParameter = VSTParameter<bool, Common::BooleanParamConverter::denormalize, Common::BooleanParamConverter::normalize>;
 using PercentParameter = RawParameter;

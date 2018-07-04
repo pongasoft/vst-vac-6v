@@ -45,23 +45,9 @@ void MaxLevelView::draw(CDrawContext *iContext)
 
   auto maxLevel = getMaxLevel();
 
-  TSample max = maxLevel.fValue;
-
-  CColor fontColor = getNoDataColor();
-
-  char text[256];
-  if(max > 0)
-  {
-    fontColor = computeColor(fSoftClippingLevelParameter->getValue(), max);
-    if(max >= Common::Sample64SilentThreshold)
-      sprintf(text, "%+.2f", sampleToDb(max));
-    else
-      sprintf(text, "-oo");
-  }
-  else
-  {
-    sprintf(text, "---.--");
-  }
+  CColor fontColor = maxLevel.isUndefined() ?
+                     getNoDataColor() :
+                     computeColor(fSoftClippingLevelParameter->getValue(), maxLevel.fValue);
 
   auto rdc = GUI::RelativeDrawContext{this, iContext};
 
@@ -70,8 +56,7 @@ void MaxLevelView::draw(CDrawContext *iContext)
   sdc.fTextInset = {2, 2};
   sdc.fFontColor = fontColor;
 
-  rdc.drawString(text, sdc);
-
+  rdc.drawString(maxLevel.toDbString(), sdc);
 }
 
 ///////////////////////////////////////////

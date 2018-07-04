@@ -15,6 +15,7 @@ using namespace VSTGUI;
 CustomView::CustomView(const CRect &size)
   : CView(size),
     fBackColor{0,0,0},
+    fEditorMode{false},
     fParameters{nullptr}
 {
   DLOG_F(INFO, "CustomView::CustomView()");
@@ -26,8 +27,11 @@ CustomView::CustomView(const CRect &size)
 ///////////////////////////////////////////
 void CustomView::draw(CDrawContext *iContext)
 {
-  iContext->setFillColor(getBackColor());
-  iContext->drawRect(getViewSize(), kDrawFilled);
+  if(getBackColor().alpha != 0)
+  {
+    iContext->setFillColor(getBackColor());
+    iContext->drawRect(getViewSize(), kDrawFilled);
+  }
 
   setDirty(false);
 }
@@ -84,6 +88,34 @@ std::unique_ptr<BooleanParameter> CustomView::registerBooleanParameter(ParamID i
 std::unique_ptr<PercentParameter> CustomView::registerPercentParameter(ParamID iParamID, bool iSubscribeToChanges)
 {
   return registerRawParameter(iParamID, iSubscribeToChanges);
+}
+
+///////////////////////////////////////////
+// CustomView::setEditorMode
+///////////////////////////////////////////
+void CustomView::setEditorMode(bool iEditorMode)
+{
+#ifdef EDITOR_MODE
+  if(fEditorMode != iEditorMode)
+  {
+    fEditorMode = iEditorMode;
+    onEditorModeChanged();
+  }
+#endif
+
+  // when not in editor mode, this does nothing...
+}
+
+///////////////////////////////////////////
+// CustomView::getEditorMode
+///////////////////////////////////////////
+bool CustomView::getEditorMode() const
+{
+#ifdef EDITOR_MODE
+  return fEditorMode;
+#else
+  return false;
+#endif
 }
 
 CustomView::Creator __gCustomDisplayCreator("pongasoft::CustomDisplay", "pongasoft - Custom Display");

@@ -122,8 +122,8 @@ tresult VAC6Controller::initialize(FUnknown *context)
   // selected position on the screen when paused
   parameters.addParameter(STR16 ("Graph Select"), // title
                           nullptr, // units
-                          MAX_ARRAY_SIZE, // stepCount => as many position as elements in the array
-                          1.0, // defaultNormalizedValue => all the way to the right
+                          MAX_ARRAY_SIZE + 1, // stepCount => [-1, MAX_ARRAY_SIZE] -1 when nothing selected
+                          0.0, // defaultNormalizedValue => not selected (-1)
                           0, // flags (state is not saved)
                           EVAC6ParamID::kLCDInputX, // tag
                           kRootUnitId, // unitID => not using units at this stage

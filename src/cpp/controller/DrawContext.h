@@ -12,6 +12,7 @@ using namespace VSTGUI;
 const CColor WHITE_COLOR = CColor{255, 255, 255};
 const CColor BLACK_COLOR = CColor{0, 0, 0};
 const CColor RED_COLOR = CColor{255, 0, 0};
+const CColor BLUE_COLOR = CColor{0, 0, 255};
 
 struct StringDrawContext
 {
@@ -35,7 +36,7 @@ using AbsoluteRect = CRect;
 class RelativeView
 {
 public:
-  explicit RelativeView(CView *iView) : fView{iView}
+  explicit RelativeView(CView const *iView) : fView{iView}
   {
     auto viewSize = fView->getViewSize();
     fOriginX = viewSize.left;
@@ -88,7 +89,7 @@ public:
   }
 
 protected:
-  CView *fView;
+  CView const *fView;
   CCoord fOriginX;
   CCoord fOriginY;
 };

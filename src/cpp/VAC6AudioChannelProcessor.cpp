@@ -20,7 +20,6 @@ VAC6AudioChannelProcessor::VAC6AudioChannelProcessor(const SampleRateBasedClock 
   fMaxAccumulatorForBuffer(iMaxAccumulatorBatchSize),
   fMaxBuffer{new CircularBuffer<TSample>(iMaxBufferSize)},
   fMaxLevelSinceLastReset{0},
-  fMaxLevelMode{DEFAULT_MAX_LEVEL_MODE},
   fZoomMaxAccumulator{iZoomWindow->setZoomFactor(DEFAULT_ZOOM_FACTOR_X)},
   fZoomMaxBuffer{new CircularBuffer<TSample>(iZoomWindow->getVisibleWindowSizeInPoints())},
   fNeedToRecomputeZoomMaxBuffer{false},
@@ -62,59 +61,6 @@ void VAC6AudioChannelProcessor::setIsLiveView(bool iIsLiveView)
 void VAC6AudioChannelProcessor::setDirty()
 {
   fNeedToRecomputeZoomMaxBuffer = true;
-}
-
-/////////////////////////////////////////
-// VAC6AudioChannelProcessor::setMaxLevelMode
-/////////////////////////////////////////
-void VAC6AudioChannelProcessor::setMaxLevelMode(MaxLevelMode iMaxLevelMode)
-{
-  fMaxLevelMode = iMaxLevelMode;
-  fMaxLevelSinceLastReset = 0;
-}
-
-/////////////////////////////////////////
-// VAC6AudioChannelProcessor::computeMaxLevelInSinceResetMode
-/////////////////////////////////////////
-MaxLevel VAC6AudioChannelProcessor::computeMaxLevelInSinceResetMode() const
-{
-  MaxLevel maxLevel{fMaxLevelSinceLastReset, -1};
-
-  // the purpose is to find the highest index where level == fMaxLevelSinceLastReset (the window may not contain it
-  // in which case it will remain -1)
-  auto findIndex = [&maxLevel] (int index, int const &iPreviousIndex, double const &iLevel) -> int {
-    if(iLevel == maxLevel.fValue)
-      return index;
-    else
-      return iPreviousIndex;
-  };
-
-  maxLevel.fIndex = fZoomMaxBuffer->foldWithIndex<int>(-1, findIndex);
-
-  return maxLevel;
-}
-
-/////////////////////////////////////////
-// VAC6AudioChannelProcessor::computeMaxLevelInWindowMode
-/////////////////////////////////////////
-MaxLevel VAC6AudioChannelProcessor::computeMaxLevelInWindowMode() const
-{
-  MaxLevel maxLevel{};
-
-  // the purpose is to find the max level in the window and if there is more than one return the highest level
-  auto findIndex = [&maxLevel] (int index, int const &iPreviousIndex, double const &iLevel) -> int {
-    if(iLevel >= maxLevel.fValue)
-    {
-      maxLevel.fValue = iLevel;
-      return index;
-    }
-    else
-      return iPreviousIndex;
-  };
-
-  maxLevel.fIndex = fZoomMaxBuffer->foldWithIndex<int>(-1, findIndex);
-
-  return maxLevel;
 }
 
 /////////////////////////////////////////

@@ -11,6 +11,12 @@
 #include <memory>
 #include "../logging/loguru.hpp"
 
+#ifndef NDEBUG
+#define EDITOR_MODE
+#else
+#undef EDITOR_MODE
+#endif
+
 namespace pongasoft {
 namespace VST {
 namespace GUI {
@@ -173,7 +179,7 @@ private:
   };
 
   /**
-   * Specialization for the tag attribute. The view must have getter and setter as defined by the
+   * Specialization for the color attribute. The view must have getter and setter as defined by the
    * types below.
    */
   class ColorAttribute : public ViewAttribute
@@ -221,6 +227,64 @@ private:
       if(tv != nullptr)
       {
         return UIViewCreator::colorToString((tv->*fGetter)(), oStringValue, iDescription);
+      }
+      return false;
+    }
+
+  private:
+    Getter fGetter;
+    Setter fSetter;
+  };
+
+  /**
+   * Specialization for the boolean attribute. The view must have getter and setter as defined by the
+   * types below.
+   */
+  class BooleanAttribute : public ViewAttribute
+  {
+  public:
+    using Getter = bool (TView::*)() const;
+    using Setter = void (TView::*)(bool);
+
+    BooleanAttribute(std::string const &iName,
+                   Getter iGetter,
+                   Setter iSetter) :
+      ViewAttribute(iName),
+      fGetter{iGetter},
+      fSetter{iSetter}
+    {
+    }
+
+    // getType
+    IViewCreator::AttrType getType() override
+    {
+      return IViewCreator::kBooleanType;
+    }
+
+    // apply => set a color to the view
+    bool apply(CView *iView, const UIAttributes &iAttributes, const IUIDescription *iDescription) override
+    {
+      auto *tv = dynamic_cast<TView *>(iView);
+      if(tv != nullptr)
+      {
+        bool value;
+        if(iAttributes.getBooleanAttribute(getName(), value))
+        {
+          (tv->*fSetter)(value);
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // getAttributeValue => get a color from the view
+    bool getAttributeValue(CView *iView, const IUIDescription *iDescription, std::string &oStringValue) const override
+    {
+      auto *tv = dynamic_cast<TView *>(iView);
+      if(tv != nullptr)
+      {
+        oStringValue = (tv->*fGetter)() ? "true" : "false";
+        return true;
       }
       return false;
     }
@@ -293,13 +357,23 @@ public:
   }
 
   /**
- * Registers a color attribute with the given name and getter/setter
- */
+   * Registers a color attribute with the given name and getter/setter
+   */
   void registerTagAttribute(std::string const &iName,
                             typename TagAttribute::Getter iGetter,
                             typename TagAttribute::Setter iSetter)
   {
     registerAttribute<TagAttribute>(iName, iGetter, iSetter);
+  }
+
+  /**
+   * Registers a color attribute with the given name and getter/setter
+   */
+  void registerBooleanAttribute(std::string const &iName,
+                                typename BooleanAttribute::Getter iGetter,
+                                typename BooleanAttribute::Setter iSetter)
+  {
+    registerAttribute<BooleanAttribute>(iName, iGetter, iSetter);
   }
 
   /**

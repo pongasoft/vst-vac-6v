@@ -92,16 +92,12 @@ protected:
     return fClock.getTimeForSampleCount(fZoomWindow->getVisibleWindowSizeInSamples() * fMaxAccumulatorBatchSize);
   }
 
-  int computeLCDInputX() const;
-
-  int computeMaxLevelIndex() const;
-
 private:
   struct State
   {
-    SoftClippingLevel fSoftClippingLevel{DEFAULT_SOFT_CLIPPING_LEVEL};
+    SoftClippingLevel fSoftClippingLevel{DEFAULT_SOFT_CLIPPING_LEVEL}; // TODO migrate to UI (not used in processing)
     double fZoomFactorX{DEFAULT_ZOOM_FACTOR_X};
-    MaxLevelMode fMaxLevelMode{DEFAULT_MAX_LEVEL_MODE};
+    MaxLevelMode fMaxLevelMode{DEFAULT_MAX_LEVEL_MODE}; // TODO migrate to UI (not used in processing)
     bool fLeftChannelOn{true};
     bool fRightChannelOn{true};
     bool fLCDLiveView{true};

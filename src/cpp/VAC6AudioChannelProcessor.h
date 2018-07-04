@@ -103,7 +103,7 @@ public:
   // resetMaxLevelSinceLastReset
   void resetMaxLevelSinceLastReset()
   {
-    fMaxLevelSinceLastReset = 0;
+    fMaxLevelSinceLastReset = -1;
   }
 
   // getMaxLevelSinceLastReset
@@ -112,9 +112,6 @@ public:
     return fMaxLevelSinceLastReset;
   }
 
-  // setMaxLevelMode
-  void setMaxLevelMode(MaxLevelMode iMaxLevelMode);
-
   /**
    * Mark the channel processor dirty in order to recompute the max zoom buffer
    */
@@ -122,12 +119,6 @@ public:
 
   // setIsLiveView
   void setIsLiveView(bool iIsLiveView);
-
-  // computeMaxLevelInSinceResetMode
-  MaxLevel computeMaxLevelInSinceResetMode() const;
-
-  // computeMaxLevelInWindowMode
-  MaxLevel computeMaxLevelInWindowMode() const;
 
   /**
    * Copy the zoomed samples into the array provided.
@@ -148,7 +139,6 @@ private:
   CircularBuffer<TSample> *const fMaxBuffer;
 
   TSample fMaxLevelSinceLastReset;
-  MaxLevelMode fMaxLevelMode;
 
   TZoom::MaxAccumulator fZoomMaxAccumulator;
   CircularBuffer<TSample> *const fZoomMaxBuffer;

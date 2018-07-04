@@ -39,9 +39,30 @@ constexpr double MIN_VOLUME_DB = -60; // -60dB
 constexpr TSample MIN_AUDIO_SAMPLE = 0.001; // dbToSample<TSample>(-60.0)
 constexpr double DEFAULT_ZOOM_FACTOR_X = 0.5;
 
-using LCDInputXParamConverter = Common::DiscreteValueParamConverter<MAX_LCD_INPUT_X>;
 using LCDHistoryOffsetParamConverter = Common::PercentParamConverter;
 using LCDZoomFactorXParamConverter = Common::PercentParamConverter;
+
+///////////////////////////////////
+// LCDInputX
+///////////////////////////////////
+
+constexpr int LCD_INPUT_X_NOTHING_SELECTED = -1;
+
+class LCDInputXParamConverter
+{
+private:
+  using DVC = Common::DiscreteValueParamConverter<MAX_LCD_INPUT_X + 1>;
+public:
+  static inline ParamValue normalize(int const &iDiscreteValue)
+  {
+    return DVC::normalize(iDiscreteValue + 1);
+  }
+
+  static inline int denormalize(ParamValue iNormalizedValue)
+  {
+    return DVC::denormalize(iNormalizedValue) - 1;
+  }
+};
 
 ///////////////////////////////////////////
 // toDisplayValue
@@ -62,6 +83,11 @@ inline TSample fromDisplayValue(double iDisplayValue, double iHeight)
   return dbToSample<double>((1.0 - (iDisplayValue / iHeight)) * MIN_VOLUME_DB);
 }
 #endif
+
+///////////////////////////////////////////
+// // VAC6::toDbString
+///////////////////////////////////////////
+std::string toDbString(TSample iSample);
 
 ///////////////////////////////////
 // MaxLevelMode
@@ -139,8 +165,15 @@ private:
 ///////////////////////////////////
 struct MaxLevel
 {
-  TSample fValue{0};
+  TSample fValue{-1};
   int fIndex{-1};
+
+  bool isUndefined() const
+  {
+    return fValue < 0;
+  }
+
+  std::string toDbString() const;
 
   static MaxLevel computeMaxLevel(MaxLevel const &iLeftMaxLevel, MaxLevel const &iRightMaxLevel);
 };
@@ -150,8 +183,6 @@ struct MaxLevel
 // LCDData
 ///////////////////////////////////
 constexpr IAttributeList::AttrID LCDDATA_WINDOW_SIZE_MS_ATTR = "WSM";
-constexpr IAttributeList::AttrID LCDDATA_LCD_INPUT_X_ATTR = "LIX";
-constexpr IAttributeList::AttrID LCDDATA_MAX_LEVEL_MODE_ATTR = "MLM";
 constexpr IAttributeList::AttrID LCDDATA_LEFT_SAMPLES_ATTR = "LSA";
 constexpr IAttributeList::AttrID LCDDATA_LEFT_MAX_LEVEL_SINCE_RESET_ATTR = "LML";
 constexpr IAttributeList::AttrID LCDDATA_RIGHT_SAMPLES_ATTR = "RSA";
@@ -170,16 +201,9 @@ struct LCDData
   };
 
   long fWindowSizeInMillis{0};
-  int fLCDInputX{-1};
-  MaxLevelMode fMaxLevelMode{DEFAULT_MAX_LEVEL_MODE};
 
   Channel fLeftChannel;
   Channel fRightChannel;
-
-  bool isLiveView() const
-  {
-    return fLCDInputX == -1;
-  }
 };
 }
 }
