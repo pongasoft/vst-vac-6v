@@ -31,9 +31,11 @@ enum EVAC6ParamID : Steinberg::Vst::ParamID
 // tags associated to custom views (not associated to params)
 enum EVAC6CustomViewTag : Steinberg::Vst::ParamID
 {
-  kMaxLevelValue = 1,
-  kLCD = 2,
-  KLCDScrollbar = 3
+  kMaxLevelSinceReset = 1,
+  kMaxLevelInWindow = 2,
+  kMaxLevelForSelection = 3,
+  kLCD = 4,
+  KLCDScrollbar = 5
 };
 
 enum EVAC6MessageID

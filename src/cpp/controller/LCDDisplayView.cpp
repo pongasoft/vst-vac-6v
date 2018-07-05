@@ -6,8 +6,10 @@ namespace pongasoft {
 namespace VST {
 namespace VAC6 {
 
-const CColor WHITE_COLOR_40 = CColor{255,255,255,40};
-const CColor WHITE_COLOR_60 = CColor{255,255,255,60};
+const CColor MAX_LEVEL_FOR_SELECTION_LINES_COLOR = CColor{255,255,255,200};
+const CColor MAX_LEVEL_SINCE_RESET_COLOR = CColor{255,0,0,220};
+const CColor MAX_LEVEL_IN_WINDOW_COLOR = CColor{0,0,255,220};
+const CColor MAX_LEVEL_FOR_SELECTION_COLOR = CColor{0,0,0,40};
 
 ///////////////////////////////////////////
 // LCDDisplayState::onMessage
@@ -92,6 +94,37 @@ LCDDisplayView::LCDDisplayView(const CRect &size)
 }
 
 ///////////////////////////////////////////
+// LCDDisplayView::drawMaxLevel
+///////////////////////////////////////////
+void LCDDisplayView::drawMaxLevel(GUI::RelativeDrawContext &iContext,
+                                  RelativePoint const &iPoint,
+                                  CCoord iHalfSize,
+                                  CColor const &iColor)
+{
+  if(iPoint.x > -1 && iPoint.y > -1 && iPoint.y < getHeight())
+  {
+    drawMaxLevelNoCheck(iContext, iPoint, iHalfSize, iColor);
+  }
+}
+
+///////////////////////////////////////////
+// LCDDisplayView::drawMaxLevelNoCheck
+///////////////////////////////////////////
+void LCDDisplayView::drawMaxLevelNoCheck(GUI::RelativeDrawContext &iContext,
+                                         RelativePoint const &iPoint,
+                                         CCoord iHalfSize,
+                                         CColor const &iColor)
+{
+  iContext.fillAndStrokeRect(RelativeRect{iPoint.x - iHalfSize,
+                                          iPoint.y - iHalfSize,
+                                          iPoint.x + iHalfSize,
+                                          iPoint.y + iHalfSize},
+                             iColor,
+                             kWhiteCColor);
+}
+
+
+///////////////////////////////////////////
 // LCDDisplayView::draw
 ///////////////////////////////////////////
 void LCDDisplayView::draw(CDrawContext *iContext)
@@ -114,13 +147,15 @@ void LCDDisplayView::draw(CDrawContext *iContext)
 
   if(leftChannelOn || rightChannelOn)
   {
-    auto maxLevel = getMaxLevel();
 
-    MaxLevel lcdInputXMaxLevel{-1, fLCDInputXParameter->getValue()};
-    RelativeCoord lcdInputY = -1;
+    MaxLevel maxLevelForSelection{-1, fLCDInputXParameter->getValue()};
+    RelativePoint maxLevelForSelectionPoint = {static_cast<RelativeCoord>(maxLevelForSelection.fIndex), -1};
 
-    RelativeCoord maxLevelX = maxLevel.fIndex;
-    RelativeCoord maxLevelY = -1;
+    auto maxLevelSinceReset = getMaxLevelSinceReset();
+    RelativePoint maxLevelSinceResetPoint = { static_cast<RelativeCoord>(maxLevelSinceReset.fIndex), -1 };
+
+    auto maxLevelInWindow = getMaxLevelInWindow();
+    RelativePoint maxLevelInWindowPoint = {static_cast<RelativeCoord>(maxLevelInWindow.fIndex), -1 };
 
     // display every sample in the array as a vertical line (from the bottom)
     for(int i = 0; i < MAX_ARRAY_SIZE; i++)
@@ -151,59 +186,38 @@ void LCDDisplayView::draw(CDrawContext *iContext)
 
       }
 
-      if(lcdInputXMaxLevel.fIndex == i)
+      if(maxLevelForSelection.fIndex == i)
       {
-        lcdInputXMaxLevel.fValue = sample;
-        lcdInputY = top;
+        maxLevelForSelection.fValue = sample;
+        maxLevelForSelectionPoint.y = top;
       }
 
-      if(maxLevelX == i)
-        maxLevelY = top;
+      if(maxLevelSinceResetPoint.x == i)
+        maxLevelSinceResetPoint.y = top;
+
+      if(maxLevelInWindowPoint.x == i)
+        maxLevelInWindowPoint.y = top;
 
       left++;
     }
 
-    if(fMaxLevelFollow->getValue() && maxLevelX >= 0 && maxLevelY >= 0 && maxLevelY < height)
+    if(fMaxLevelFollow->getValue())
     {
-      constexpr auto offset = 3.0;
-      rdc.fillAndStrokeRect(RelativeRect{maxLevelX - offset,
-                                         maxLevelY - offset,
-                                         maxLevelX + offset,
-                                         maxLevelY + offset},
-                            kRedCColor,
-                            kWhiteCColor);
+      drawMaxLevel(rdc,
+                   maxLevelInWindowPoint,
+                   maxLevelInWindowPoint.x == maxLevelSinceResetPoint.x ? 5.0 : 3.0,
+                   MAX_LEVEL_IN_WINDOW_COLOR);
+      drawMaxLevel(rdc, maxLevelSinceResetPoint, 3.0, MAX_LEVEL_SINCE_RESET_COLOR);
     }
 
-    int lcdInputX = lcdInputXMaxLevel.fIndex;
-    if(lcdInputX >= 0 && lcdInputY > -1)
+    if(maxLevelForSelectionPoint.x > -1)
     {
-      constexpr auto offset = 3.0;
-      rdc.fillRect(RelativeRect{lcdInputX - 5.0, 0, lcdInputX + 5.0, height}, WHITE_COLOR_40);
-      rdc.fillRect(RelativeRect{lcdInputX - 3.0, 0, lcdInputX + 3.0, height}, WHITE_COLOR_60);
-      rdc.drawLine(lcdInputX, 0, lcdInputX, height, kWhiteCColor);
-      rdc.drawLine(0, lcdInputY, width, lcdInputY, WHITE_COLOR_60);
-      rdc.fillAndStrokeRect(RelativeRect{lcdInputX - offset,
-                                         lcdInputY - offset,
-                                         lcdInputX + offset,
-                                         lcdInputY + offset},
-                            kBlueCColor,
-                            kWhiteCColor);
-
-      constexpr auto textHeight = 20.0;
-
-      auto textTop = height - textHeight;
-
-      rdc.fillRect(RelativeRect{0, textTop, MAX_ARRAY_SIZE, height}, CColor{0,0,0,40});
-      StringDrawContext sdc{};
-      sdc.fStyle |= kShadowText;
-      sdc.fHoriTxtAlign = kLeftText;
-      sdc.fTextInset = {2, 2};
-      sdc.fFontColor = kWhiteCColor;
-      sdc.fShadowColor = kBlackCColor;
-
-      rdc.drawString(lcdInputXMaxLevel.toDbString(), RelativeRect{0, textTop, MAX_ARRAY_SIZE, height}, sdc);
+      RelativeCoord x = maxLevelForSelectionPoint.x;
+      RelativeCoord y = maxLevelForSelectionPoint.y;
+      drawMaxLevelNoCheck(rdc, maxLevelForSelectionPoint, 7.0, MAX_LEVEL_FOR_SELECTION_COLOR);
+      rdc.drawLine(x, 0, x, height, MAX_LEVEL_FOR_SELECTION_LINES_COLOR);
+      rdc.drawLine(0, y, width, y, MAX_LEVEL_FOR_SELECTION_LINES_COLOR);
     }
-
   }
 
   // display the soft clipping level line (which is controlled by a knob)
@@ -247,8 +261,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
 int LCDDisplayView::computeLCDInputX(CPoint &where) const
 {
   RelativeView rv(this);
-  int mouseX = static_cast<int>(rv.fromAbsolutePoint(where).x);
-  return clamp<int>(mouseX, 0, MAX_LCD_INPUT_X);
+  return clamp(rv.fromAbsolutePoint(where).x, 0, MAX_LCD_INPUT_X);
 }
 
 ///////////////////////////////////////////
@@ -318,7 +331,6 @@ void LCDDisplayView::registerParameters()
   HistoryView::registerParameters();
   fMaxLevelFollow = registerBooleanParameter(EVAC6ParamID::kMaxLevelFollow);
   fLCDLiveViewParameter = registerBooleanParameter(EVAC6ParamID::kLCDLiveView);
-  fLCDInputXParameter = registerVSTParameter<LCDInputXParameter>(EVAC6ParamID::kLCDInputX);
 }
 
 ///////////////////////////////////////////
@@ -384,6 +396,17 @@ void LCDDisplayView::onEditorModeChanged()
       lcdData.fLeftChannel.fSamples[i] = 0.0;
       lcdData.fRightChannel.fSamples[i] = 0.0;
     }
+
+    lcdData.fLeftChannel.fMaxLevelSinceReset = lcdData.fLeftChannel.fSamples[10];
+    lcdData.fRightChannel.fMaxLevelSinceReset = lcdData.fRightChannel.fSamples[10];
+
+    fState->fHistoryState->fMaxLevelInWindow =
+      MaxLevel::computeMaxLevel(lcdData.fLeftChannel.computeInWindowMaxLevel(),
+                                lcdData.fRightChannel.computeInWindowMaxLevel());
+    fState->fHistoryState->fMaxLevelSinceReset =
+      MaxLevel::computeMaxLevel(lcdData.fLeftChannel.computeSinceResetMaxLevel(),
+                                lcdData.fRightChannel.computeSinceResetMaxLevel());
+
   }
 }
 #endif

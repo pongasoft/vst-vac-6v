@@ -100,16 +100,16 @@ public:
     return *fMaxBuffer;
   };
 
-  // resetMaxLevelSinceLastReset
-  void resetMaxLevelSinceLastReset()
+  // resetMaxLevelSinceReset
+  void resetMaxLevelSinceReset()
   {
-    fMaxLevelSinceLastReset = -1;
+    fMaxLevelSinceReset = -1;
   }
 
-  // getMaxLevelSinceLastReset
-  TSample getMaxLevelSinceLastReset() const
+  // getMaxLevelSinceReset
+  TSample getMaxLevelSinceReset() const
   {
-    return fMaxLevelSinceLastReset;
+    return fMaxLevelSinceReset;
   }
 
   /**
@@ -138,7 +138,7 @@ private:
   MaxAccumulator fMaxAccumulatorForBuffer;
   CircularBuffer<TSample> *const fMaxBuffer;
 
-  TSample fMaxLevelSinceLastReset;
+  TSample fMaxLevelSinceReset;
 
   TZoom::MaxAccumulator fZoomMaxAccumulator;
   CircularBuffer<TSample> *const fZoomMaxBuffer;

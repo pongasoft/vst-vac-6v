@@ -19,7 +19,7 @@ VAC6AudioChannelProcessor::VAC6AudioChannelProcessor(const SampleRateBasedClock 
   fClock{iClock},
   fMaxAccumulatorForBuffer(iMaxAccumulatorBatchSize),
   fMaxBuffer{new CircularBuffer<TSample>(iMaxBufferSize)},
-  fMaxLevelSinceLastReset{0},
+  fMaxLevelSinceReset{0},
   fZoomMaxAccumulator{iZoomWindow->setZoomFactor(DEFAULT_ZOOM_FACTOR_X)},
   fZoomMaxBuffer{new CircularBuffer<TSample>(iZoomWindow->getVisibleWindowSizeInPoints())},
   fNeedToRecomputeZoomMaxBuffer{false},

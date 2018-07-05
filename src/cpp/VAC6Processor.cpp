@@ -50,9 +50,9 @@ bool VAC6AudioChannelProcessor::genericProcessChannel(ZoomWindow const *iZoomWin
         if(fZoomMaxAccumulator.accumulate(max, zoomedMax))
         {
           fZoomMaxBuffer->push(zoomedMax);
-          if(zoomedMax > fMaxLevelSinceLastReset)
+          if(zoomedMax > fMaxLevelSinceReset)
           {
-            fMaxLevelSinceLastReset = zoomedMax;
+            fMaxLevelSinceReset = zoomedMax;
           }
         }
       }
@@ -305,10 +305,10 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   fRightChannelProcessor->genericProcessChannel<SampleType>(fZoomWindow, in.getRightChannel(), rightChannel);
 
   // if reset of max level is requested (pressing momentary button) then we need to reset the accumulator
-  if(fState.fLCDLiveView && fMaxLevelResetRequested)
+  if(fMaxLevelResetRequested)
   {
-    fLeftChannelProcessor->resetMaxLevelSinceLastReset();
-    fRightChannelProcessor->resetMaxLevelSinceLastReset();
+    fLeftChannelProcessor->resetMaxLevelSinceReset();
+    fRightChannelProcessor->resetMaxLevelSinceReset();
   }
 
   // is it time to update the UI?
@@ -320,7 +320,7 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
     if(fState.fLeftChannelOn)
     {
       fLeftChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fLeftChannel.fSamples);
-      lcdData.fLeftChannel.fMaxLevelSinceReset = fLeftChannelProcessor->getMaxLevelSinceLastReset();
+      lcdData.fLeftChannel.fMaxLevelSinceReset = fLeftChannelProcessor->getMaxLevelSinceReset();
     }
     lcdData.fLeftChannel.fOn = fState.fLeftChannelOn;
 
@@ -329,7 +329,7 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
     if(fState.fRightChannelOn)
     {
       fRightChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fRightChannel.fSamples);
-      lcdData.fRightChannel.fMaxLevelSinceReset = fRightChannelProcessor->getMaxLevelSinceLastReset();
+      lcdData.fRightChannel.fMaxLevelSinceReset = fRightChannelProcessor->getMaxLevelSinceReset();
     }
     lcdData.fRightChannel.fOn = fState.fRightChannelOn;
 

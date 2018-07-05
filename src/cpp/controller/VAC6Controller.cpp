@@ -16,7 +16,9 @@ namespace VAC6 {
 VAC6Controller::VAC6Controller() : EditController(),
                                    fXmlFile("VAC6.uidesc"),
                                    fHistoryState{std::make_shared<HistoryState>()},
-                                   fMaxLevelState{fHistoryState},
+                                   fMaxLevelSinceResetState{fHistoryState},
+                                   fMaxLevelInWindowState{fHistoryState},
+                                   fMaxLevelForSelectionState{fHistoryState},
                                    fLCDDisplayState{fHistoryState}
 {
   DLOG_F(INFO, "VAC6Controller::VAC6Controller()");
@@ -181,8 +183,16 @@ CView *VAC6Controller::verifyView(CView *view,
 
     switch(customView->getCustomViewTag())
     {
-      case EVAC6CustomViewTag::kMaxLevelValue:
-        fMaxLevelState.assign(dynamic_cast<MaxLevelView *>(customView));
+      case EVAC6CustomViewTag::kMaxLevelSinceReset:
+        fMaxLevelSinceResetState.assign(dynamic_cast<MaxLevelView *>(customView));
+        break;
+
+      case EVAC6CustomViewTag::kMaxLevelInWindow:
+        fMaxLevelInWindowState.assign(dynamic_cast<MaxLevelView *>(customView));
+        break;
+
+      case EVAC6CustomViewTag::kMaxLevelForSelection:
+        fMaxLevelForSelectionState.assign(dynamic_cast<MaxLevelView *>(customView));
         break;
 
       case EVAC6CustomViewTag::kLCD:
@@ -311,7 +321,9 @@ tresult VAC6Controller::notify(IMessage *message)
     case kLCDData_MID:
     {
       fHistoryState->onMessage(m);
-      fMaxLevelState.onMessage(m);
+      fMaxLevelSinceResetState.onMessage(m);
+      fMaxLevelInWindowState.onMessage(m);
+      fMaxLevelForSelectionState.onMessage(m);
       fLCDDisplayState.onMessage(m);
       break;
     }

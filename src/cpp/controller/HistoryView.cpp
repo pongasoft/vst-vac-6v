@@ -26,15 +26,44 @@ void HistoryView::registerParameters()
   CustomView::registerParameters();
 
   fSoftClippingLevelParameter = registerVSTParameter<SoftClippingLevelParameter>(EVAC6ParamID::kSoftClippingLevel);
-  fMaxLevelModeParameter = registerVSTParameter<MaxLevelModeParameter>(EVAC6ParamID::kMaxLevelMode);
+  fLCDInputXParameter = registerVSTParameter<LCDInputXParameter>(EVAC6ParamID::kLCDInputX);
 }
 
 ///////////////////////////////////////////
-// HistoryView::getMaxLevel
+// HistoryView::getMaxLevelSinceReset
 ///////////////////////////////////////////
-MaxLevel HistoryView::getMaxLevel() const
+MaxLevel HistoryView::getMaxLevelSinceReset() const
 {
-  return fMaxLevelModeParameter->getValue() == kMaxInWindow ? fHistoryState->fMaxLevelInWindow : fHistoryState->fMaxLevelSinceReset;
+  return fHistoryState->fMaxLevelSinceReset;
+}
+
+///////////////////////////////////////////
+// HistoryView::getMaxLevelInWindow
+///////////////////////////////////////////
+MaxLevel HistoryView::getMaxLevelInWindow() const
+{
+  return fHistoryState->fMaxLevelInWindow;
+}
+
+///////////////////////////////////////////
+// HistoryView::getMaxLevelForSelection
+///////////////////////////////////////////
+MaxLevel HistoryView::getMaxLevelForSelection() const
+{
+  // no selection
+  if(fLCDInputXParameter->getValue() < 0)
+    return MaxLevel{};
+
+  MaxLevel res{-1, clampE(fLCDInputXParameter->getValue(), 0, MAX_LCD_INPUT_X)};
+
+  LCDData &lcdData = fHistoryState->fLCDData;
+
+  TSample leftSample = lcdData.fLeftChannel.fOn ? lcdData.fLeftChannel.fSamples[res.fIndex] : -1;
+  TSample rightSample = lcdData.fRightChannel.fOn ? lcdData.fRightChannel.fSamples[res.fIndex] : -1;
+
+  res.fValue = std::max(leftSample, rightSample);
+
+  return res;
 }
 
 ///////////////////////////////////////////

@@ -2,6 +2,7 @@
 
 #include <pluginterfaces/vst/ivstaudioprocessor.h>
 #include <cmath>
+#include "logging/loguru.hpp"
 
 namespace pongasoft {
 namespace VST {
@@ -33,10 +34,27 @@ inline bool isSilent(Sample64 value)
   return value <= Sample64SilentThreshold;
 }
 
-template <typename T>
-inline static const T& clamp(const T &value, const T &lower, const T &upper)
+/**
+ * Make sure that the value remains within its bounds
+ */
+template <typename T, typename U>
+inline static T clamp(const U &value, const T &lower, const T &upper)
 {
-  return value < lower ? lower : (value > upper ? upper : value);
+  auto v = static_cast<T>(value);
+  return v < lower ? lower : (v > upper ? upper : value);
+}
+
+/**
+ * Same as clamp except it will actually fail/assert in debug mode. For example can be used to
+ * access an array with an index and making sure the index is valid within the array. If it happens in production
+ * release then it will no randomly crash the application by accessing random memory.
+ */
+template <typename T, typename U>
+inline static T clampE(const U &value, const T &lower, const T &upper)
+{
+  auto v = static_cast<T>(value);
+  DCHECK_F(v >= lower && v <= upper);
+  return v < lower ? lower : (v > upper ? upper : value);
 }
 
 /**

@@ -13,6 +13,7 @@ using namespace Common;
 
 using SoftClippingLevelParameter = VSTParameterFromClass<SoftClippingLevel>;
 using MaxLevelModeParameter = VSTParameterFromType<MaxLevelMode, MaxLevelModeParamConverter>;
+using LCDInputXParameter = VSTParameterFromType<int, LCDInputXParamConverter>;
 
 class HistoryState;
 
@@ -68,8 +69,11 @@ public:
 
   CLASS_METHODS_NOCOPY(HistoryView, CustomView)
 
+  MaxLevel getMaxLevelSinceReset() const;
+  MaxLevel getMaxLevelInWindow() const;
+  MaxLevel getMaxLevelForSelection() const;
+
 protected:
-  MaxLevel getMaxLevel() const;
 
   std::shared_ptr<HistoryState> fHistoryState;
 
@@ -83,7 +87,7 @@ protected:
   CColor fLevelStateHardClippingColor{};
 
   std::unique_ptr<SoftClippingLevelParameter> fSoftClippingLevelParameter;
-  std::unique_ptr<MaxLevelModeParameter> fMaxLevelModeParameter;
+  std::unique_ptr<LCDInputXParameter> fLCDInputXParameter{nullptr};
 
 public:
   class Creator : public CustomViewCreator<HistoryView>

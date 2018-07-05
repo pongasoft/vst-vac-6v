@@ -74,7 +74,9 @@ private:
   std::shared_ptr<HistoryState> fHistoryState;
 
   // state for max level
-  MaxLevelState fMaxLevelState;
+  MaxLevelState fMaxLevelSinceResetState;
+  MaxLevelState fMaxLevelInWindowState;
+  MaxLevelState fMaxLevelForSelectionState;
 
   // state for LCD Display
   LCDDisplayState fLCDDisplayState;

@@ -72,8 +72,9 @@ void MaxLevelView::setState(MaxLevelState *iState)
 }
 
 
-MaxLevelView::Creator __gMaxLevelViewCreator("pongasoft::MaxLevel", "pongasoft - Max Level");
-
+MaxLevelSinceResetViewCreator __gMaxLevelSinceResetViewCreator("pongasoft::MaxLevelSinceReset", "pongasoft - Max Level - Since Reset");
+MaxLevelInWindowViewCreator __gMaxLevelInWindowViewCreator("pongasoft::MaxLevelInWindow", "pongasoft - Max Level - In Window");
+MaxLevelForSelectionViewCreator __gMaxLevelForSelectionViewCreator("pongasoft::MaxLevelForSelection", "pongasoft - Max Level - For Selection");
 }
 }
 }
