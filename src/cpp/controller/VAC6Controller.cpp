@@ -16,9 +16,9 @@ namespace VAC6 {
 VAC6Controller::VAC6Controller() : EditController(),
                                    fXmlFile("VAC6.uidesc"),
                                    fHistoryState{std::make_shared<HistoryState>()},
-                                   fMaxLevelSinceResetState{fHistoryState},
-                                   fMaxLevelInWindowState{fHistoryState},
-                                   fMaxLevelForSelectionState{fHistoryState},
+                                   fMaxLevelSinceResetState{MaxLevelState::Type::kSinceReset, fHistoryState},
+                                   fMaxLevelInWindowState{MaxLevelState::Type::kInWindow, fHistoryState},
+                                   fMaxLevelForSelectionState{MaxLevelState::Type::kForSelection, fHistoryState},
                                    fLCDDisplayState{fHistoryState}
 {
   DLOG_F(INFO, "VAC6Controller::VAC6Controller()");

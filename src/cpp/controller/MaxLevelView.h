@@ -35,7 +35,7 @@ public:
   void setNoDataColor(const CColor &iNoDataColor) { fNoDataColor = iNoDataColor; }
 
   // getMaxLevel
-  virtual MaxLevel getMaxLevel() const { return MaxLevel{}; }
+  MaxLevel getMaxLevel() const;
 
   // draw => does the actual drawing job
   void draw(CDrawContext *iContext) override;
@@ -62,77 +62,22 @@ public:
   };
 };
 
-using MaxLevelAccessor = MaxLevel (HistoryView::*)() const;
-
-/**
- * TMaxLevelView => getMaxLevel is generic
- */
-template<MaxLevelAccessor Accessor>
-class TMaxLevelView : public MaxLevelView
-{
-public:
-  // Constructor
-  explicit TMaxLevelView(const CRect &size) : MaxLevelView{size} {}
-
-  // Deleted CC
-  TMaxLevelView(const TMaxLevelView &c) = delete;
-
-  // getMaxLevel
-  MaxLevel getMaxLevel() const override {return (this->*Accessor)(); }
-
-  CLASS_METHODS_NOCOPY(TMaxLevelView<Accessor>, MaxLevelView)
-};
-
-
-///////////////////////////////////////////
-// MaxLevelSinceResetView
-///////////////////////////////////////////
-using MaxLevelSinceResetView = TMaxLevelView<&HistoryView::getMaxLevelSinceReset>;
-class MaxLevelSinceResetViewCreator : public CustomViewCreator<MaxLevelSinceResetView>
-{
-public:
-  explicit MaxLevelSinceResetViewCreator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
-    CustomViewCreator(iViewName, iDisplayName)
-  {
-    registerAttributes(MaxLevelView::Creator());
-  }
-};
-
-///////////////////////////////////////////
-// MaxLevelInWindowView
-///////////////////////////////////////////
-using MaxLevelInWindowView = TMaxLevelView<&HistoryView::getMaxLevelInWindow>;
-class MaxLevelInWindowViewCreator : public CustomViewCreator<MaxLevelInWindowView>
-{
-public:
-  explicit MaxLevelInWindowViewCreator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
-    CustomViewCreator(iViewName, iDisplayName)
-  {
-    registerAttributes(MaxLevelView::Creator());
-  }
-};
-
-///////////////////////////////////////////
-// MaxLevelForSelectionView
-///////////////////////////////////////////
-using MaxLevelForSelectionView = TMaxLevelView<&HistoryView::getMaxLevelForSelection>;
-class MaxLevelForSelectionViewCreator : public CustomViewCreator<MaxLevelForSelectionView>
-{
-public:
-  explicit MaxLevelForSelectionViewCreator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
-    CustomViewCreator(iViewName, iDisplayName)
-  {
-    registerAttributes(MaxLevelView::Creator());
-  }
-};
-
-
 /**
  * Handles the max level text label */
 class MaxLevelState : public VSTViewState<MaxLevelView>
 {
 public:
-  explicit MaxLevelState(std::shared_ptr<HistoryState> iHistoryState) : fHistoryState{std::move(iHistoryState)}
+  enum class Type
+  {
+    kForSelection,
+    kSinceReset,
+    kInWindow
+  };
+
+public:
+  MaxLevelState(Type iType, std::shared_ptr<HistoryState> iHistoryState) :
+    fType{iType},
+    fHistoryState{std::move(iHistoryState)}
   {}
 
   void afterAssign() override
@@ -148,11 +93,14 @@ public:
 
   void onMessage(Message const &message);
 
+  MaxLevel getMaxLevel(int iLCDInputX) const;
+
 private:
   friend class MaxLevelView;
 
   void updateView() const;
 
+  Type fType;
   std::shared_ptr<HistoryState> fHistoryState;
 };
 

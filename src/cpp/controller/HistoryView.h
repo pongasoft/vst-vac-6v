@@ -11,9 +11,14 @@ namespace VAC6 {
 using namespace GUI;
 using namespace Common;
 
-using SoftClippingLevelParameter = VSTParameterFromClass<SoftClippingLevel>;
-using MaxLevelModeParameter = VSTParameterFromType<MaxLevelMode, MaxLevelModeParamConverter>;
-using LCDInputXParameter = VSTParameterFromType<int, LCDInputXParamConverter>;
+// TODO => this syntax is completely valid but CLion chokes on it :(
+//using SoftClippingLevelParameter = VSTParameterFromClass<SoftClippingLevel>;
+//using MaxLevelModeParameter = VSTParameterFromType<MaxLevelMode, MaxLevelModeParamConverter>;
+//using LCDInputXParameter = VSTParameterFromType<int, LCDInputXParamConverter>;
+
+using SoftClippingLevelParameter = VSTParameter<SoftClippingLevel, SoftClippingLevel::denormalize, SoftClippingLevel::normalize>;
+using MaxLevelModeParameter = VSTParameter<MaxLevelMode, MaxLevelModeParamConverter::denormalize, MaxLevelModeParamConverter::normalize>;
+using LCDInputXParameter = VSTParameter<int, LCDInputXParamConverter::denormalize, LCDInputXParamConverter::normalize>;
 
 class HistoryState;
 
@@ -71,7 +76,6 @@ public:
 
   MaxLevel getMaxLevelSinceReset() const;
   MaxLevel getMaxLevelInWindow() const;
-  MaxLevel getMaxLevelForSelection() const;
 
 protected:
 
@@ -127,6 +131,8 @@ public:
   }
 
   virtual void onMessage(Message const &message);
+
+  MaxLevel getMaxLevelForSelection(int iLCDInputX) const;
 
   LCDData fLCDData;
   MaxLevel fMaxLevelInWindow{};

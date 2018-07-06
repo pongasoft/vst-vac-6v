@@ -25,6 +25,24 @@ void MaxLevelState::onMessage(Message const &message)
 }
 
 ///////////////////////////////////////////
+// MaxLevelState::onMessage
+///////////////////////////////////////////
+MaxLevel MaxLevelState::getMaxLevel(int iLCDInputX) const
+{
+  switch(fType)
+  {
+    case Type::kForSelection:
+      return fHistoryState->getMaxLevelForSelection(iLCDInputX);
+
+    case Type::kSinceReset:
+      return fHistoryState->fMaxLevelSinceReset;
+
+    case Type::kInWindow:
+      return fHistoryState->fMaxLevelInWindow;
+  }
+}
+
+///////////////////////////////////////////
 // MaxLevelView::MaxLevelView
 ///////////////////////////////////////////
 MaxLevelView::MaxLevelView(const CRect &size)
@@ -71,10 +89,16 @@ void MaxLevelView::setState(MaxLevelState *iState)
     fHistoryState = nullptr;
 }
 
+///////////////////////////////////////////
+// MaxLevelView::getMaxLevel
+///////////////////////////////////////////
+MaxLevel MaxLevelView::getMaxLevel() const
+{
+  return fState->getMaxLevel(fLCDInputXParameter->getValue());
+}
 
-MaxLevelSinceResetViewCreator __gMaxLevelSinceResetViewCreator("pongasoft::MaxLevelSinceReset", "pongasoft - Max Level - Since Reset");
-MaxLevelInWindowViewCreator __gMaxLevelInWindowViewCreator("pongasoft::MaxLevelInWindow", "pongasoft - Max Level - In Window");
-MaxLevelForSelectionViewCreator __gMaxLevelForSelectionViewCreator("pongasoft::MaxLevelForSelection", "pongasoft - Max Level - For Selection");
+
+MaxLevelView::Creator __gMaxLevelViewCreator("pongasoft::MaxLevel", "pongasoft - Max Level");
 }
 }
 }

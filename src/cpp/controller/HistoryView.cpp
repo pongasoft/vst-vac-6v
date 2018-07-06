@@ -46,27 +46,6 @@ MaxLevel HistoryView::getMaxLevelInWindow() const
 }
 
 ///////////////////////////////////////////
-// HistoryView::getMaxLevelForSelection
-///////////////////////////////////////////
-MaxLevel HistoryView::getMaxLevelForSelection() const
-{
-  // no selection
-  if(fLCDInputXParameter->getValue() < 0)
-    return MaxLevel{};
-
-  MaxLevel res{-1, clampE(fLCDInputXParameter->getValue(), 0, MAX_LCD_INPUT_X)};
-
-  LCDData &lcdData = fHistoryState->fLCDData;
-
-  TSample leftSample = lcdData.fLeftChannel.fOn ? lcdData.fLeftChannel.fSamples[res.fIndex] : -1;
-  TSample rightSample = lcdData.fRightChannel.fOn ? lcdData.fRightChannel.fSamples[res.fIndex] : -1;
-
-  res.fValue = std::max(leftSample, rightSample);
-
-  return res;
-}
-
-///////////////////////////////////////////
 // HistoryState::onMessage
 ///////////////////////////////////////////
 void HistoryState::onMessage(Message const &message)
@@ -84,6 +63,24 @@ void HistoryState::onMessage(Message const &message)
                                                   fLCDData.fRightChannel.computeSinceResetMaxLevel());
 }
 
+///////////////////////////////////////////
+// HistoryState::getMaxLevelForSelection
+///////////////////////////////////////////
+MaxLevel HistoryState::getMaxLevelForSelection(int iLCDInputX) const
+{
+  // no selection
+  if(iLCDInputX < 0)
+    return MaxLevel{};
+
+  MaxLevel res{-1, clampE(iLCDInputX, 0, MAX_LCD_INPUT_X)};
+
+  TSample leftSample = fLCDData.fLeftChannel.fOn ? fLCDData.fLeftChannel.fSamples[res.fIndex] : -1;
+  TSample rightSample = fLCDData.fRightChannel.fOn ? fLCDData.fRightChannel.fSamples[res.fIndex] : -1;
+
+  res.fValue = std::max(leftSample, rightSample);
+
+  return res;
+}
 
 }
 }
