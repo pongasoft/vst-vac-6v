@@ -411,11 +411,6 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
             fMaxLevelResetRequested = BooleanParamConverter::denormalize(value);
             break;
 
-          case kMaxLevelMode:
-            newState.fMaxLevelMode = MaxLevelModeParamConverter::denormalize(value);
-            stateChanged |= newState.fMaxLevelMode != fState.fMaxLevelMode;
-            break;
-
           case kLCDZoomFactorX:
             newState.fZoomFactorX = LCDZoomFactorXParamConverter::denormalize(value);
             stateChanged |= newState.fZoomFactorX != fState.fZoomFactorX;
@@ -491,14 +486,6 @@ tresult VAC6Processor::setState(IBStream *state)
     newState.fZoomFactorX = savedParam;
   }
 
-  // max level auto reset
-  {
-    int32 savedParam = 0;
-    if(!streamer.readInt32(savedParam))
-      savedParam = DEFAULT_MAX_LEVEL_MODE;
-    newState.fMaxLevelMode = static_cast<MaxLevelMode>(savedParam);
-  }
-
   // left channel on
   {
     bool savedParam;
@@ -519,10 +506,9 @@ tresult VAC6Processor::setState(IBStream *state)
 
   fStateUpdate.push(newState);
 
-  DLOG_F(INFO, "VAC6Processor::setState => fSoftClippingLevel=%f, fZoomFactorX=%f, fMaxLevelMode=%d, fLeftChannelOn=%d, fRightChannelOn=%d",
+  DLOG_F(INFO, "VAC6Processor::setState => fSoftClippingLevel=%f, fZoomFactorX=%f, fLeftChannelOn=%d, fRightChannelOn=%d",
          newState.fSoftClippingLevel.getValueInSample(),
          newState.fZoomFactorX,
-         newState.fMaxLevelMode,
          newState.fLeftChannelOn,
          newState.fRightChannelOn);
 
@@ -543,14 +529,12 @@ tresult VAC6Processor::getState(IBStream *state)
 
   streamer.writeDouble(latestState.fSoftClippingLevel.getValueInSample());
   streamer.writeDouble(latestState.fZoomFactorX);
-  streamer.writeInt32(latestState.fMaxLevelMode);
   streamer.writeBool(latestState.fLeftChannelOn);
   streamer.writeBool(latestState.fRightChannelOn);
 
-  DLOG_F(INFO, "VAC6Processor::getState => fSoftClippingLevel=%f, fZoomFactorX=%f, fMaxLevelMode=%d, fLeftChannelOn=%d, fRightChannelOn=%d",
+  DLOG_F(INFO, "VAC6Processor::getState => fSoftClippingLevel=%f, fZoomFactorX=%f, fLeftChannelOn=%d, fRightChannelOn=%d",
          latestState.fSoftClippingLevel.getValueInSample(),
          latestState.fZoomFactorX,
-         latestState.fMaxLevelMode,
          latestState.fLeftChannelOn,
          latestState.fRightChannelOn);
 

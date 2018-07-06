@@ -15,8 +15,8 @@ static const ::Steinberg::FUID VAC6ControllerUID(0x3415c383, 0x5e904dcf, 0xb6ccf
 enum EVAC6ParamID : Steinberg::Vst::ParamID
 {
   kMaxLevelReset = 1010,
-  kMaxLevelMode = 1020,
-  kMaxLevelFollow = 1030,
+  kMaxLevelSinceResetMarker = 1030,
+  kMaxLevelInWindowMarker = 1031,
 
   kSoftClippingLevel = 2000,
 

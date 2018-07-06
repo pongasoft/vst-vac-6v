@@ -95,7 +95,8 @@ protected:
   // the state
   LCDDisplayState *fState{nullptr};
 
-  std::unique_ptr<BooleanParameter> fMaxLevelFollow{nullptr};
+  std::unique_ptr<BooleanParameter> fMaxLevelSinceResetMarker{nullptr};
+  std::unique_ptr<BooleanParameter> fMaxLevelInWindowMarker{nullptr};
   std::unique_ptr<BooleanParameter> fLCDLiveViewParameter{nullptr};
 
   std::unique_ptr<LCDInputXParameter::Editor> fLCDInputXEditor{nullptr};

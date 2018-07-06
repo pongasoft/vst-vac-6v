@@ -65,21 +65,25 @@ tresult VAC6Controller::initialize(FUnknown *context)
                           kRootUnitId, // unitID => not using units at this stage
                           STR16 ("Max Lvl Rst")); // shortTitle
 
-  // the toggle for following
-  parameters.addParameter(STR16 ("Max Level Follow"), // title
+  // the toggle for the LCD marker representing since reset max level
+  parameters.addParameter(STR16 ("Since Reset Marker"), // title
                           nullptr, // units
                           1, // stepCount => 1 means toggle
-                          BooleanParamConverter::normalize(false), // defaultNormalizedValue
+                          BooleanParamConverter::normalize(true), // defaultNormalizedValue
                           ParameterInfo::ParameterFlags::kCanAutomate, // flags
-                          EVAC6ParamID::kMaxLevelFollow, // tag
+                          EVAC6ParamID::kMaxLevelSinceResetMarker, // tag
                           kRootUnitId, // unitID => not using units at this stage
-                          STR16 ("Max Lvl Flw")); // shortTitle
+                          STR16 ("Rst Mkr")); // shortTitle
 
-  // An option menu to change the auto reset (from OFF to 10s)
-  auto maxLevelModeParam = new StringListParameter(USTRING("Max Level Mode"), EVAC6ParamID::kMaxLevelMode);
-  maxLevelModeParam->appendString(USTRING("Since Reset"));
-  maxLevelModeParam->appendString(USTRING("In Window"));
-  parameters.addParameter(maxLevelModeParam);
+  // the toggle for the LCD marker representing in window max level
+  parameters.addParameter(STR16 ("In Window Marker"), // title
+                          nullptr, // units
+                          1, // stepCount => 1 means toggle
+                          BooleanParamConverter::normalize(true), // defaultNormalizedValue
+                          ParameterInfo::ParameterFlags::kCanAutomate, // flags
+                          EVAC6ParamID::kMaxLevelInWindowMarker, // tag
+                          kRootUnitId, // unitID => not using units at this stage
+                          STR16 ("Wdw Mkr")); // shortTitle
 
   // the zoom level knob
   parameters.addParameter(STR16 ("Zoom Level"), // title
@@ -237,13 +241,6 @@ tresult VAC6Controller::setComponentState(IBStream *state)
   setParamNormalized(EVAC6ParamID::kLCDZoomFactorX,
                      LCDZoomFactorXParamConverter::normalize(savedParamZoomFactorX));
 
-  // EVAC6ParamID::kMaxLevelMode
-  int32 savedMaxLevelMode = 0;
-  if(!streamer.readInt32(savedMaxLevelMode))
-    savedMaxLevelMode = DEFAULT_MAX_LEVEL_MODE;
-  setParamNormalized(EVAC6ParamID::kMaxLevelMode,
-                     MaxLevelModeParamConverter::normalize(static_cast<MaxLevelMode>(savedMaxLevelMode)));
-
   // EVAC6ParamID::kLCDLeftChannel
   bool savedLeftChannelOn;
   if(!streamer.readBool(savedLeftChannelOn))
@@ -256,10 +253,9 @@ tresult VAC6Controller::setComponentState(IBStream *state)
     savedRightChannelOn = true;
   setParamNormalized(EVAC6ParamID::kLCDRightChannel, BooleanParamConverter::normalize(savedRightChannelOn));
 
-  DLOG_F(INFO, "VAC6Controller::setComponentState => kSoftClippingLevel=%f, kLCDZoomFactorX=%f, kMaxLevelAutoReset=%d, kLCDLeftChannel=%d, kLCDRightChannel=%d",
+  DLOG_F(INFO, "VAC6Controller::setComponentState => kSoftClippingLevel=%f, kLCDZoomFactorX=%f, kLCDLeftChannel=%d, kLCDRightChannel=%d",
          savedParamSoftLevelClipping,
          savedParamZoomFactorX,
-         savedMaxLevelMode,
          savedLeftChannelOn,
          savedRightChannelOn);
 
@@ -278,12 +274,20 @@ tresult VAC6Controller::setState(IBStream *state)
 
   IBStreamer streamer(state, kLittleEndian);
 
-  // EVAC6ParamID::kMaxLevelFollow
+  // EVAC6ParamID::kMaxLevelSinceResetMarker
   {
     bool savedParam;
     if(!streamer.readBool(savedParam))
-      savedParam = false;
-    setParamNormalized(EVAC6ParamID::kMaxLevelFollow, BooleanParamConverter::normalize(savedParam));
+      savedParam = true;
+    setParamNormalized(EVAC6ParamID::kMaxLevelSinceResetMarker, BooleanParamConverter::normalize(savedParam));
+  }
+
+  // EVAC6ParamID::kMaxLevelInWindowMarker
+  {
+    bool savedParam;
+    if(!streamer.readBool(savedParam))
+      savedParam = true;
+    setParamNormalized(EVAC6ParamID::kMaxLevelInWindowMarker, BooleanParamConverter::normalize(savedParam));
   }
 
   return kResultOk;
@@ -301,7 +305,8 @@ tresult VAC6Controller::getState(IBStream *state)
 
   IBStreamer streamer(state, kLittleEndian);
 
-  streamer.writeBool(BooleanParamConverter::denormalize(getParamNormalized(EVAC6ParamID::kMaxLevelFollow)));
+  streamer.writeBool(BooleanParamConverter::denormalize(getParamNormalized(EVAC6ParamID::kMaxLevelSinceResetMarker)));
+  streamer.writeBool(BooleanParamConverter::denormalize(getParamNormalized(EVAC6ParamID::kMaxLevelInWindowMarker)));
 
   return kResultOk;
 }

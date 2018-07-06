@@ -201,12 +201,19 @@ void LCDDisplayView::draw(CDrawContext *iContext)
       left++;
     }
 
-    if(fMaxLevelFollow->getValue())
+    if(fMaxLevelInWindowMarker->getValue())
     {
-      drawMaxLevel(rdc,
-                   maxLevelInWindowPoint,
-                   maxLevelInWindowPoint.x == maxLevelSinceResetPoint.x ? 5.0 : 3.0,
-                   MAX_LEVEL_IN_WINDOW_COLOR);
+      // on top of each other => make bigger
+      CCoord size = 3.0;
+      if(maxLevelInWindowPoint.x == maxLevelSinceResetPoint.x && fMaxLevelSinceResetMarker->getValue())
+      {
+        size = 5.0;
+      }
+      drawMaxLevel(rdc, maxLevelInWindowPoint, size, MAX_LEVEL_IN_WINDOW_COLOR);
+    }
+
+    if(fMaxLevelSinceResetMarker->getValue())
+    {
       drawMaxLevel(rdc, maxLevelSinceResetPoint, 3.0, MAX_LEVEL_SINCE_RESET_COLOR);
     }
 
@@ -329,7 +336,8 @@ CMouseEventResult LCDDisplayView::onMouseCancel()
 void LCDDisplayView::registerParameters()
 {
   HistoryView::registerParameters();
-  fMaxLevelFollow = registerBooleanParameter(EVAC6ParamID::kMaxLevelFollow);
+  fMaxLevelSinceResetMarker = registerBooleanParameter(EVAC6ParamID::kMaxLevelSinceResetMarker);
+  fMaxLevelInWindowMarker = registerBooleanParameter(EVAC6ParamID::kMaxLevelInWindowMarker);
   fLCDLiveViewParameter = registerBooleanParameter(EVAC6ParamID::kLCDLiveView);
 }
 
@@ -375,7 +383,6 @@ void LCDDisplayView::setState(LCDDisplayState *iState)
 ///////////////////////////////////////////
 void LCDDisplayView::onEditorModeChanged()
 {
-  DLOG_F(INFO, "onEditorModeChanged %s", fState ? "<fState>" : "nullptr");
   if(fState && getEditorMode())
   {
     LCDData &lcdData = fState->fHistoryState->fLCDData;
