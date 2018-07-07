@@ -134,8 +134,8 @@ public:
     void PLUGIN_API update(FUnknown *iChangedUnknown, Steinberg::int32 iMessage) SMTG_OVERRIDE;
 
     // disabling copy
-    Connection(Editor const &) = delete;
-    Connection& operator=(Editor const &) = delete;
+    Connection(Connection const &) = delete;
+    Connection& operator=(Connection const &) = delete;
 
   private:
     ParamID fParamID;

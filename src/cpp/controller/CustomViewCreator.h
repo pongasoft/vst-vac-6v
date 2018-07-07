@@ -177,6 +177,76 @@ private:
   };
 
   /**
+   * Specialization for an Integer attribute (which can be any kind of integer, like short, int32_t, etc..).
+   * The view must have getter and setter as defined by the types below.
+   */
+  template<typename TInt>
+  class IntegerAttribute : public ViewAttribute
+  {
+  public:
+    using Getter = TInt (TView::*)() const;
+    using Setter = void (TView::*)(TInt);
+
+    IntegerAttribute(std::string const &iName,
+                     Getter iGetter,
+                     Setter iSetter) :
+      ViewAttribute(iName),
+      fGetter{iGetter},
+      fSetter{iSetter}
+    {
+    }
+
+    // getType
+    IViewCreator::AttrType getType() override
+    {
+      return IViewCreator::kIntegerType;
+    }
+
+    // apply => set the tag value
+    bool apply(CView *iView, const UIAttributes &iAttributes, const IUIDescription *iDescription) override
+    {
+      auto *tv = dynamic_cast<TView *>(iView);
+      if(tv != nullptr)
+      {
+        TInt value = static_cast<TInt>(0);
+        auto integerAttr = iAttributes.getAttributeValue(getName());
+        if(integerAttr)
+        {
+          char *endPtr = nullptr;
+          value = static_cast<TInt>(strtol(integerAttr->c_str(), &endPtr, 10));
+          if(endPtr == integerAttr->c_str())
+          {
+            DLOG_F(WARNING, "could not convert <%s> to an integer", integerAttr->c_str());
+            value = static_cast<TInt>(0);
+          }
+        }
+        (tv->*fSetter)(value);
+        return true;
+      }
+      return false;
+    }
+
+    // getAttributeValue => get the integer value
+    bool getAttributeValue(CView *iView, const IUIDescription *iDescription, std::string &oStringValue) const override
+    {
+      auto *tv = dynamic_cast<TView *>(iView);
+      if(tv != nullptr)
+      {
+        TInt value = (tv->*fGetter)();
+        std::stringstream str;
+        str << value;
+        oStringValue = str.str();
+        return true;
+      }
+      return false;
+    }
+
+  private:
+    Getter fGetter;
+    Setter fSetter;
+  };
+
+  /**
    * Specialization for the color attribute. The view must have getter and setter as defined by the
    * types below.
    */
@@ -356,7 +426,7 @@ public:
   }
 
   /**
-   * Registers a color attribute with the given name and getter/setter
+   * Registers a tag attribute with the given name and getter/setter
    */
   void registerTagAttribute(std::string const &iName,
                             typename TagAttribute::Getter iGetter,
@@ -366,7 +436,28 @@ public:
   }
 
   /**
-   * Registers a color attribute with the given name and getter/setter
+   * Registers an Integer (any kind) attribute with the given name and getter/setter
+   */
+  template<typename TInt>
+  void registerIntegerAttribute(std::string const &iName,
+                                typename IntegerAttribute<TInt>::Getter iGetter,
+                                typename IntegerAttribute<TInt>::Setter iSetter)
+  {
+    registerAttribute<IntegerAttribute<TInt>>(iName, iGetter, iSetter);
+  }
+
+  /**
+   * Registers an int attribute with the given name and getter/setter
+   */
+  void registerIntAttribute(std::string const &iName,
+                            typename IntegerAttribute<int32_t>::Getter iGetter,
+                            typename IntegerAttribute<int32_t>::Setter iSetter)
+  {
+    registerIntegerAttribute<int32_t>(iName, iGetter, iSetter);
+  }
+
+  /**
+   * Registers a boolean attribute with the given name and getter/setter
    */
   void registerBooleanAttribute(std::string const &iName,
                                 typename BooleanAttribute::Getter iGetter,

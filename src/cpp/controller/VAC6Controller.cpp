@@ -1,10 +1,7 @@
 #include <vstgui4/vstgui/plugin-bindings/vst3editor.h>
-#include <pluginterfaces/vst/ivsteditcontroller.h>
 #include <base/source/fstreamer.h>
-#include <pluginterfaces/base/ustring.h>
 #include "../logging/loguru.hpp"
 #include "VAC6Controller.h"
-#include "../VAC6CIDs.h"
 
 namespace pongasoft {
 namespace VST {
