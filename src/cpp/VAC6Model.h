@@ -37,7 +37,8 @@ constexpr TSample HARD_CLIPPING_LEVEL = 1.0;
 constexpr double MIN_SOFT_CLIPPING_LEVEL_DB = -24;
 constexpr double MIN_VOLUME_DB = -60; // -60dB
 constexpr TSample MIN_AUDIO_SAMPLE = 0.001; // dbToSample<TSample>(-60.0)
-constexpr double DEFAULT_ZOOM_FACTOR_X = 0.5;
+// zoom varies from 30s to 1.28s (5ms * 256=1.28s) and we want default to be 15s
+constexpr double DEFAULT_ZOOM_FACTOR_X = 0.52228412256267409131;
 
 using LCDHistoryOffsetParamConverter = Common::PercentParamConverter;
 using LCDZoomFactorXParamConverter = Common::PercentParamConverter;

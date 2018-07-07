@@ -161,7 +161,7 @@ class LCDDisplayState : public VSTViewState<LCDDisplayView>
         // we bring now to "0" compare to startOfFade
         iTime -= startOfFade;
         auto lerp = Utils::Lerp<float>(0, 255, fFadeDuration, 0);
-        float alpha = lerp.compute(iTime);
+        float alpha = lerp.computeY(iTime);
         fColor.alpha = static_cast<uint8_t>(alpha);
       }
 

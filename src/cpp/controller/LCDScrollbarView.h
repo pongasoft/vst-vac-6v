@@ -85,12 +85,12 @@ protected:
 
     RelativeCoord computeCenter(double iPercent) const
     {
-      return Utils::Lerp<RelativeCoord>(fMinCenter, fMaxCenter).compute(iPercent);
+      return Utils::Lerp<RelativeCoord>(fMinCenter, fMaxCenter).computeY(iPercent);
     }
 
     double computePercent() const
     {
-      return Utils::Lerp<double>(fMinCenter, fMaxCenter).reverse(fCenter);
+      return Utils::Lerp<double>(fMinCenter, fMaxCenter).computeX(fCenter);
     }
 
     void move(CCoord iDeltaX)

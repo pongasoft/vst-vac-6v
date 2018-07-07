@@ -393,7 +393,7 @@ void LCDDisplayView::onEditorModeChanged()
 
     for(int i = 0; i < MAX_ARRAY_SIZE; i++)
     {
-      auto sample = i >= 10 && i < 13 ? 0.0: dbToSample<TSample>(dbLerp.compute(i));
+      auto sample = i >= 10 && i < 13 ? 0.0: dbToSample<TSample>(dbLerp.computeY(i));
       lcdData.fLeftChannel.fSamples[i] = sample;
       lcdData.fRightChannel.fSamples[MAX_ARRAY_SIZE - i - 1] = sample;
     }

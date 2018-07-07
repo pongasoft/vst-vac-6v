@@ -20,7 +20,10 @@ constexpr double MAX_HISTORY_OFFSET = 1.0; // percentage
 
 // the max will be accumulated for 5ms which is ~221 samples at 44100 sample rate
 constexpr int ACCUMULATOR_BATCH_SIZE_IN_MS = 5;
-constexpr int HISTORY_SIZE_IN_SECONDS = 10; // how long is the history in seconds
+constexpr int HISTORY_SIZE_IN_SECONDS = 30; // how long is the history in seconds
+// the buffer size is independent of the sample rate since one sample in the buffer is always made of
+// enough samples to fit ACCUMULATOR_BATCH_SIZE_IN_MS
+constexpr int SAMPLE_BUFFER_SIZE = HISTORY_SIZE_IN_SECONDS * 1000 / ACCUMULATOR_BATCH_SIZE_IN_MS; // 6000 samples
 
 /**
  * State of max level (hard clipping means above 0dB, soft clipping means above some defined threshold)

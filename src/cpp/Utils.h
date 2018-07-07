@@ -4,7 +4,7 @@ namespace pongasoft {
 namespace Utils {
 /**
  * Util class to compute linear interpolation. Note that assembly code totally removes this class which is great!
- * ex: Utils::Lerp(MAX_ZOOM_FACTOR_Y, 1.0).compute(fPropZoomFactorY.getValue());
+ * ex: Utils::Lerp(MAX_ZOOM_FACTOR_Y, 1.0).computeY(fPropZoomFactorY.getValue());
  */
 template <typename T>
 class Lerp
@@ -17,12 +17,12 @@ public:
    */
   Lerp(T iY0, T iY1) : fA(iY1 - iY0), fB(iY0) {};
 
-  inline T compute(T iX) const
+  inline T computeY(T iX) const
   {
     return (iX * fA) + fB;
   }
 
-  inline T reverse(T iY) const
+  inline T computeX(T iY) const
   {
     DCHECK_F(fA != 0);
     return (iY - fB) / fA;

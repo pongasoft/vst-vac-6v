@@ -29,7 +29,7 @@ ZoomWindow::ZoomWindow(int iVisibleWindowSize, int iBufferSize) :
 TZoom::MaxAccumulator ZoomWindow::setZoomFactor(double iZoomFactorPercent)
 {
   DCHECK_F(iZoomFactorPercent >= 0 && iZoomFactorPercent <= 1.0);
-  return __setRawZoomFactor(getZoomFactorLerp().compute(iZoomFactorPercent));
+  return __setRawZoomFactor(getZoomFactorLerp().computeY(iZoomFactorPercent));
 }
 
 ////////////////////////////////////////////////////////////
@@ -66,7 +66,7 @@ TZoom::MaxAccumulator ZoomWindow::__setRawZoomFactor(double iZoomFactor)
 int ZoomWindow::setZoomFactor(double iZoomFactorPercent, int iOffsetFromLeftOfScreen, std::initializer_list<CircularBuffer<TSample> const *>iBuffers)
 {
   DCHECK_F(iZoomFactorPercent >= 0 && iZoomFactorPercent <= 1.0);
-  return __setRawZoomFactor(getZoomFactorLerp().compute(iZoomFactorPercent), iOffsetFromLeftOfScreen, iBuffers);
+  return __setRawZoomFactor(getZoomFactorLerp().computeY(iZoomFactorPercent), iOffsetFromLeftOfScreen, iBuffers);
 }
 
 ////////////////////////////////////////////////////////////
@@ -203,7 +203,7 @@ void ZoomWindow::setWindowOffset(double iWindowOffsetPercent)
   DCHECK_F(iWindowOffsetPercent >= 0 && iWindowOffsetPercent <= 1.0);
 
   auto lerp = getWindowOffsetLerp();
-  __setRawWindowOffset(static_cast<int>(lerp.compute(iWindowOffsetPercent)));
+  __setRawWindowOffset(static_cast<int>(lerp.computeY(iWindowOffsetPercent)));
 }
 
 ////////////////////////////////////////////////////////////
@@ -215,7 +215,7 @@ double ZoomWindow::getWindowOffset() const
     return 1.0;
 
   auto lerp = getWindowOffsetLerp();
-  return lerp.reverse(fWindowOffset);
+  return lerp.computeX(fWindowOffset);
 }
 
 ////////////////////////////////////////////////////////////

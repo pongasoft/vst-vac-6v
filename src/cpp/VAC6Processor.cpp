@@ -158,20 +158,19 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
   delete fLeftChannelProcessor;
   delete fZoomWindow;
 
+  // TODO communicate sample rate to UI so that we can get rid of this in the processing side
   fMaxAccumulatorBatchSize = fClock.getSampleCountFor(ACCUMULATOR_BATCH_SIZE_IN_MS);
-  auto maxBufferSize = static_cast<int>(ceil(fClock.getSampleCountFor(HISTORY_SIZE_IN_SECONDS * 1000) / fMaxAccumulatorBatchSize));
 
-  fZoomWindow = new ZoomWindow(MAX_ARRAY_SIZE, maxBufferSize);
-  fLeftChannelProcessor = new VAC6AudioChannelProcessor(fClock, fZoomWindow, fMaxAccumulatorBatchSize, maxBufferSize);
-  fRightChannelProcessor = new VAC6AudioChannelProcessor(fClock, fZoomWindow, fMaxAccumulatorBatchSize, maxBufferSize);
+  fZoomWindow = new ZoomWindow(MAX_ARRAY_SIZE, SAMPLE_BUFFER_SIZE);
+  fLeftChannelProcessor = new VAC6AudioChannelProcessor(fClock, fZoomWindow, SAMPLE_BUFFER_SIZE);
+  fRightChannelProcessor = new VAC6AudioChannelProcessor(fClock, fZoomWindow, SAMPLE_BUFFER_SIZE);
 
   DLOG_F(INFO,
-         "VAC6Processor::setupProcessing(processMode=%d, symbolicSampleSize=%d, maxSamplesPerBlock=%d, sampleRate=%f, fMaxBufferSize=%d, accumulatorBatchSize=%d)",
+         "VAC6Processor::setupProcessing(processMode=%d, symbolicSampleSize=%d, maxSamplesPerBlock=%d, sampleRate=%f, accumulatorBatchSize=%d)",
          setup.processMode,
          setup.symbolicSampleSize,
          setup.maxSamplesPerBlock,
          setup.sampleRate,
-         maxBufferSize,
          fMaxAccumulatorBatchSize);
 
   return result;

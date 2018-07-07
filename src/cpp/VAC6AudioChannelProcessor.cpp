@@ -14,10 +14,9 @@ using namespace VST::Common;
 /////////////////////////////////////////
 VAC6AudioChannelProcessor::VAC6AudioChannelProcessor(const SampleRateBasedClock &iClock,
                                                      ZoomWindow *iZoomWindow,
-                                                     uint32 iMaxAccumulatorBatchSize,
                                                      int iMaxBufferSize) :
   fClock{iClock},
-  fMaxAccumulatorForBuffer(iMaxAccumulatorBatchSize),
+  fMaxAccumulatorForBuffer(fClock.getSampleCountFor(ACCUMULATOR_BATCH_SIZE_IN_MS)),
   fMaxBuffer{new CircularBuffer<TSample>(iMaxBufferSize)},
   fMaxLevelSinceReset{0},
   fZoomMaxAccumulator{iZoomWindow->setZoomFactor(DEFAULT_ZOOM_FACTOR_X)},

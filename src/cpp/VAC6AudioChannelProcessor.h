@@ -88,7 +88,6 @@ public:
   // Constructor
   explicit VAC6AudioChannelProcessor(const SampleRateBasedClock &iClock,
                                      ZoomWindow *iZoomWindow,
-                                     uint32 iMaxAccumulatorBatchSize,
                                      int iMaxBufferSize);
 
   // Destructor
