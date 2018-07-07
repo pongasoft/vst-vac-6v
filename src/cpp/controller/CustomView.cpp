@@ -12,8 +12,8 @@ using namespace VSTGUI;
 ///////////////////////////////////////////
 // CustomView::CustomView
 ///////////////////////////////////////////
-CustomView::CustomView(const CRect &size)
-  : CView(size),
+CustomView::CustomView(const CRect &iSize)
+  : CView(iSize),
     fBackColor{0,0,0},
     fEditorMode{false},
     fParameters{nullptr}
@@ -39,12 +39,12 @@ void CustomView::draw(CDrawContext *iContext)
 ///////////////////////////////////////////
 // CustomView::setBackColor
 ///////////////////////////////////////////
-void CustomView::setBackColor(CColor const &color)
+void CustomView::setBackColor(CColor const &iColor)
 {
   // to force the redraw
-  if(fBackColor != color)
+  if(fBackColor != iColor)
   {
-    fBackColor = color;
+    fBackColor = iColor;
     drawStyleChanged();
   }
 }

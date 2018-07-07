@@ -90,38 +90,6 @@ inline TSample fromDisplayValue(double iDisplayValue, double iHeight)
 std::string toDbString(TSample iSample);
 
 ///////////////////////////////////
-// MaxLevelMode
-///////////////////////////////////
-enum MaxLevelMode
-{
-  kMaxSinceReset = 0,
-  kMaxInWindow = 1
-};
-
-constexpr MaxLevelMode DEFAULT_MAX_LEVEL_MODE = MaxLevelMode::kMaxSinceReset;
-
-class MaxLevelModeParamConverter
-{
-private:
-  using DVC = Common::DiscreteValueParamConverter<1>;
-
-public:
-  static inline ParamValue normalize(MaxLevelMode const &iMaxLevelVode)
-  {
-    return DVC::normalize(iMaxLevelVode);
-  }
-
-  static inline MaxLevelMode denormalize(ParamValue iNormalizedValue)
-  {
-    int discreteValue = DVC::denormalize(iNormalizedValue);
-    if(discreteValue == 0)
-      return kMaxSinceReset;
-    else
-      return kMaxInWindow;
-  }
-};
-
-///////////////////////////////////
 // SoftClippingLevel
 ///////////////////////////////////
 class SoftClippingLevel
@@ -140,7 +108,7 @@ public:
 // 0.0  => -24dB => (10^-24/20 => 0.06 sample value)
 // => scl = A * x + B in dB => 10 ^ scl/20 in sample
 
-  inline ParamValue getNormalizedParam() const
+  inline ParamValue getNormalizedValue() const
   {
     return (MIN_SOFT_CLIPPING_LEVEL_DB - getValueInDb()) / MIN_SOFT_CLIPPING_LEVEL_DB;
   }
@@ -153,12 +121,52 @@ public:
 
   static ParamValue normalize(SoftClippingLevel const &iSoftClippingLevel)
   {
-    return iSoftClippingLevel.getNormalizedParam();
+    return iSoftClippingLevel.getNormalizedValue();
   }
 
 private:
   Sample64 fValueInSample;
 };
+
+///////////////////////////////////
+// Gain
+///////////////////////////////////
+class Gain
+{
+public:
+  static constexpr double Unity = 1.0;
+  static constexpr double Factor = 0.7;
+
+  constexpr explicit Gain(double iValue = Unity) : fValue{iValue} {}
+
+  inline double getValue() const { return fValue; }
+  inline double getValueInDb() const { return sampleToDb(fValue); }
+  inline ParamValue getNormalizedValue() const { return normalize(*this); }
+
+  /**
+   * Gain uses an x^3 curve with 0.7 (Param Value) being unity gain
+   */
+  static Gain denormalize(ParamValue value)
+  {
+    if(std::fabs(value - Factor) < 1e-5)
+      return Gain{};
+
+    // gain = (value / 0.7) ^ 3
+    double correctedGain = value / Factor;
+    return Gain{correctedGain * correctedGain * correctedGain};
+  }
+
+  static ParamValue normalize(Gain const &iGain)
+  {
+    // value = (gain ^ 1/3) * 0.7
+    return std::pow(iGain.fValue, 1.0/3) * Factor;
+  }
+
+private:
+  double fValue;
+};
+
+constexpr Gain DEFAULT_GAIN = Gain{};
 
 ///////////////////////////////////
 // MaxLevel

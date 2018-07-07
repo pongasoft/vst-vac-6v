@@ -58,6 +58,8 @@ set(vst_sources
 		${CPP_SOURCES}/controller/CustomViewCreator.h
 		${CPP_SOURCES}/controller/DrawContext.h
 		${CPP_SOURCES}/controller/DrawContext.cpp
+		${CPP_SOURCES}/controller/GainView.h
+		${CPP_SOURCES}/controller/GainView.cpp
 		${CPP_SOURCES}/controller/HistoryView.h
 		${CPP_SOURCES}/controller/HistoryView.cpp
 		${CPP_SOURCES}/controller/LCDDisplayView.h

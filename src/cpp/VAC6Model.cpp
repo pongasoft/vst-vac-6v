@@ -109,10 +109,10 @@ std::string toDbString(TSample iSample)
     iSample = -iSample;
 
   char text[128];
-    if(iSample >= Common::Sample64SilentThreshold)
-      sprintf(text, "%+.2f", sampleToDb(iSample));
-    else
-      sprintf(text, "-oo");
+  if(iSample >= Common::Sample64SilentThreshold)
+    sprintf(text, "%+.2f", sampleToDb(iSample));
+  else
+    sprintf(text, "-oo");
   return std::string(text);
 }
 

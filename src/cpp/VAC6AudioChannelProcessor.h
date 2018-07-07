@@ -130,7 +130,8 @@ public:
   template<typename SampleType>
   bool genericProcessChannel(ZoomWindow const *iZoomWindow,
                              const typename AudioBuffers<SampleType>::Channel &iIn,
-                             typename AudioBuffers<SampleType>::Channel &iOut);
+                             typename AudioBuffers<SampleType>::Channel &iOut,
+                             Gain const &iGain);
 
 private:
   SampleRateBasedClock fClock;

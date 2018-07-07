@@ -368,11 +368,12 @@ private:
 ///////////////////////////////////////////
 // class VSTParameters
 ///////////////////////////////////////////
+class VSTParametersManager;
 
 /**
  * Encapsulates access to the vst parameters defined in the controller
  */
-class VSTParameters
+class VSTParameters : public std::enable_shared_from_this<VSTParameters>
 {
 public:
   // Constructor
@@ -386,9 +387,6 @@ public:
   VSTParameters(VSTParameters const&) = delete;
   VSTParameters& operator=(VSTParameters const &) = delete;
 
-  // Destructor
-  ~VSTParameters() = default;
-
   /**
    * @return the raw parameter given its id
    */
@@ -396,6 +394,11 @@ public:
   {
     return std::make_unique<RawParameter>(iParamID, fParameterOwner);
   }
+
+  /**
+   * Creates a manager
+   */
+  std::unique_ptr<VSTParametersManager> createManager();
 
 private:
   ParameterOwner *const fParameterOwner;
@@ -423,10 +426,6 @@ using DiscreteParameter = VSTParameter<int, Common::DiscreteValueParamConverter<
 class VSTParametersManager
 {
 public:
-  explicit VSTParametersManager(std::shared_ptr<VSTParameters> iParameters) :
-                                fParameters{std::move(iParameters)}
-  {}
-
   /**
    * Registers a raw parameter (no conversion)
    */
@@ -450,6 +449,13 @@ public:
   // shortcut for PercentParameter
   std::unique_ptr<PercentParameter> registerPercentParameter(ParamID iParamID,
                                                              RawParameter::IChangeListener *iChangeListener = nullptr);
+
+  friend class VSTParameters;
+
+protected:
+  explicit VSTParametersManager(std::shared_ptr<VSTParameters> iParameters) :
+    fParameters{std::move(iParameters)}
+  {}
 
 private:
 

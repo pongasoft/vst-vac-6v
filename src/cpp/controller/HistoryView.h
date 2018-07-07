@@ -13,11 +13,9 @@ using namespace Common;
 
 // TODO => this syntax is completely valid but CLion chokes on it :(
 //using SoftClippingLevelParameter = VSTParameterFromClass<SoftClippingLevel>;
-//using MaxLevelModeParameter = VSTParameterFromType<MaxLevelMode, MaxLevelModeParamConverter>;
 //using LCDInputXParameter = VSTParameterFromType<int, LCDInputXParamConverter>;
 
 using SoftClippingLevelParameter = VSTParameter<SoftClippingLevel, SoftClippingLevel::denormalize, SoftClippingLevel::normalize>;
-using MaxLevelModeParameter = VSTParameter<MaxLevelMode, MaxLevelModeParamConverter::denormalize, MaxLevelModeParamConverter::normalize>;
 using LCDInputXParameter = VSTParameter<int, LCDInputXParamConverter::denormalize, LCDInputXParamConverter::normalize>;
 
 class HistoryState;

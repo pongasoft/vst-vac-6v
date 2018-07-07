@@ -26,6 +26,9 @@ enum EVAC6ParamID : Steinberg::Vst::ParamID
   kLCDLiveView = 3030,      // live view/pause toggle
   kLCDInputX = 3040,        // selected position on the screen when paused
   kLCDHistoryOffset = 3050, // position is a percent in the history [0.0, 1.0]
+
+  kGain1 = 4000,
+  kGain2 = 4010,
 };
 
 // tags associated to custom views (not associated to params)
@@ -35,7 +38,8 @@ enum EVAC6CustomViewTag : Steinberg::Vst::ParamID
   kMaxLevelInWindow = 2,
   kMaxLevelForSelection = 3,
   kLCD = 4,
-  KLCDScrollbar = 5
+  KLCDScrollbar = 5,
+  kGain = 6,
 };
 
 enum EVAC6MessageID

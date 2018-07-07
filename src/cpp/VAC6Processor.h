@@ -102,6 +102,8 @@ private:
     bool fLCDLiveView{true};
     int fLCDInputX{MAX_LCD_INPUT_X};
     double fLCDHistoryOffset{MAX_HISTORY_OFFSET};
+    Gain fGain1{};
+    Gain fGain2{};
 
     void updateLCDInputX(ProcessData& iData, int iLCDInputX);
     void updateLCDHistoryOffset(ProcessData& iData, double iLCDHistoryOffset);
@@ -111,6 +113,8 @@ private:
 
   State fState;
   State fPreviousState;
+
+  Gain fGain;
 
   SampleRateBasedClock fClock;
 

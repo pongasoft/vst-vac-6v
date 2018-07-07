@@ -158,6 +158,16 @@ VSTParametersManager::registerPercentParameter(ParamID iParamID, RawParameter::I
   return registerRawParameter(iParamID, iChangeListener);
 }
 
+///////////////////////////////////////////
+// VSTParametersManager::createManager
+///////////////////////////////////////////
+std::unique_ptr<VSTParametersManager> VSTParameters::createManager()
+{
+  // not using make_unique because protected constructor
+  std::unique_ptr<VSTParametersManager> ptr{new VSTParametersManager(shared_from_this())};
+  return ptr;
+}
+
 }
 }
 }

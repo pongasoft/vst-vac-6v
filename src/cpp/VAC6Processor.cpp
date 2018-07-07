@@ -18,7 +18,8 @@ using namespace VAC6;
 template<typename SampleType>
 bool VAC6AudioChannelProcessor::genericProcessChannel(ZoomWindow const *iZoomWindow,
                                                       typename AudioBuffers<SampleType>::Channel const &iIn,
-                                                      typename AudioBuffers<SampleType>::Channel &iOut)
+                                                      typename AudioBuffers<SampleType>::Channel &iOut,
+                                                      Gain const &iGain)
 {
   DCHECK_EQ_F(iIn.getNumSamples(), iOut.getNumSamples());
 
@@ -36,7 +37,10 @@ bool VAC6AudioChannelProcessor::genericProcessChannel(ZoomWindow const *iZoomWin
 
   for(int i = 0; i < numSamples; ++i, inPtr++, outPtr++)
   {
-    const TSample sample = *inPtr;
+    TSample sample = *inPtr;
+
+    if(iGain.getValue() != Gain::Unity)
+      sample *= iGain.getValue();
 
     if(fIsLiveView)
     {
@@ -77,6 +81,7 @@ VAC6Processor::VAC6Processor() :
   fMaxLevelResetRequested{false},
   fState{},
   fPreviousState{fState},
+  fGain{fState.fGain1.getValue() * fState.fGain2.getValue()},
   fStateUpdate{},
   fLatestState{fState},
   fClock{44100},
@@ -240,6 +245,14 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
     isNewPause =!isNewLiveView;
   }
 
+  // gain has changed
+  if(fPreviousState.fGain1.getValue() != fState.fGain1.getValue() ||
+     fPreviousState.fGain2.getValue() != fState.fGain2.getValue())
+  {
+    // simply combine the 2 gains
+    fGain = Gain{fState.fGain1.getValue() * fState.fGain2.getValue()};
+  }
+
   // Zoom has changed
   if(fPreviousState.fZoomFactorX != fState.fZoomFactorX)
   {
@@ -301,8 +314,8 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   auto leftChannel = out.getLeftChannel();
   auto rightChannel = out.getRightChannel();
 
-  fLeftChannelProcessor->genericProcessChannel<SampleType>(fZoomWindow, in.getLeftChannel(), leftChannel);
-  fRightChannelProcessor->genericProcessChannel<SampleType>(fZoomWindow, in.getRightChannel(), rightChannel);
+  fLeftChannelProcessor->genericProcessChannel<SampleType>(fZoomWindow, in.getLeftChannel(), leftChannel, fGain);
+  fRightChannelProcessor->genericProcessChannel<SampleType>(fZoomWindow, in.getRightChannel(), rightChannel, fGain);
 
   // if reset of max level is requested (pressing momentary button) then we need to reset the accumulator
   if(fMaxLevelResetRequested)
@@ -441,6 +454,16 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
             stateChanged |= newState.fLCDHistoryOffset != fState.fLCDHistoryOffset;
             break;
 
+          case kGain1:
+            newState.fGain1 = Gain::denormalize(value);
+            stateChanged |= newState.fGain1.getValue() != fState.fGain1.getValue();
+            break;
+
+          case kGain2:
+            newState.fGain2 = Gain::denormalize(value);
+            stateChanged |= newState.fGain2.getValue() != fState.fGain2.getValue();
+            break;
+
           default:
             // shouldn't happen?
             break;
@@ -502,15 +525,33 @@ tresult VAC6Processor::setState(IBStream *state)
     newState.fRightChannelOn = savedParam;
   }
 
+  // gain1
+  {
+    double savedParam;
+    if(!streamer.readDouble(savedParam))
+      savedParam = Gain::Unity;
+    newState.fGain1 = Gain{savedParam};
+  }
+
+  // gain2
+  {
+    double savedParam;
+    if(!streamer.readDouble(savedParam))
+      savedParam = Gain::Unity;
+    newState.fGain2 = Gain{savedParam};
+  }
+
   // lcd live view IGNORED! (does not make sense to not be in live view when loading)
 
   fStateUpdate.push(newState);
 
-  DLOG_F(INFO, "VAC6Processor::setState => fSoftClippingLevel=%f, fZoomFactorX=%f, fLeftChannelOn=%d, fRightChannelOn=%d",
+  DLOG_F(INFO, "VAC6Processor::setState => fSoftClippingLevel=%f, fZoomFactorX=%f, fLeftChannelOn=%d, fRightChannelOn=%d, fGain1=%f, fGain2=%f",
          newState.fSoftClippingLevel.getValueInSample(),
          newState.fZoomFactorX,
          newState.fLeftChannelOn,
-         newState.fRightChannelOn);
+         newState.fRightChannelOn,
+         newState.fGain1.getValue(),
+         newState.fGain2.getValue());
 
   return kResultOk;
 }
@@ -531,12 +572,16 @@ tresult VAC6Processor::getState(IBStream *state)
   streamer.writeDouble(latestState.fZoomFactorX);
   streamer.writeBool(latestState.fLeftChannelOn);
   streamer.writeBool(latestState.fRightChannelOn);
+  streamer.writeDouble(latestState.fGain1.getValue());
+  streamer.writeDouble(latestState.fGain2.getValue());
 
-  DLOG_F(INFO, "VAC6Processor::getState => fSoftClippingLevel=%f, fZoomFactorX=%f, fLeftChannelOn=%d, fRightChannelOn=%d",
+  DLOG_F(INFO, "VAC6Processor::getState => fSoftClippingLevel=%f, fZoomFactorX=%f, fLeftChannelOn=%d, fRightChannelOn=%d, fGain1=%f, fGain2=%f",
          latestState.fSoftClippingLevel.getValueInSample(),
          latestState.fZoomFactorX,
          latestState.fLeftChannelOn,
-         latestState.fRightChannelOn);
+         latestState.fRightChannelOn,
+         latestState.fGain1.getValue(),
+         latestState.fGain2.getValue());
 
   return kResultOk;
 }

@@ -79,13 +79,13 @@ class CustomView : public CView, RawParameter::IChangeListener
 {
 public:
   // Constructor
-  explicit CustomView(const CRect &size);
+  explicit CustomView(const CRect &iSize);
 
   // Deleting for now... not sure there is an actual use for it
   CustomView(const CustomView &c) = delete;
 
   // setBackColor / getBackColor
-  void setBackColor(CColor const &color);
+  void setBackColor(CColor const &iColor);
   CColor const &getBackColor() const { return fBackColor; }
 
   // setCustomViewTag / getCustomViewTag
@@ -124,9 +124,9 @@ public:
   /**
    * Called by the controller to initialize the VSTParameters object
    */
-  virtual void initParameters(std::shared_ptr<VSTParameters> iParameters)
+  virtual void initParameters(std::shared_ptr<VSTParameters> const &iParameters)
   {
-    fParameters = std::make_unique<VSTParametersManager>(std::move(iParameters));
+    fParameters = iParameters->createManager();
     registerParameters();
   }
 

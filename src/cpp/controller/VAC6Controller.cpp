@@ -46,11 +46,41 @@ tresult VAC6Controller::initialize(FUnknown *context)
   parameters.addParameter(STR16 ("Soft Clipping Level"), // title
                           nullptr, // units
                           0, // stepCount => continuous
-                          SoftClippingLevel{DEFAULT_SOFT_CLIPPING_LEVEL}.getNormalizedParam(), // defaultNormalizedValue
+                          SoftClippingLevel{DEFAULT_SOFT_CLIPPING_LEVEL}.getNormalizedValue(), // defaultNormalizedValue
                           ParameterInfo::ParameterFlags::kCanAutomate, // flags
                           EVAC6ParamID::kSoftClippingLevel, // tag
                           kRootUnitId, // unitID => not using units at this stage
                           STR16 ("Sft Clp Lvl")); // shortTitle
+
+  // the zoom level knob
+  parameters.addParameter(STR16 ("Zoom Level"), // title
+                          nullptr, // units
+                          0, // stepCount => continuous
+                          DEFAULT_ZOOM_FACTOR_X, // defaultNormalizedValue
+                          ParameterInfo::ParameterFlags::kCanAutomate, // flags
+                          EVAC6ParamID::kLCDZoomFactorX, // tag
+                          kRootUnitId, // unitID => not using units at this stage
+                          STR16 ("Zoom Lvl")); // shortTitle
+
+  // the Gain1 knob
+  parameters.addParameter(STR16 ("Gain 1"), // title
+                          nullptr, // units
+                          0, // stepCount => continuous
+                          DEFAULT_GAIN.getNormalizedValue(), // defaultNormalizedValue
+                          ParameterInfo::ParameterFlags::kCanAutomate, // flags
+                          EVAC6ParamID::kGain1, // tag
+                          kRootUnitId, // unitID => not using units at this stage
+                          STR16 ("Gain1")); // shortTitle
+
+  // the Gain2 knob
+  parameters.addParameter(STR16 ("Gain 2"), // title
+                          nullptr, // units
+                          0, // stepCount => continuous
+                          DEFAULT_GAIN.getNormalizedValue(), // defaultNormalizedValue
+                          ParameterInfo::ParameterFlags::kCanAutomate, // flags
+                          EVAC6ParamID::kGain2, // tag
+                          kRootUnitId, // unitID => not using units at this stage
+                          STR16 ("Gain2")); // shortTitle
 
   // the momentary button that resets the max level
   parameters.addParameter(STR16 ("Max Level Reset"), // title
@@ -81,16 +111,6 @@ tresult VAC6Controller::initialize(FUnknown *context)
                           EVAC6ParamID::kMaxLevelInWindowMarker, // tag
                           kRootUnitId, // unitID => not using units at this stage
                           STR16 ("Wdw Mkr")); // shortTitle
-
-  // the zoom level knob
-  parameters.addParameter(STR16 ("Zoom Level"), // title
-                          nullptr, // units
-                          0, // stepCount => continuous
-                          DEFAULT_ZOOM_FACTOR_X, // defaultNormalizedValue
-                          ParameterInfo::ParameterFlags::kCanAutomate, // flags
-                          EVAC6ParamID::kLCDZoomFactorX, // tag
-                          kRootUnitId, // unitID => not using units at this stage
-                          STR16 ("Zoom Lvl")); // shortTitle
 
   // on/off toggle to show/hide left channel
   parameters.addParameter(STR16 ("Left Channel"), // title
@@ -229,7 +249,7 @@ tresult VAC6Controller::setComponentState(IBStream *state)
   if(!streamer.readDouble(savedParamSoftLevelClipping))
     savedParamSoftLevelClipping = DEFAULT_SOFT_CLIPPING_LEVEL;
   setParamNormalized(EVAC6ParamID::kSoftClippingLevel,
-                     SoftClippingLevel{savedParamSoftLevelClipping}.getNormalizedParam());
+                     SoftClippingLevel{savedParamSoftLevelClipping}.getNormalizedValue());
 
   // EVAC6ParamID::kLCDZoomFactorX
   double savedParamZoomFactorX = 0.f;
@@ -250,11 +270,27 @@ tresult VAC6Controller::setComponentState(IBStream *state)
     savedRightChannelOn = true;
   setParamNormalized(EVAC6ParamID::kLCDRightChannel, BooleanParamConverter::normalize(savedRightChannelOn));
 
-  DLOG_F(INFO, "VAC6Controller::setComponentState => kSoftClippingLevel=%f, kLCDZoomFactorX=%f, kLCDLeftChannel=%d, kLCDRightChannel=%d",
+  // EVAC6ParamID::kGain1
+  double savedGain1 = 0.f;
+  if(!streamer.readDouble(savedGain1))
+    savedGain1 = Gain::Unity;
+  setParamNormalized(EVAC6ParamID::kGain1,
+                     Gain{savedGain1}.getNormalizedValue());
+
+  // EVAC6ParamID::kGain2
+  double savedGain2 = 0.f;
+  if(!streamer.readDouble(savedGain2))
+    savedGain2 = Gain::Unity;
+  setParamNormalized(EVAC6ParamID::kGain2,
+                     Gain{savedGain2}.getNormalizedValue());
+
+  DLOG_F(INFO, "VAC6Controller::setComponentState => kSoftClippingLevel=%f, kLCDZoomFactorX=%f, kLCDLeftChannel=%d, kLCDRightChannel=%d, kGain1=%f, kGain2=%f",
          savedParamSoftLevelClipping,
          savedParamZoomFactorX,
          savedLeftChannelOn,
-         savedRightChannelOn);
+         savedRightChannelOn,
+         savedGain1,
+         savedGain2);
 
   return kResultOk;
 }
