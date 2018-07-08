@@ -2,6 +2,9 @@
 
 #include <public.sdk/source/vst/vsteditcontroller.h>
 #include <vstgui4/vstgui/plugin-bindings/vst3editor.h>
+
+#include <utility>
+#include "CustomViewFactory.h"
 #include "VSTViewState.h"
 #include "LCDDisplayView.h"
 #include "MaxLevelView.h"
@@ -69,6 +72,8 @@ private:
 
   // the vst parameters
   std::shared_ptr<VSTParameters> fVSTParameters;
+
+  CustomUIViewFactory *fViewFactory;
 
   // the history state (shared by fMaxLevelState & fLCDDisplayState)
   std::shared_ptr<HistoryState> fHistoryState;

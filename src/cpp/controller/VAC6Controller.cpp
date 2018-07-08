@@ -12,6 +12,7 @@ namespace VAC6 {
 ///////////////////////////////////////////
 VAC6Controller::VAC6Controller() : EditController(),
                                    fXmlFile("VAC6.uidesc"),
+                                   fVSTParameters{nullptr},
                                    fHistoryState{std::make_shared<HistoryState>()},
                                    fMaxLevelSinceResetState{MaxLevelState::Type::kSinceReset, fHistoryState},
                                    fMaxLevelInWindowState{MaxLevelState::Type::kInWindow, fHistoryState},
@@ -163,6 +164,7 @@ tresult VAC6Controller::initialize(FUnknown *context)
                           STR16 ("Gph Scr.")); // shortTitle
 
   fVSTParameters = std::make_shared<VSTParameters>(this);
+  fViewFactory = new CustomUIViewFactory(fVSTParameters);
 
   return result;
 }
@@ -172,6 +174,7 @@ tresult VAC6Controller::initialize(FUnknown *context)
 ///////////////////////////////////////////
 tresult VAC6Controller::terminate()
 {
+  delete fViewFactory;
   fVSTParameters = nullptr;
 
   return EditController::terminate();
@@ -184,7 +187,8 @@ IPlugView *VAC6Controller::createView(const char *name)
 {
   if(name && strcmp(name, ViewType::kEditor) == 0)
   {
-    return new VSTGUI::VST3Editor(this, "view", fXmlFile);
+    UIDescription *uiDescription = new UIDescription(fXmlFile,fViewFactory);
+    return new VSTGUI::VST3Editor(uiDescription, this, "view", fXmlFile);
   }
   return nullptr;
 }
@@ -200,8 +204,6 @@ CView *VAC6Controller::verifyView(CView *view,
   auto customView = dynamic_cast<CustomView *>(view);
   if(customView != nullptr)
   {
-    customView->initParameters(fVSTParameters);
-
     switch(customView->getCustomViewTag())
     {
       case EVAC6CustomViewTag::kMaxLevelSinceReset:

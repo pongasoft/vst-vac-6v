@@ -75,7 +75,7 @@ using namespace VSTGUI;
  *   }
  * }
  */
-class CustomView : public CView, RawParameter::IChangeListener
+class CustomView : public CView, public RawParameter::IChangeListener, public CustomViewInitializer
 {
 public:
   // Constructor
@@ -122,23 +122,6 @@ public:
 public:
 
   /**
-   * Called by the controller to initialize the VSTParameters object
-   */
-  virtual void initParameters(std::shared_ptr<VSTParameters> const &iParameters)
-  {
-    fParameters = iParameters->createManager();
-    registerParameters();
-  }
-
-  /**
-   * Subclasses should override this method to register each parameter
-   */
-  virtual void registerParameters()
-  {
-    // subclasses implements this method
-  }
-
-  /**
    * Registers a raw parameter (no conversion)
    */
   std::unique_ptr<RawParameter> registerRawParameter(ParamID iParamID, bool iSubscribeToChanges = true);
@@ -159,6 +142,31 @@ public:
   std::unique_ptr<PercentParameter> registerPercentParameter(ParamID iParamID, bool iSubscribeToChanges = true);
 
   CLASS_METHODS_NOCOPY(CustomView, CControl)
+
+  void afterCreate(UIAttributes const &iAttributes, IUIDescription const *iDescription) override;
+
+  // beforeApply
+  void beforeApply(UIAttributes const &iAttributes, IUIDescription const *iDescription) override;
+
+  // afterApply
+  void afterApply(UIAttributes const &iAttributes, IUIDescription const *iDescription) override;
+
+protected:
+  /**
+   * Called during initialization
+   */
+  virtual void initParameters(std::shared_ptr<VSTParameters> const &iParameters)
+  {
+    fParameters = iParameters->createManager();
+  }
+
+  /**
+   * Subclasses should override this method to register each parameter
+   */
+  virtual void registerParameters()
+  {
+    // subclasses implements this method
+  }
 
 protected:
   int32_t fTag;
@@ -193,9 +201,8 @@ public:
   explicit CustomControlView(const CRect &iSize) : CustomView(iSize) {}
 
   // get/setControlTag
-  void setControlTag (int32_t iTag);
+  void setControlTag (int32_t iTag) { fControlTag = iTag; };
   int32_t getControlTag () const { return fControlTag; }
-  virtual void onControlTagChange() {}
 
 public:
   CLASS_METHODS_NOCOPY(CustomControlView, CustomView)
@@ -235,16 +242,10 @@ public:
   typename TVSTParameter::value_type getControlValue() const;
   void setControlValue(typename TVSTParameter::value_type const &iControlValue);
 
-  // onControlTagChange
-  void onControlTagChange() override;
-
   // registerParameters
   void registerParameters() override;
 
 protected:
-  // parameters are registered after the fact
-  void registerControlParameter();
-
   // the vst parameter tied to the control
   std::unique_ptr<TVSTParameter> fControlParameter{nullptr};
 
@@ -299,61 +300,38 @@ void TCustomControlView<TVSTParameter>::setControlValue(typename TVSTParameter::
 }
 
 ///////////////////////////////////////////
-// TCustomControlView<TVSTParameter>::onControlTagChange
-///////////////////////////////////////////
-template<typename TVSTParameter>
-void TCustomControlView<TVSTParameter>::onControlTagChange()
-{
-  CustomControlView::onControlTagChange();
-  registerControlParameter();
-}
-
-///////////////////////////////////////////
 // TCustomControlView<TVSTParameter>::registerParameters
 ///////////////////////////////////////////
 template<typename TVSTParameter>
 void TCustomControlView<TVSTParameter>::registerParameters()
 {
   CustomControlView::registerParameters();
-  registerControlParameter();
-}
+  if(!fParameters)
+    ABORT_F("fParameters should have been registered");
 
-///////////////////////////////////////////
-// TCustomControlView<TVSTParameter>::registerControlParameter
-///////////////////////////////////////////
-template<typename TVSTParameter>
-void TCustomControlView<TVSTParameter>::registerControlParameter()
-{
 #if EDITOR_MODE
   if(getControlTag() >= 0)
   {
     auto paramID = static_cast<ParamID>(getControlTag());
-    if(fParameters)
+    if(fParameters->exists(paramID))
     {
-      if(fParameters->exists(paramID))
-      {
-        fControlParameter = registerVSTParameter<TVSTParameter>(paramID);
-        fControlValue = fControlParameter->getValue();
-      }
-      else
-      {
-        DLOG_F(WARNING, "Parameter[%d] does not exist", paramID);
-        fControlParameter = nullptr;
-      }
+      fControlParameter = registerVSTParameter<TVSTParameter>(paramID);
+      fControlValue = fControlParameter->getValue();
+    }
+    else
+    {
+      DLOG_F(WARNING, "Parameter[%d] does not exist", paramID);
+      fControlParameter = nullptr;
     }
   }
 #else
   auto paramID = static_cast<ParamID>(getControlTag());
-  if(fParameters)
-  {
-    if(fParameters->exists(paramID))
-      fControlParameter = registerVSTParameter<TVSTParameter>(paramID);
-    else
-      ABORT_F("Could not find parameter for control tag [%d]", paramID);
-  }
+  if(fParameters->exists(paramID))
+    fControlParameter = registerVSTParameter<TVSTParameter>(paramID);
+  else
+    ABORT_F("Could not find parameter for control tag [%d]", paramID);
 #endif
 }
-
 }
 }
 }

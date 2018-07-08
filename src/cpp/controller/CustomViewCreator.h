@@ -67,6 +67,16 @@ private:
 };
 
 /**
+ * Interface which is implemented by views interested in being notified during the creation/parameter apply phase */
+class CustomViewInitializer
+{
+public:
+  virtual void afterCreate(UIAttributes const &iAttributes, IUIDescription const *iDescription) = 0;
+  virtual void beforeApply(UIAttributes const &iAttributes, IUIDescription const *iDescription) = 0;
+  virtual void afterApply(UIAttributes const &iAttributes, IUIDescription const *iDescription) = 0;
+};
+
+/**
  * Generic custom view creator base class. Inherit from it and call the various "registerXX" methods in the constructor.
  *
  * In case of inheritance, you do the following:
@@ -472,7 +482,14 @@ public:
   CView *create(const UIAttributes &attributes, const IUIDescription *description) const override
   {
     DLOG_F(INFO, "CustomViewCreator<%s>::create()", getViewName());
-    return new TView(CRect(0, 0, 0, 0));
+
+    auto tv = new TView(CRect(0, 0, 0, 0));
+
+    auto *cvi = dynamic_cast<CustomViewInitializer *>(tv);
+    if(cvi != nullptr)
+      cvi->afterCreate(attributes, description);
+
+    return tv;
   }
 
   /**
@@ -486,12 +503,20 @@ public:
     if(tv == nullptr)
       return false;
 
+    auto *cvi = dynamic_cast<CustomViewInitializer *>(tv);
+
+    if(cvi != nullptr)
+      cvi->beforeApply(attributes, description);
+
     bool res = false;
 
     for(auto attribute : fAttributes)
     {
       res |= attribute.second->apply(tv, attributes, description);
     }
+
+    if(cvi != nullptr)
+      cvi->afterApply(attributes, description);
 
     return res;
   }

@@ -1,6 +1,7 @@
 #include <vstgui4/vstgui/uidescription/iviewcreator.h>
 #include <vstgui4/vstgui/lib/cdrawcontext.h>
 #include "CustomView.h"
+#include "CustomViewFactory.h"
 
 
 namespace pongasoft {
@@ -19,7 +20,6 @@ CustomView::CustomView(const CRect &iSize)
     fEditorMode{false},
     fParameters{nullptr}
 {
-  DLOG_F(INFO, "CustomView::CustomView()");
   setWantsFocus(true);
 }
 
@@ -72,7 +72,10 @@ void CustomView::onParameterChange(ParamID iParamID, ParamValue iNormalizedValue
 ///////////////////////////////////////////
 std::unique_ptr<RawParameter> CustomView::registerRawParameter(ParamID iParamID, bool iSubscribeToChanges)
 {
-  return fParameters ? fParameters->registerRawParameter(iParamID, iSubscribeToChanges ? this : nullptr) : nullptr;
+  if(!fParameters)
+    ABORT_F("fParameters should have been registered");
+
+  return fParameters->registerRawParameter(iParamID, iSubscribeToChanges ? this : nullptr);
 }
 
 ///////////////////////////////////////////
@@ -120,15 +123,31 @@ bool CustomView::getEditorMode() const
 }
 
 ///////////////////////////////////////////
-// CustomControlView::setControlTag
+// CustomView::afterCreate
 ///////////////////////////////////////////
-void CustomControlView::setControlTag(int32_t iTag)
+void CustomView::afterCreate(UIAttributes const &iAttributes, IUIDescription const *iDescription)
 {
-  if(fControlTag != iTag)
-  {
-    fControlTag = iTag;
-    onControlTagChange();
-  }
+  DLOG_F(INFO, "CustomView::afterCreate(%d)", fTag);
+  auto provider = dynamic_cast<VSTParametersProvider const *>(iDescription->getViewFactory());
+  if(provider)
+    initParameters(provider->getVSTParameters());
+}
+
+///////////////////////////////////////////
+// CustomView::beforeApply
+///////////////////////////////////////////
+void CustomView::beforeApply(UIAttributes const &iAttributes, IUIDescription const *iDescription)
+{
+  // nothing to do...
+}
+
+///////////////////////////////////////////
+// CustomView::afterApply
+///////////////////////////////////////////
+void CustomView::afterApply(UIAttributes const &iAttributes, IUIDescription const *iDescription)
+{
+  if(fParameters)
+    registerParameters();
 }
 }
 }
