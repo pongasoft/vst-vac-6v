@@ -388,6 +388,14 @@ public:
   VSTParameters& operator=(VSTParameters const &) = delete;
 
   /**
+   * @return true if the param actually exists
+   */
+  bool exists(ParamID iParamID) const
+  {
+    return fParameterOwner->getParameterObject(iParamID) != nullptr;
+  }
+
+  /**
    * @return the raw parameter given its id
    */
   std::unique_ptr<RawParameter> getRawParameter(ParamID iParamID) const
@@ -426,6 +434,14 @@ using DiscreteParameter = VSTParameter<int, Common::DiscreteValueParamConverter<
 class VSTParametersManager
 {
 public:
+  /**
+   * @return true if the param actually exists
+   */
+  bool exists(ParamID iParamID) const
+  {
+    return fParameters->exists(iParamID);
+  }
+
   /**
    * Registers a raw parameter (no conversion)
    */

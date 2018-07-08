@@ -14,6 +14,7 @@ using namespace VSTGUI;
 ///////////////////////////////////////////
 CustomView::CustomView(const CRect &iSize)
   : CView(iSize),
+    fTag{-1},
     fBackColor{0,0,0},
     fEditorMode{false},
     fParameters{nullptr}
@@ -71,7 +72,7 @@ void CustomView::onParameterChange(ParamID iParamID, ParamValue iNormalizedValue
 ///////////////////////////////////////////
 std::unique_ptr<RawParameter> CustomView::registerRawParameter(ParamID iParamID, bool iSubscribeToChanges)
 {
-  return fParameters->registerRawParameter(iParamID, iSubscribeToChanges ? this : nullptr);
+  return fParameters ? fParameters->registerRawParameter(iParamID, iSubscribeToChanges ? this : nullptr) : nullptr;
 }
 
 ///////////////////////////////////////////
@@ -118,7 +119,17 @@ bool CustomView::getEditorMode() const
 #endif
 }
 
-CustomView::Creator __gCustomDisplayCreator("pongasoft::CustomDisplay", "pongasoft - Custom Display");
+///////////////////////////////////////////
+// CustomControlView::setControlTag
+///////////////////////////////////////////
+void CustomControlView::setControlTag(int32_t iTag)
+{
+  if(fControlTag != iTag)
+  {
+    fControlTag = iTag;
+    onControlTagChange();
+  }
+}
 }
 }
 }

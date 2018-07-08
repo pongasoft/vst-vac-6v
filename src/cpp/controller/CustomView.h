@@ -184,6 +184,176 @@ public:
   };
 };
 
+/**
+ * Base class for custom views providing one parameter only (similar to CControl)
+ */
+class CustomControlView : public CustomView
+{
+public:
+  explicit CustomControlView(const CRect &iSize) : CustomView(iSize) {}
+
+  // get/setControlTag
+  void setControlTag (int32_t iTag);
+  int32_t getControlTag () const { return fControlTag; }
+  virtual void onControlTagChange() {}
+
+public:
+  CLASS_METHODS_NOCOPY(CustomControlView, CustomView)
+
+protected:
+  int32_t fControlTag{-1};
+
+public:
+  class Creator : public CustomViewCreator<CustomControlView>
+  {
+  public:
+    explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
+      CustomViewCreator(iViewName, iDisplayName)
+    {
+      registerAttributes(CustomView::Creator());
+      registerTagAttribute("control-tag", &CustomControlView::getControlTag, &CustomControlView::setControlTag);
+    }
+  };
+};
+
+/**
+ * Base class for custom views providing one parameter only (similar to CControl)
+ * This base class automatically registers the custom control and also keeps a control value for the case when
+ * the control does not exist (for example in editor the control tag may not be defined).
+ */
+template<typename TVSTParameter>
+class TCustomControlView : public CustomControlView
+{
+public:
+  // TCustomControlView
+  explicit TCustomControlView(const CRect &iSize) : CustomControlView(iSize) {}
+
+public:
+  CLASS_METHODS_NOCOPY(CustomControlView, TCustomControlView)
+
+  // set/getControlValue
+  typename TVSTParameter::value_type getControlValue() const;
+  void setControlValue(typename TVSTParameter::value_type const &iControlValue);
+
+  // onControlTagChange
+  void onControlTagChange() override;
+
+  // registerParameters
+  void registerParameters() override;
+
+protected:
+  // parameters are registered after the fact
+  void registerControlParameter();
+
+  // the vst parameter tied to the control
+  std::unique_ptr<TVSTParameter> fControlParameter{nullptr};
+
+#if EDITOR_MODE
+  // the value (in sync with control parameter but may exist on its own in editor mode)
+  typename TVSTParameter::value_type fControlValue{};
+#endif
+
+public:
+  class Creator : public CustomViewCreator<TCustomControlView<TVSTParameter>>
+  {
+  private:
+    using CustomViewCreatorT = CustomViewCreator<TCustomControlView<TVSTParameter>>;
+  public:
+    explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
+      CustomViewCreatorT(iViewName, iDisplayName)
+    {
+      CustomViewCreatorT::registerAttributes(CustomControlView::Creator());
+    }
+  };
+};
+
+///////////////////////////////////////////
+// TCustomControlView<TVSTParameter>::getControlValue
+///////////////////////////////////////////
+template<typename TVSTParameter>
+typename TVSTParameter::value_type TCustomControlView<TVSTParameter>::getControlValue() const
+{
+#if EDITOR_MODE
+  if(fControlParameter)
+    return fControlParameter->getValue();
+  else
+    return fControlValue;
+#else
+  return fControlParameter->getValue();
+#endif
+}
+
+///////////////////////////////////////////
+// TCustomControlView<TVSTParameter>::setControlValue
+///////////////////////////////////////////
+template<typename TVSTParameter>
+void TCustomControlView<TVSTParameter>::setControlValue(typename TVSTParameter::value_type const &iControlValue)
+{
+#if EDITOR_MODE
+  fControlValue = iControlValue;
+  if(fControlParameter)
+    fControlParameter->setValue(fControlValue);
+#else
+  fControlParameter->setValue(iControlValue);
+#endif
+}
+
+///////////////////////////////////////////
+// TCustomControlView<TVSTParameter>::onControlTagChange
+///////////////////////////////////////////
+template<typename TVSTParameter>
+void TCustomControlView<TVSTParameter>::onControlTagChange()
+{
+  CustomControlView::onControlTagChange();
+  registerControlParameter();
+}
+
+///////////////////////////////////////////
+// TCustomControlView<TVSTParameter>::registerParameters
+///////////////////////////////////////////
+template<typename TVSTParameter>
+void TCustomControlView<TVSTParameter>::registerParameters()
+{
+  CustomControlView::registerParameters();
+  registerControlParameter();
+}
+
+///////////////////////////////////////////
+// TCustomControlView<TVSTParameter>::registerControlParameter
+///////////////////////////////////////////
+template<typename TVSTParameter>
+void TCustomControlView<TVSTParameter>::registerControlParameter()
+{
+#if EDITOR_MODE
+  if(getControlTag() >= 0)
+  {
+    auto paramID = static_cast<ParamID>(getControlTag());
+    if(fParameters)
+    {
+      if(fParameters->exists(paramID))
+      {
+        fControlParameter = registerVSTParameter<TVSTParameter>(paramID);
+        fControlValue = fControlParameter->getValue();
+      }
+      else
+      {
+        DLOG_F(WARNING, "Parameter[%d] does not exist", paramID);
+        fControlParameter = nullptr;
+      }
+    }
+  }
+#else
+  auto paramID = static_cast<ParamID>(getControlTag());
+  if(fParameters)
+  {
+    if(fParameters->exists(paramID))
+      fControlParameter = registerVSTParameter<TVSTParameter>(paramID);
+    else
+      ABORT_F("Could not find parameter for control tag [%d]", paramID);
+  }
+#endif
+}
+
 }
 }
 }

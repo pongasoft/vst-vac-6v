@@ -70,6 +70,8 @@ set(vst_sources
 		${CPP_SOURCES}/controller/MaxLevelView.cpp
 		${CPP_SOURCES}/controller/MomentaryButton.h
 		${CPP_SOURCES}/controller/MomentaryButton.cpp
+		${CPP_SOURCES}/controller/ToggleButtonView.h
+		${CPP_SOURCES}/controller/ToggleButtonView.cpp
 		${CPP_SOURCES}/controller/VAC6Controller.h
 		${CPP_SOURCES}/controller/VAC6Controller.cpp
 		${CPP_SOURCES}/controller/VAC6Controller.h
