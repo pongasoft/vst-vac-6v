@@ -7,6 +7,7 @@
 #include <vstgui4/vstgui/uidescription/detail/uiviewcreatorattributes.h>
 #include <vstgui4/vstgui/lib/crect.h>
 #include <vstgui4/vstgui/lib/ccolor.h>
+#include <vstgui4/vstgui/lib/cbitmap.h>
 #include <map>
 #include <memory>
 #include "../logging/loguru.hpp"
@@ -20,6 +21,28 @@ namespace VST {
 namespace GUI {
 
 using namespace VSTGUI;
+
+/**
+ * Turns a CBitmap * (which is reference counted internally) into a std::shared_ptr<CBitmap> which will properly
+ * decrements the counter when no more shared references are held. The issue with the sdk SharedPointer concept
+ * is that it behaves differently than the native std::shared_ptr concept (for example, bool operator to test if null).
+ */
+inline std::shared_ptr<CBitmap> toSharedPtr(CBitmap *iBitmap)
+{
+  if(iBitmap)
+  {
+    auto deleter = [](CBitmap *bm) {
+      bm->forget();
+      // NO DELETE on purpose!
+    };
+    iBitmap->remember();
+    return std::shared_ptr<CBitmap>(iBitmap, deleter);
+  }
+  return nullptr;
+}
+
+// Defines a BitmapPtr shortcut notation
+using BitmapPtr = std::shared_ptr<CBitmap>;
 
 /**
  * Base abstract class for an attribute of a view
@@ -137,26 +160,25 @@ private:
       auto *tv = dynamic_cast<TView *>(iView);
       if(tv != nullptr)
       {
-        int32_t tag = -1;
-        const std::string *controlTagAttr = iAttributes.getAttributeValue(getName());
+        auto controlTagAttr = iAttributes.getAttributeValue(getName());
         if(controlTagAttr)
         {
           if(controlTagAttr->length() != 0)
           {
-            tag = iDescription->getTagForName(controlTagAttr->c_str());
+            int32_t tag = iDescription->getTagForName(controlTagAttr->c_str());
             if(tag == -1)
             {
               char *endPtr = nullptr;
               tag = (int32_t) strtol(controlTagAttr->c_str(), &endPtr, 10);
               if(endPtr == controlTagAttr->c_str())
               {
-                tag = -1;
+                return false;
               }
             }
+            (tv->*fSetter)(tag);
+            return true;
           }
         }
-        (tv->*fSetter)(tag);
-        return true;
       }
       return false;
     }
@@ -218,20 +240,18 @@ private:
       auto *tv = dynamic_cast<TView *>(iView);
       if(tv != nullptr)
       {
-        TInt value = static_cast<TInt>(0);
         auto integerAttr = iAttributes.getAttributeValue(getName());
         if(integerAttr)
         {
           char *endPtr = nullptr;
-          value = static_cast<TInt>(strtol(integerAttr->c_str(), &endPtr, 10));
+          auto value = static_cast<TInt>(strtol(integerAttr->c_str(), &endPtr, 10));
           if(endPtr == integerAttr->c_str())
           {
             DLOG_F(WARNING, "could not convert <%s> to an integer", integerAttr->c_str());
-            value = static_cast<TInt>(0);
+            return false;
           }
+          (tv->*fSetter)(value);
         }
-        (tv->*fSetter)(value);
-        return true;
       }
       return false;
     }
@@ -287,12 +307,15 @@ private:
       auto *tv = dynamic_cast<TView *>(iView);
       if(tv != nullptr)
       {
-        CColor color;
-        if(UIViewCreator::stringToColor(iAttributes.getAttributeValue(getName()), color,
-                                        iDescription))
+        auto colorAttr = iAttributes.getAttributeValue(getName());
+        if(colorAttr)
         {
-          (tv->*fSetter)(color);
-          return true;
+          CColor color;
+          if(UIViewCreator::stringToColor(colorAttr, color, iDescription))
+          {
+            (tv->*fSetter)(color);
+            return true;
+          }
         }
       }
       return false;
@@ -345,11 +368,14 @@ private:
       auto *tv = dynamic_cast<TView *>(iView);
       if(tv != nullptr)
       {
-        bool value;
-        if(iAttributes.getBooleanAttribute(getName(), value))
+        if(iAttributes.getAttributeValue(getName()))
         {
-          (tv->*fSetter)(value);
-          return true;
+          bool value;
+          if(iAttributes.getBooleanAttribute(getName(), value))
+          {
+            (tv->*fSetter)(value);
+            return true;
+          }
         }
       }
       return false;
@@ -363,6 +389,69 @@ private:
       {
         oStringValue = (tv->*fGetter)() ? "true" : "false";
         return true;
+      }
+      return false;
+    }
+
+  private:
+    Getter fGetter;
+    Setter fSetter;
+  };
+
+  /**
+   * Specialization for a bitmap attribute. The view must have getter and setter as defined by the
+   * types below.
+   */
+  class BitmapAttribute : public ViewAttribute
+  {
+  public:
+    using Getter = BitmapPtr(TView::*)() const;
+    using Setter = void (TView::*)(BitmapPtr);
+
+    BitmapAttribute(std::string const &iName,
+                   Getter iGetter,
+                   Setter iSetter) :
+      ViewAttribute(iName),
+      fGetter{iGetter},
+      fSetter{iSetter}
+    {
+    }
+
+    // getType
+    IViewCreator::AttrType getType() override
+    {
+      return IViewCreator::kBitmapType;
+    }
+
+    // apply => set a bitmap to the view
+    bool apply(CView *iView, const UIAttributes &iAttributes, const IUIDescription *iDescription) override
+    {
+      auto *tv = dynamic_cast<TView *>(iView);
+      if(tv != nullptr)
+      {
+        auto bitmapAttr = iAttributes.getAttributeValue(getName());
+        if(bitmapAttr)
+        {
+          CBitmap *bitmap;
+          if(UIViewCreator::stringToBitmap(bitmapAttr, bitmap, iDescription))
+          {
+            (tv->*fSetter)(toSharedPtr(bitmap));
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    // getAttributeValue => get a bitmap from the view
+    bool getAttributeValue(CView *iView, const IUIDescription *iDescription, std::string &oStringValue) const override
+    {
+      auto *tv = dynamic_cast<TView *>(iView);
+      if(tv != nullptr)
+      {
+        auto bitmap = (tv->*fGetter)();
+        if(bitmap)
+          return UIViewCreator::bitmapToString(bitmap.get(), oStringValue, iDescription);
       }
       return false;
     }
@@ -433,6 +522,16 @@ public:
                               typename ColorAttribute::Setter iSetter)
   {
     registerAttribute<ColorAttribute>(iName, iGetter, iSetter);
+  }
+
+  /**
+   * Registers a bitmap attribute with the given name and getter/setter
+   */
+  void registerBitmapAttribute(std::string const &iName,
+                              typename BitmapAttribute::Getter iGetter,
+                              typename BitmapAttribute::Setter iSetter)
+  {
+    registerAttribute<BitmapAttribute>(iName, iGetter, iSetter);
   }
 
   /**

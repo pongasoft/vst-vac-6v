@@ -7,22 +7,60 @@ namespace VST {
 namespace GUI {
 
 ///////////////////////////////////////////
+// ToggleButtonView::setFrames
+///////////////////////////////////////////
+void ToggleButtonView::setFrames(int iFrames)
+{
+  if(iFrames != 2 && iFrames != 4)
+  {
+    DLOG_F(WARNING, "frames should be either 2 or 4");
+  }
+  else
+    fFrames = iFrames;
+}
+
+///////////////////////////////////////////
 // ToggleButtonView::draw
 ///////////////////////////////////////////
 void ToggleButtonView::draw(CDrawContext *iContext)
 {
   CustomView::draw(iContext);
 
-  if(isOn())
+  if(fImage)
   {
-    iContext->setFillColor(kRedCColor);
-    iContext->drawRect(getViewSize(), kDrawFilled);
-  }
+    int frameIndex;
+    CCoord frameHeight = fImage->getHeight() / getFrames();
+    if(getFrames() == 4)
+    {
+      frameIndex = isOn() ? 2 : 0;
+      if(fPressed)
+        frameIndex++;
+    }
+    else
+    {
+      frameIndex = isOn() ? 1 : 0;
+    }
 
-  if(fPressed)
+    fImage->draw(iContext, getViewSize(), CPoint{0, frameIndex * frameHeight});
+  }
+  else
   {
-    iContext->setFillColor(CColor{0,0,0,120});
-    iContext->drawRect(getViewSize(), kDrawFilled);
+    // no image => simply fill the surface with appropriate color (background and "on" color)
+    // so that the button is fully functioning right away
+    if(isOn())
+    {
+      iContext->setFillColor(getOnColor());
+      iContext->drawRect(getViewSize(), kDrawFilled);
+    }
+
+    if(getFrames() == 4)
+    {
+      if(fPressed)
+      {
+        iContext->setFillColor(CColor{0,0,0,120});
+        iContext->drawRect(getViewSize(), kDrawFilled);
+      }
+    }
   }
 }
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 #include "CustomView.h"
 
 namespace pongasoft {
@@ -11,7 +13,11 @@ using namespace VSTGUI;
 class ToggleButtonView : public TCustomControlView<BooleanParameter>
 {
 public:
-  explicit ToggleButtonView(const CRect &iSize) : TCustomControlView(iSize) {}
+  explicit ToggleButtonView(const CRect &iSize) : TCustomControlView(iSize)
+  {
+    // off color is grey
+    fBackColor = CColor{200,200,200};
+  }
 
   // draw => does the actual drawing job
   void draw(CDrawContext *iContext) override;
@@ -29,10 +35,37 @@ public:
   bool isOn() const { return getControlValue(); }
   bool isOff() const { return !isOn(); }
 
+  // get/set frames (should be either 2 or 4) 4 includes the pressed state
+  int getFrames() const { return fFrames; }
+  void setFrames(int iFrames);
+
+  // get/setOnColor (the off color is the back color...)
+  CColor const &getOnColor() const { return fOnColor; }
+  void setOnColor(CColor const &iColor) { fOnColor = iColor; }
+
+  /**
+   * get/setImage for the button which should have 2 or 4 frames depending on the fFrames value
+   * The images should contain the following :
+   * - for 2 frames each is of size image height / 2:
+   *   - at y = 0, the button in its off state
+   *   - at y = image height / 2, the button in its on state
+   * - for 4 frames each is of size image height / 4:
+   *   - at y = 0              0/4, the button in its off state
+   *   - at y = image height * 1/4, the button in its off state depressed
+   *   - at y = image height * 2/4, the button in its on state
+   *   - at y = image height * 3/4, the button in its on state depressed
+   */
+  BitmapPtr getImage() const { return fImage; }
+  void setImage(BitmapPtr iImage) { fImage = std::move(iImage); }
+
 public:
   CLASS_METHODS_NOCOPY(ToggleButtonView, CustomControlView)
 
 protected:
+  int fFrames{4};
+  CColor fOnColor{kRedCColor};
+  BitmapPtr fImage{nullptr};
+
   bool fPressed{false};
 
 public:
@@ -43,6 +76,9 @@ public:
       CustomViewCreator(iViewName, iDisplayName)
     {
       registerAttributes(TCustomControlView<BooleanParameter>::Creator());
+      registerIntAttribute("frames", &ToggleButtonView::getFrames, &ToggleButtonView::setFrames);
+      registerColorAttribute("on-color", &ToggleButtonView::getOnColor, &ToggleButtonView::setOnColor);
+      registerBitmapAttribute("image", &ToggleButtonView::getImage, &ToggleButtonView::setImage);
     }
   };
 };
