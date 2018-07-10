@@ -102,13 +102,12 @@ protected:
   std::unique_ptr<LCDInputXParameter::Editor> fLCDInputXEditor{nullptr};
 
 public:
-  class Creator : public CustomViewCreator<LCDDisplayView>
+  class Creator : public CustomViewCreator<LCDDisplayView, HistoryView>
   {
   public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
       CustomViewCreator(iViewName, iDisplayName)
     {
-      registerAttributes(HistoryView::Creator());
       registerColorAttribute("soft-clipping-level-color",
                              &LCDDisplayView::getSoftClippingLevelColor,
                              &LCDDisplayView::setSoftClippingLevelColor);

@@ -48,13 +48,12 @@ protected:
   CColor fNoDataColor{};
 
 public:
-  class Creator : public CustomViewCreator<MaxLevelView>
+  class Creator : public CustomViewCreator<MaxLevelView, HistoryView>
   {
   public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
       CustomViewCreator(iViewName, iDisplayName)
     {
-      registerAttributes(HistoryView::Creator());
       registerColorAttribute("no-data-color",
                              &MaxLevelView::getNoDataColor,
                              &MaxLevelView::setNoDataColor);

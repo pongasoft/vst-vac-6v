@@ -177,11 +177,11 @@ protected:
   std::unique_ptr<VSTParametersManager> fParameters;
 
 public:
-  class Creator : public CustomViewCreator<CustomView>
+  class Creator : public TCustomViewCreator<CustomView>
   {
   public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
-      CustomViewCreator(iViewName, iDisplayName)
+      TCustomViewCreator<CustomView>(iViewName, iDisplayName)
     {
       registerTagAttribute("custom-view-tag", &CustomView::getCustomViewTag, &CustomView::setCustomViewTag);
 #if EDITOR_MODE
@@ -211,13 +211,12 @@ protected:
   int32_t fControlTag{-1};
 
 public:
-  class Creator : public CustomViewCreator<CustomControlView>
+  class Creator : public CustomViewCreator<CustomControlView, CustomView>
   {
   public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
       CustomViewCreator(iViewName, iDisplayName)
     {
-      registerAttributes(CustomView::Creator());
       registerTagAttribute("control-tag", &CustomControlView::getControlTag, &CustomControlView::setControlTag);
     }
   };
@@ -255,15 +254,14 @@ protected:
 #endif
 
 public:
-  class Creator : public CustomViewCreator<TCustomControlView<TVSTParameter>>
+  class Creator : public CustomViewCreator<TCustomControlView<TVSTParameter>, CustomControlView>
   {
   private:
-    using CustomViewCreatorT = CustomViewCreator<TCustomControlView<TVSTParameter>>;
+    using CustomViewCreatorT = CustomViewCreator<TCustomControlView<TVSTParameter>, CustomControlView>;
   public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
       CustomViewCreatorT(iViewName, iDisplayName)
     {
-      CustomViewCreatorT::registerAttributes(CustomControlView::Creator());
     }
   };
 };

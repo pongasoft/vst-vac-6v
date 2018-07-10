@@ -44,13 +44,12 @@ protected:
 
 public:
   // Creator class
-  class Creator : public CustomViewCreator<GainView>
+  class Creator : public CustomViewCreator<GainView, CustomView>
   {
   public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
       CustomViewCreator(iViewName, iDisplayName)
     {
-      registerAttributes(CustomView::Creator());
       registerColorAttribute("font-color",
                              &GainView::getFontColor,
                              &GainView::setFontColor);

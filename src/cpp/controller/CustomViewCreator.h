@@ -126,7 +126,7 @@ public:
  * }
  */
 template<typename TView>
-class CustomViewCreator : public ViewCreatorAdapter
+class TCustomViewCreator : public ViewCreatorAdapter
 {
 private:
   /**
@@ -463,9 +463,9 @@ private:
 
 public:
   // Constructor
-  explicit CustomViewCreator(char const *iViewName = nullptr,
-                             char const *iDisplayName = nullptr,
-                             char const *iBaseViewName = VSTGUI::UIViewCreator::kCView) :
+  explicit TCustomViewCreator(char const *iViewName = nullptr,
+                              char const *iDisplayName = nullptr,
+                              char const *iBaseViewName = VSTGUI::UIViewCreator::kCView) :
     fViewName{iViewName},
     fDisplayName{iDisplayName},
     fBaseViewName{iBaseViewName},
@@ -477,7 +477,7 @@ public:
   }
 
   // Destructor
-  ~CustomViewCreator() override
+  ~TCustomViewCreator() override
   {
     // we simply clear the map since it holds shared pointers which will be discarded when they are no longer
     // held by another object
@@ -506,7 +506,7 @@ public:
    * This method is called to register all the attributes from another CustomViewCreator (used in case of inheritance)
    */
   template<typename XView>
-  void registerAttributes(CustomViewCreator<XView> const &iOther)
+  void registerAttributes(TCustomViewCreator<XView> const &iOther)
   {
     for(auto attribute : iOther.fAttributes)
     {
@@ -607,17 +607,15 @@ public:
     if(cvi != nullptr)
       cvi->beforeApply(attributes, description);
 
-    bool res = false;
-
     for(auto attribute : fAttributes)
     {
-      res |= attribute.second->apply(tv, attributes, description);
+      attribute.second->apply(tv, attributes, description);
     }
 
     if(cvi != nullptr)
       cvi->afterApply(attributes, description);
 
-    return res;
+    return true;
   }
 
   // getAttributeNames
@@ -667,7 +665,7 @@ private:
 
   // somehow this is required...
   template<typename XView>
-  friend class CustomViewCreator;
+  friend class TCustomViewCreator;
 
   /**
    * Internal method to register an attribute... check that names are not duplicate!
@@ -699,6 +697,22 @@ private:
 
   // use a map of shared pointers so that they can easily be copied (see registerAttributes)
   std::map<std::string, std::shared_ptr<ViewAttribute>> fAttributes;
+};
+
+/**
+ * Convenient definition which assumes that TBaseView has a Creator inner class. Use TCustomViewCreator otherwise.
+ */
+template<typename TView, typename TBaseView>
+class CustomViewCreator : public TCustomViewCreator<TView>
+{
+public:
+  explicit CustomViewCreator(char const *iViewName = nullptr,
+                             char const *iDisplayName = nullptr,
+                             char const *iBaseViewName = VSTGUI::UIViewCreator::kCView) :
+    TCustomViewCreator<TView>(iViewName, iDisplayName, iBaseViewName)
+  {
+    TCustomViewCreator<TView>::registerAttributes(typename TBaseView::Creator());
+  }
 };
 
 }

@@ -116,13 +116,12 @@ protected:
   RelativeCoord fStarDragGestureX{-1.0};
 
 public:
-  class Creator : public CustomViewCreator<LCDScrollbarView>
+  class Creator : public CustomViewCreator<LCDScrollbarView, CustomView>
   {
   public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
       CustomViewCreator(iViewName, iDisplayName)
     {
-      registerAttributes(CustomView::Creator());
       // TODO add min-scrollbar-size and handle-color
     }
   };

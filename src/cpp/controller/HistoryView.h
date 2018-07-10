@@ -92,13 +92,12 @@ protected:
   std::unique_ptr<LCDInputXParameter> fLCDInputXParameter{nullptr};
 
 public:
-  class Creator : public CustomViewCreator<HistoryView>
+  class Creator : public CustomViewCreator<HistoryView, CustomView>
   {
   public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
       CustomViewCreator(iViewName, iDisplayName)
     {
-      registerAttributes(CustomView::Creator());
       registerColorAttribute("level-state-ok-color",
                              &HistoryView::getLevelStateOkColor,
                              &HistoryView::setLevelStateOkColor);

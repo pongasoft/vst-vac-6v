@@ -69,16 +69,15 @@ protected:
   bool fPressed{false};
 
 public:
-  class Creator : public CustomViewCreator<ToggleButtonView>
+  class Creator : public CustomViewCreator<ToggleButtonView, TCustomControlView<BooleanParameter>>
   {
   public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
       CustomViewCreator(iViewName, iDisplayName)
     {
-      registerAttributes(TCustomControlView<BooleanParameter>::Creator());
       registerIntAttribute("frames", &ToggleButtonView::getFrames, &ToggleButtonView::setFrames);
       registerColorAttribute("on-color", &ToggleButtonView::getOnColor, &ToggleButtonView::setOnColor);
-      registerBitmapAttribute("image", &ToggleButtonView::getImage, &ToggleButtonView::setImage);
+      registerBitmapAttribute("button-image", &ToggleButtonView::getImage, &ToggleButtonView::setImage);
     }
   };
 };
