@@ -143,6 +143,16 @@ tresult VAC6Controller::initialize(FUnknown *context)
                           kRootUnitId, // unitID => not using units at this stage
                           STR16 ("Live")); // shortTitle
 
+  // the toggle for gain filtering
+  parameters.addParameter(STR16 ("Gain Filter"), // title
+                          nullptr, // units
+                          1, // stepCount => 1 means toggle
+                          BooleanParamConverter::normalize(DEFAULT_GAIN_FILTER), // defaultNormalizedValue
+                          ParameterInfo::ParameterFlags::kCanAutomate, // flags
+                          EVAC6ParamID::kGainFilter, // tag
+                          kRootUnitId, // unitID => not using units at this stage
+                          STR16 ("Gn. Ft.")); // shortTitle
+
   // selected position on the screen when paused
   parameters.addParameter(STR16 ("Graph Select"), // title
                           nullptr, // units
@@ -286,13 +296,20 @@ tresult VAC6Controller::setComponentState(IBStream *state)
   setParamNormalized(EVAC6ParamID::kGain2,
                      Gain{savedGain2}.getNormalizedValue());
 
-  DLOG_F(INFO, "VAC6Controller::setComponentState => kSoftClippingLevel=%f, kLCDZoomFactorX=%f, kLCDLeftChannel=%d, kLCDRightChannel=%d, kGain1=%f, kGain2=%f",
-         savedParamSoftLevelClipping,
-         savedParamZoomFactorX,
-         savedLeftChannelOn,
-         savedRightChannelOn,
-         savedGain1,
-         savedGain2);
+  // EVAC6ParamID::kGainFilter
+  bool savedGainFilter;
+  if(!streamer.readBool(savedGainFilter))
+    savedGainFilter = DEFAULT_GAIN_FILTER;
+  setParamNormalized(EVAC6ParamID::kGainFilter, BooleanParamConverter::normalize(savedGainFilter));
+
+
+//  DLOG_F(INFO, "VAC6Controller::setComponentState => kSoftClippingLevel=%f, kLCDZoomFactorX=%f, kLCDLeftChannel=%d, kLCDRightChannel=%d, kGain1=%f, kGain2=%f",
+//         savedParamSoftLevelClipping,
+//         savedParamZoomFactorX,
+//         savedLeftChannelOn,
+//         savedRightChannelOn,
+//         savedGain1,
+//         savedGain2);
 
   return kResultOk;
 }

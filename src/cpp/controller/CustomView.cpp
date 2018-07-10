@@ -127,7 +127,6 @@ bool CustomView::getEditorMode() const
 ///////////////////////////////////////////
 void CustomView::afterCreate(UIAttributes const &iAttributes, IUIDescription const *iDescription)
 {
-  DLOG_F(INFO, "CustomView::afterCreate(%d)", fTag);
   auto provider = dynamic_cast<VSTParametersProvider const *>(iDescription->getViewFactory());
   if(provider)
     initParameters(provider->getVSTParameters());

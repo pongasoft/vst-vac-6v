@@ -104,6 +104,7 @@ private:
     double fLCDHistoryOffset{MAX_HISTORY_OFFSET};
     Gain fGain1{};
     Gain fGain2{};
+    bool fGainFilter{DEFAULT_GAIN_FILTER};
 
     void updateLCDInputX(ProcessData& iData, int iLCDInputX);
     void updateLCDHistoryOffset(ProcessData& iData, double iLCDHistoryOffset);
@@ -114,7 +115,7 @@ private:
   State fState;
   State fPreviousState;
 
-  Gain fGain;
+  FilteredGain fGain;
 
   SampleRateBasedClock fClock;
 

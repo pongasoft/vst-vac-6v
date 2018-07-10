@@ -29,6 +29,7 @@ enum EVAC6ParamID : Steinberg::Vst::ParamID
 
   kGain1 = 4000,
   kGain2 = 4010,
+  kGainFilter = 4020
 };
 
 // tags associated to custom views (not associated to params)

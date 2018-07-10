@@ -39,6 +39,7 @@ constexpr double MIN_VOLUME_DB = -60; // -60dB
 constexpr TSample MIN_AUDIO_SAMPLE = 0.001; // dbToSample<TSample>(-60.0)
 // zoom varies from 30s to 1.28s (5ms * 256=1.28s) and we want default to be 15s
 constexpr double DEFAULT_ZOOM_FACTOR_X = 0.52228412256267409131;
+constexpr bool DEFAULT_GAIN_FILTER = true;
 
 using LCDHistoryOffsetParamConverter = Common::PercentParamConverter;
 using LCDZoomFactorXParamConverter = Common::PercentParamConverter;
@@ -168,6 +169,56 @@ private:
 };
 
 constexpr Gain DEFAULT_GAIN = Gain{};
+
+///////////////////////////////////
+// FilteredGain - Gain which changes slowly to avoid nasty effects
+///////////////////////////////////
+class FilteredGain
+{
+public:
+  explicit FilteredGain(double iValue = Gain::Unity, bool iFilterOn = true) :
+    fValue{iValue},
+    fTargetValue{fValue},
+    fFilterOn{iFilterOn}
+  {}
+
+  // adjust should be called every frame
+  bool adjust()
+  {
+    if(fTargetValue == fValue)
+      return false;
+
+    double previousValue = fValue;
+    if(!fFilterOn)
+    {
+      fValue = fTargetValue;
+    }
+    else
+    {
+      // Filter changes to avoid nasty sounds.
+      if(std::abs(fValue - fTargetValue) < 0.01f)
+      {
+        fValue = fTargetValue;
+      }
+      else
+      {
+        fValue += (fTargetValue - fValue) / 100.0f;
+        DLOG_F(INFO, "gain adjusted from %f to %f with target %f", previousValue, fValue, fTargetValue);
+      }
+    }
+
+    return previousValue != fValue;
+  }
+
+  inline void setTargetValue(double iTargetValue) { fTargetValue = iTargetValue; }
+  inline double getValue() const { return fValue; }
+  inline void setFilterOn(bool iFilterOn) { fFilterOn = iFilterOn; }
+
+private:
+  double fValue;
+  double fTargetValue;
+  bool fFilterOn;
+};
 
 ///////////////////////////////////
 // MaxLevel

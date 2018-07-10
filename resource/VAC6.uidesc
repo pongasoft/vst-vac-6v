@@ -31,11 +31,13 @@
 		<view angle-range="300" angle-start="135" background-offset="0, 0" bitmap="Knob" circle-drawing="false" class="CAnimKnob" control-tag="Param_Gain2" corona-color="~ WhiteCColor" corona-dash-dot="false" corona-drawing="false" corona-from-center="false" corona-inset="0" corona-inverted="false" corona-line-cap-butt="false" corona-outline="false" corona-outline-width-add="2" default-value="0.7" handle-color="~ WhiteCColor" handle-line-width="1" handle-shadow-color="~ GreyCColor" height-of-one-image="75" inverse-bitmap="false" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="200, 240" size="75, 75" skip-handle-drawing="true" sub-pixmaps="64" transparent="false" value-inset="0" wants-focus="true" wheel-inc-value="0.1" zoom-factor="0"/>
 		<view back-color="~ TransparentCColor" background-offset="0, 0" class="CTextLabel" default-value="0.5" font="~ NormalFont" font-antialias="true" font-color="~ WhiteCColor" frame-color="~ TransparentCColor" frame-width="1" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="215, 310" round-rect-radius="6" shadow-color="LevelStateHardClipping" size="50, 20" style-3D-in="false" style-3D-out="false" style-no-draw="false" style-no-frame="false" style-no-text="false" style-round-rect="false" style-shadow-text="false" text-alignment="center" text-inset="0, 0" text-rotation="0" text-shadow-offset="1, 1" title="Gain 2" transparent="false" value-precision="2" wants-focus="false" wheel-inc-value="0.1"/>
 		<view back-color="~ BlackCColor" class="pongasoft::Gain" editor-mode="false" font-color="~ WhiteCColor" mouse-enabled="true" opacity="1" origin="120, 270" size="60, 20" transparent="false" wants-focus="true"/>
-		<view back-color="~ TransparentCColor" class="pongasoft::ToggleButton" control-tag="Param_MaxLevelInWindowMarker" editor-mode="false" frames="4" button-image="Button_mini_4frames" mouse-enabled="true" on-color="~ RedCColor" opacity="1" origin="142, 10" size="20, 20" transparent="false" wants-focus="true"/>
-		<view back-color="~ TransparentCColor" class="pongasoft::ToggleButton" control-tag="Param_MaxLevelSinceResetMarker" editor-mode="false" frames="4" button-image="Button_mini_4frames" mouse-enabled="true" on-color="~ RedCColor" opacity="1" origin="260, 10" size="20, 20" transparent="false" wants-focus="true"/>
-		<view back-color="~ TransparentCColor" class="pongasoft::ToggleButton" control-tag="Param_LCDLiveView" editor-mode="false" frames="4" button-image="Button_mini_4frames" mouse-enabled="true" on-color="~ RedCColor" opacity="1" origin="320, 290" size="20, 20" transparent="false" wants-focus="true"/>
-		<view back-color="~ TransparentCColor" class="pongasoft::ToggleButton" control-tag="Param_LCDRightChannel" editor-mode="false" frames="4" button-image="Button_mini_4frames" mouse-enabled="true" on-color="~ RedCColor" opacity="1" origin="340, 250" size="20, 20" transparent="false" wants-focus="true"/>
-		<view back-color="~ TransparentCColor" class="pongasoft::ToggleButton" control-tag="Param_LCDLeftChannel" editor-mode="false" frames="4" button-image="Button_mini_4frames" mouse-enabled="true" on-color="~ RedCColor" opacity="1" origin="300, 250" size="20, 20" transparent="false" wants-focus="true"/>
+		<view back-color="~ TransparentCColor" button-image="Button_mini_4frames" class="pongasoft::ToggleButton" control-tag="Param_MaxLevelInWindowMarker" editor-mode="false" frames="4" mouse-enabled="true" on-color="~ RedCColor" opacity="1" origin="142, 10" size="20, 20" transparent="false" wants-focus="true"/>
+		<view back-color="~ TransparentCColor" button-image="Button_mini_4frames" class="pongasoft::ToggleButton" control-tag="Param_MaxLevelSinceResetMarker" editor-mode="false" frames="4" mouse-enabled="true" on-color="~ RedCColor" opacity="1" origin="260, 10" size="20, 20" transparent="false" wants-focus="true"/>
+		<view back-color="~ TransparentCColor" button-image="Button_mini_4frames" class="pongasoft::ToggleButton" control-tag="Param_LCDLiveView" editor-mode="false" frames="4" mouse-enabled="true" on-color="~ RedCColor" opacity="1" origin="320, 290" size="20, 20" transparent="false" wants-focus="true"/>
+		<view back-color="~ TransparentCColor" button-image="Button_mini_4frames" class="pongasoft::ToggleButton" control-tag="Param_LCDRightChannel" editor-mode="false" frames="4" mouse-enabled="true" on-color="~ RedCColor" opacity="1" origin="340, 250" size="20, 20" transparent="false" wants-focus="true"/>
+		<view back-color="~ TransparentCColor" button-image="Button_mini_4frames" class="pongasoft::ToggleButton" control-tag="Param_LCDLeftChannel" editor-mode="false" frames="4" mouse-enabled="true" on-color="~ RedCColor" opacity="1" origin="300, 250" size="20, 20" transparent="false" wants-focus="true"/>
+		<view back-color="~ TransparentCColor" button-image="Button_mini_4frames" class="pongasoft::ToggleButton" control-tag="Param_GainFilter" editor-mode="false" frames="4" mouse-enabled="true" on-color="LevelStateHardClipping" opacity="1" origin="120, 310" size="20, 20" transparent="false" wants-focus="true"/>
+		<view back-color="~ TransparentCColor" background-offset="0, 0" class="CTextLabel" default-value="0.5" font="~ NormalFont" font-antialias="true" font-color="~ WhiteCColor" frame-color="~ TransparentCColor" frame-width="1" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="135, 310" round-rect-radius="6" size="65, 20" style-3D-in="false" style-3D-out="false" style-no-draw="false" style-no-frame="false" style-no-text="false" style-round-rect="false" style-shadow-text="false" text-alignment="center" text-inset="0, 0" text-rotation="0" text-shadow-offset="1, 1" title="Gain Filter" transparent="false" value-precision="2" wants-focus="false" wheel-inc-value="0.1"/>
 	</template>
 	<custom>
 		<attributes name="FocusDrawing"/>
@@ -45,7 +47,7 @@
 		<attributes EditViewScale="1" EditorSize="0, 0, 1161, 760" SplitViewSize_0_0="0.8240866035182679016912743463763035833836" SplitViewSize_0_1="0.1488497970230040490235978722921572625637" SplitViewSize_1_0="0.4952638700947226135795631307701114565134" SplitViewSize_1_1="0.4979702300405953740991549238970037549734" SplitViewSize_2_0="0.5960378983634797567248142513562925159931" SplitViewSize_2_1="0.3996554694229113025016886240337044000626" TabSwitchValue="0" Version="1" name="UIEditController"/>
 		<attributes name="UIAttributesController"/>
 		<attributes SelectedRow="37" name="UIViewCreatorDataSource"/>
-		<attributes SelectedRow="0" name="UITagsDataSource"/>
+		<attributes SelectedRow="8" name="UITagsDataSource"/>
 		<attributes SelectedRow="4" name="UIColorsDataSource"/>
 		<attributes SelectedRow="1" name="UIBitmapsDataSource"/>
 		<attributes SelectedRow="-1" name="UIGradientsDataSource"/>
@@ -59,6 +61,7 @@
 		<control-tag name="CV_MaxLevelSinceReset" tag="1"/>
 		<control-tag name="Param_Gain1" tag="4000"/>
 		<control-tag name="Param_Gain2" tag="4010"/>
+		<control-tag name="Param_GainFilter" tag="4020"/>
 		<control-tag name="Param_LCDLeftChannel" tag="3020"/>
 		<control-tag name="Param_LCDLiveView" tag="3030"/>
 		<control-tag name="Param_LCDRightChannel" tag="3021"/>
