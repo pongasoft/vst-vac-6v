@@ -62,6 +62,8 @@ void ToggleButtonView::draw(CDrawContext *iContext)
       }
     }
   }
+
+  setDirty(false);
 }
 
 ///////////////////////////////////////////
@@ -69,6 +71,9 @@ void ToggleButtonView::draw(CDrawContext *iContext)
 ///////////////////////////////////////////
 CMouseEventResult ToggleButtonView::onMouseDown(CPoint &where, const CButtonState &buttons)
 {
+  if(!(buttons & kLButton))
+    return kMouseEventNotHandled;
+
   fPressed = true;
   setDirty(true);
   return kMouseEventHandled;
@@ -79,6 +84,9 @@ CMouseEventResult ToggleButtonView::onMouseDown(CPoint &where, const CButtonStat
 ///////////////////////////////////////////
 CMouseEventResult ToggleButtonView::onMouseUp(CPoint &where, const CButtonState &buttons)
 {
+  if(!(buttons & kLButton))
+    return kMouseEventNotHandled;
+
   fPressed = false;
   setControlValue(!getControlValue());
   setDirty(true);
@@ -93,6 +101,43 @@ CMouseEventResult ToggleButtonView::onMouseCancel()
   fPressed = false;
   setDirty(true);
   return kMouseEventHandled;
+}
+
+///////////////////////////////////////////
+// ToggleButtonView::onKeyDown
+///////////////////////////////////////////
+int32_t ToggleButtonView::onKeyDown(VstKeyCode &keyCode)
+{
+  if(keyCode.virt == VKEY_RETURN && keyCode.modifier == 0)
+  {
+    fPressed = true;
+    setDirty(true);
+    return 1;
+  }
+  return -1;
+}
+
+///////////////////////////////////////////
+// ToggleButtonView::onKeyUp
+///////////////////////////////////////////
+int32_t ToggleButtonView::onKeyUp(VstKeyCode &keyCode)
+{
+  if(keyCode.virt == VKEY_RETURN && keyCode.modifier == 0)
+  {
+    fPressed = false;
+    setControlValue(!getControlValue());
+    setDirty(true);
+    return 1;
+  }
+  return -1;
+}
+
+///////////////////////////////////////////
+// ToggleButtonView::sizeToFit
+///////////////////////////////////////////
+bool ToggleButtonView::sizeToFit()
+{
+  return CustomView::sizeToFit(getImage(), fFrames);
 }
 
 ToggleButtonView::Creator __gToggleButtonCreator("pongasoft::ToggleButton", "pongasoft - Toggle Button (on/off)");

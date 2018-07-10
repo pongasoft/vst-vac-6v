@@ -168,6 +168,31 @@ protected:
     // subclasses implements this method
   }
 
+  /**
+   * Convenient call to size to fit this view according to the and height provided
+   */
+  void sizeToFit(CCoord iWidth, CCoord iHeight)
+  {
+    CRect vs(getViewSize());
+    vs.setWidth(iWidth);
+    vs.setHeight(iHeight);
+    setViewSize(vs, true);
+    setMouseableArea(vs);
+  }
+
+  /**
+   * Convenient call to size to fit this view to match the bitmap
+   */
+  bool sizeToFit(BitmapPtr iBitmap, int iFrameCount = 1)
+  {
+    if(iBitmap)
+    {
+      sizeToFit(iBitmap->getWidth(), iBitmap->getHeight() / iFrameCount);
+      return true;
+    }
+    return false;
+  }
+
 protected:
   int32_t fTag;
   bool fEditorMode;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vstgui4/vstgui/lib/controls/ccontrol.h>
+#include "CustomView.h"
 
 namespace pongasoft {
 namespace VST {
@@ -26,35 +27,63 @@ using namespace VSTGUI;
  * CKickButton which is similar but it behaves improperly (for example, the button gets stuck in "pressed" state
  * for some reason...)
  */
-class MomentaryButton : public CControl
+class MomentaryButton : public TCustomControlView<BooleanParameter>
 {
 public:
-  MomentaryButton(const CRect &size, IControlListener *listener, int32_t tag, CBitmap *pBackground);
+  explicit MomentaryButton(const CRect &iSize) : TCustomControlView(iSize)
+  {
+    // off color is grey
+    fBackColor = CColor{200,200,200};
+  }
 
-  MomentaryButton(const MomentaryButton &momentaryButton);
+  // draw => does the actual drawing job
+  void draw(CDrawContext *iContext) override;
 
-  void draw(CDrawContext *) override;
-
+  // input events (mouse/keyboard)
   CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override;
-
   CMouseEventResult onMouseUp(CPoint &where, const CButtonState &buttons) override;
-
-  CMouseEventResult onMouseMoved(CPoint &where, const CButtonState &buttons) override;
-
   CMouseEventResult onMouseCancel() override;
-
   int32_t onKeyDown(VstKeyCode &keyCode) override;
-
   int32_t onKeyUp(VstKeyCode &keyCode) override;
 
+  // sizeToFit
   bool sizeToFit() override;
 
-  CLASS_METHODS(MomentaryButton, CControl)
+  // is on or off
+  bool isOn() const { return getControlValue(); }
+  bool isOff() const { return !isOn(); }
+
+  // get/setOnColor (the off color is the back color...)
+  CColor const &getOnColor() const { return fOnColor; }
+  void setOnColor(CColor const &iColor) { fOnColor = iColor; }
+
+  /**
+   * get/setImage for the button which should have 2 frames
+   * The images should contain the following 2 frames (each is of size image height / 2):
+   *   - at y = 0, the button in its off state
+   *   - at y = image height / 2, the button in its on state
+   */
+  BitmapPtr getImage() const { return fImage; }
+  void setImage(BitmapPtr iImage) { fImage = std::move(iImage); }
+
+public:
+  CLASS_METHODS_NOCOPY(MomentaryButton, TCustomControlView<BooleanParameter>)
 
 protected:
-  ~MomentaryButton() noexcept override = default;
+  CColor fOnColor{kRedCColor};
+  BitmapPtr fImage{nullptr};
 
-  void updateValue(float fNewValue);
+public:
+  class Creator : public CustomViewCreator<MomentaryButton, TCustomControlView<BooleanParameter>>
+  {
+    public:
+    explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
+      CustomViewCreator(iViewName, iDisplayName)
+    {
+      registerColorAttribute("on-color", &MomentaryButton::getOnColor, &MomentaryButton::setOnColor);
+      registerBitmapAttribute("button-image", &MomentaryButton::getImage, &MomentaryButton::setImage);
+    }
+  };
 };
 
 }

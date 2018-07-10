@@ -1,7 +1,5 @@
 #pragma once
 
-#include <utility>
-
 #include "CustomView.h"
 
 namespace pongasoft {
@@ -22,14 +20,15 @@ public:
   // draw => does the actual drawing job
   void draw(CDrawContext *iContext) override;
 
-  // onMouseDown
+  // input events (mouse/keyboard)
   CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override;
-
-  // onMouseUp
   CMouseEventResult onMouseUp(CPoint &where, const CButtonState &buttons) override;
-
-  // onMouseCancel
   CMouseEventResult onMouseCancel() override;
+  int32_t onKeyDown(VstKeyCode &keyCode) override;
+  int32_t onKeyUp(VstKeyCode &keyCode) override;
+
+  // sizeToFit
+  bool sizeToFit() override;
 
   // is on or off
   bool isOn() const { return getControlValue(); }
@@ -59,7 +58,7 @@ public:
   void setImage(BitmapPtr iImage) { fImage = std::move(iImage); }
 
 public:
-  CLASS_METHODS_NOCOPY(ToggleButtonView, CustomControlView)
+  CLASS_METHODS_NOCOPY(ToggleButtonView, TCustomControlView<BooleanParameter>)
 
 protected:
   int fFrames{4};
