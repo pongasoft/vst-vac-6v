@@ -43,6 +43,10 @@ tresult VAC6Controller::initialize(FUnknown *context)
     return result;
   }
 
+  // making sure that the knob mode is linear
+  CFrame::kDefaultKnobMode = CKnobMode::kLinearMode;
+  setKnobMode(CKnobMode::kLinearMode);
+
   // the knob that changes the soft clipping level
   parameters.addParameter(STR16 ("Soft Clipping Level"), // title
                           nullptr, // units
@@ -247,7 +251,7 @@ CView *VAC6Controller::verifyView(CView *view,
 ///////////////////////////////////////////
 tresult VAC6Controller::setComponentState(IBStream *state)
 {
-  DLOG_F(INFO, "VAC6Controller::setComponentState");
+  // DLOG_F(INFO, "VAC6Controller::setComponentState");
 
   // we receive the current state of the component (processor part)
   if(state == nullptr)
@@ -322,7 +326,7 @@ tresult VAC6Controller::setState(IBStream *state)
   if(state == nullptr)
     return kResultFalse;
 
-  DLOG_F(INFO, "VAC6Controller::setState()");
+  // DLOG_F(INFO, "VAC6Controller::setState()");
 
   IBStreamer streamer(state, kLittleEndian);
 
@@ -353,7 +357,7 @@ tresult VAC6Controller::getState(IBStream *state)
   if(state == nullptr)
     return kResultFalse;
 
-  DLOG_F(INFO, "VAC6Controller::getState()");
+  // DLOG_F(INFO, "VAC6Controller::getState()");
 
   IBStreamer streamer(state, kLittleEndian);
 

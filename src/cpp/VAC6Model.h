@@ -203,7 +203,7 @@ public:
       else
       {
         fValue += (fTargetValue - fValue) / 100.0f;
-        DLOG_F(INFO, "gain adjusted from %f to %f with target %f", previousValue, fValue, fTargetValue);
+        //DLOG_F(INFO, "gain adjusted from %f to %f with target %f", previousValue, fValue, fTargetValue);
       }
     }
 

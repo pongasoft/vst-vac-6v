@@ -30,7 +30,7 @@ public:
 
   inline static bool denormalize(ParamValue iNormalizedValue)
   {
-    return iNormalizedValue > 0;
+    return iNormalizedValue >= 0.5;
   }
 };
 
