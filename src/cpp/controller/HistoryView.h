@@ -11,12 +11,8 @@ namespace VAC6 {
 using namespace GUI;
 using namespace Common;
 
-// TODO => this syntax is completely valid but CLion chokes on it :(
-//using SoftClippingLevelParameter = VSTParameterFromClass<SoftClippingLevel>;
-//using LCDInputXParameter = VSTParameterFromType<int, LCDInputXParamConverter>;
-
-using SoftClippingLevelParameter = VSTParameter<SoftClippingLevel, SoftClippingLevelParamConverter::denormalize, SoftClippingLevelParamConverter::normalize>;
-using LCDInputXParameter = VSTParameter<int, LCDInputXParamConverter::denormalize, LCDInputXParamConverter::normalize>;
+using SoftClippingLevelParameter = VSTParameter<SoftClippingLevelParamConverter>;
+using LCDInputXParameter = VSTParameter<LCDInputXParamConverter>;
 
 class HistoryState;
 

@@ -218,23 +218,15 @@ private:
 // VSTParameter<T>
 ///////////////////////////////////////////
 
-// the function pointer type to denormalize a raw value
-template<typename T>
-using VSTParameterDenormalizer = T (*)(ParamValue);
-
-// the function pointer type to normalize a raw value
-template<typename T>
-using VSTParameterNormalizer = ParamValue (*)(T const &);
-
 /**
- * This class wraps a RawParameter to deal with any type using a Normalizer and Denormalizer functions
+ * This class wraps a RawParameter to deal with any type using a ParamConverter
  */
-template<typename T, VSTParameterDenormalizer<T> Denormalizer, VSTParameterNormalizer<T> Normalizer>
+template<typename ParamConverter>
 class VSTParameter
 {
 public:
-  typedef T value_type;
-  typedef VSTParameter<T, Denormalizer, Normalizer> class_type;
+  using ParamType = typename ParamConverter::ParamType;
+  typedef VSTParameter<ParamConverter> class_type;
 
 public:
   /**
@@ -265,9 +257,9 @@ public:
     /**
      * Change the value of the parameter. Note that nothing happens if you have called commit or rollback already
      */
-    inline tresult setValue(T iValue)
+    inline tresult setValue(ParamType iValue)
     {
-      return fRawEditor->setValue(Normalizer(iValue));
+      return fRawEditor->setValue(ParamConverter::normalize(iValue));
     }
 
     /*
@@ -284,7 +276,7 @@ public:
      * Call when you are done with the modifications.
      * This has no effect if rollback() has already been called
      */
-    inline tresult commit(T iValue)
+    inline tresult commit(ParamType iValue)
     {
       setValue(iValue);
       return commit();
@@ -327,18 +319,18 @@ public:
   /**
    * @return the current value of the parameter as a T (using the Denormalizer)
    */
-  T getValue() const
+  ParamType getValue() const
   {
-    return Denormalizer(fRawParameter->getValue());
+    return ParamConverter::denormalize(fRawParameter->getValue());
   }
 
   /**
    * Sets the value of this parameter. Note that this is "transactional" and if you want to make
    * further changes that spans multiple calls (ex: onMouseDown / onMouseMoved / onMouseUp) you should use an editor
    */
-  tresult setValue(T iValue)
+  tresult setValue(ParamType iValue)
   {
-    return fRawParameter->setValue(Normalizer(iValue));
+    return fRawParameter->setValue(ParamConverter::normalize(iValue));
   }
 
   /**
@@ -354,7 +346,7 @@ public:
    *
    * @return an editor to modify the parameter (see Editor)
    */
-  std::unique_ptr<Editor> edit(T iValue)
+  std::unique_ptr<Editor> edit(ParamType iValue)
   {
     auto editor = edit();
     editor->setValue(iValue);
@@ -416,16 +408,10 @@ private:
 // Common types
 ///////////////////////////////////////////
 
-template<typename T, typename U>
-using VSTParameterFromType = VSTParameter<T, U::denormalize, U::normalize>;
-
-template<typename T>
-using VSTParameterFromClass = VSTParameterFromType<T, T>;
-
-using BooleanParameter = VSTParameter<bool, Common::BooleanParamConverter::denormalize, Common::BooleanParamConverter::normalize>;
+using BooleanParameter = VSTParameter<Common::BooleanParamConverter>;
 using PercentParameter = RawParameter;
 template<int StepCount>
-using DiscreteParameter = VSTParameter<int, Common::DiscreteValueParamConverter<StepCount>::denormalize, Common::DiscreteValueParamConverter<StepCount>::normalize>;
+using DiscreteParameter = VSTParameter<Common::DiscreteValueParamConverter<StepCount>>;
 
 ///////////////////////////////////////////
 // class VSTParametersManager

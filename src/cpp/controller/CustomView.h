@@ -263,8 +263,8 @@ public:
   CLASS_METHODS_NOCOPY(CustomControlView, TCustomControlView)
 
   // set/getControlValue
-  typename TVSTParameter::value_type getControlValue() const;
-  void setControlValue(typename TVSTParameter::value_type const &iControlValue);
+  typename TVSTParameter::ParamType getControlValue() const;
+  void setControlValue(typename TVSTParameter::ParamType const &iControlValue);
 
   // registerParameters
   void registerParameters() override;
@@ -275,7 +275,7 @@ protected:
 
 #if EDITOR_MODE
   // the value (in sync with control parameter but may exist on its own in editor mode)
-  typename TVSTParameter::value_type fControlValue{};
+  typename TVSTParameter::ParamType fControlValue{};
 #endif
 
 public:
@@ -295,7 +295,7 @@ public:
 // TCustomControlView<TVSTParameter>::getControlValue
 ///////////////////////////////////////////
 template<typename TVSTParameter>
-typename TVSTParameter::value_type TCustomControlView<TVSTParameter>::getControlValue() const
+typename TVSTParameter::ParamType TCustomControlView<TVSTParameter>::getControlValue() const
 {
 #if EDITOR_MODE
   if(fControlParameter)
@@ -311,7 +311,7 @@ typename TVSTParameter::value_type TCustomControlView<TVSTParameter>::getControl
 // TCustomControlView<TVSTParameter>::setControlValue
 ///////////////////////////////////////////
 template<typename TVSTParameter>
-void TCustomControlView<TVSTParameter>::setControlValue(typename TVSTParameter::value_type const &iControlValue)
+void TCustomControlView<TVSTParameter>::setControlValue(typename TVSTParameter::ParamType const &iControlValue)
 {
 #if EDITOR_MODE
   fControlValue = iControlValue;

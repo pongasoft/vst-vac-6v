@@ -11,9 +11,7 @@ using namespace VSTGUI;
 using namespace Common;
 using namespace GUI;
 
-//using GainParameter = VSTParameterFromClass<Gain>; // CLion unhappy :(
-
-using GainParameter = VSTParameter<Gain, GainParamConverter::denormalize, GainParamConverter::normalize>;
+using GainParameter = VSTParameter<GainParamConverter>;
 
 /**
  * Combine the 2 gains to display the total amount of gain */
