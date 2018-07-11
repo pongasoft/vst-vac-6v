@@ -109,7 +109,8 @@ protected:
 
   std::unique_ptr<PercentParameter> fLCDInputHistoryOffsetParameter{nullptr};
 
-  std::unique_ptr<PercentParameter> fLCDZoomFactorXParameter{nullptr};
+  using LCDZoomFactorXParameter = VSTParameter<LCDZoomFactorXParamConverter>;
+  std::unique_ptr<LCDZoomFactorXParameter> fLCDZoomFactorXParameter{nullptr};
 
   std::unique_ptr<PercentParameter::Editor> fLCDInputHistoryOffsetEditor{nullptr};
   std::unique_ptr<ZoomBox> fStartDragGestureZoomBox{nullptr};

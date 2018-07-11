@@ -409,7 +409,7 @@ private:
 ///////////////////////////////////////////
 
 using BooleanParameter = VSTParameter<Common::BooleanParamConverter>;
-using PercentParameter = RawParameter;
+using PercentParameter = VSTParameter<Common::PercentParamConverter>;
 template<int StepCount>
 using DiscreteParameter = VSTParameter<Common::DiscreteValueParamConverter<StepCount>>;
 

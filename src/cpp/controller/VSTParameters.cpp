@@ -155,7 +155,7 @@ VSTParametersManager::registerBooleanParameter(ParamID iParamID, RawParameter::I
 std::unique_ptr<PercentParameter>
 VSTParametersManager::registerPercentParameter(ParamID iParamID, RawParameter::IChangeListener *iChangeListener)
 {
-  return registerRawParameter(iParamID, iChangeListener);
+  return registerVSTParameter<PercentParameter>(iParamID, iChangeListener);
 }
 
 ///////////////////////////////////////////

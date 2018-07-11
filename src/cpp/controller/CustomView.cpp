@@ -91,7 +91,7 @@ std::unique_ptr<BooleanParameter> CustomView::registerBooleanParameter(ParamID i
 ///////////////////////////////////////////
 std::unique_ptr<PercentParameter> CustomView::registerPercentParameter(ParamID iParamID, bool iSubscribeToChanges)
 {
-  return registerRawParameter(iParamID, iSubscribeToChanges);
+  return registerVSTParameter<PercentParameter>(iParamID, iSubscribeToChanges);
 }
 
 ///////////////////////////////////////////

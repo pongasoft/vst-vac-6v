@@ -19,7 +19,7 @@ void LCDScrollbarView::registerParameters()
 {
   fLCDLiveViewParameter = registerBooleanParameter(EVAC6ParamID::kLCDLiveView);
   fLCDInputHistoryOffsetParameter = registerPercentParameter(EVAC6ParamID::kLCDHistoryOffset);
-  fLCDZoomFactorXParameter = registerPercentParameter(EVAC6ParamID::kLCDZoomFactorX);
+  fLCDZoomFactorXParameter = registerVSTParameter<LCDZoomFactorXParameter>(EVAC6ParamID::kLCDZoomFactorX);
 }
 
 ///////////////////////////////////////////
