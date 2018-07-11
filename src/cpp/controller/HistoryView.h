@@ -15,7 +15,7 @@ using namespace Common;
 //using SoftClippingLevelParameter = VSTParameterFromClass<SoftClippingLevel>;
 //using LCDInputXParameter = VSTParameterFromType<int, LCDInputXParamConverter>;
 
-using SoftClippingLevelParameter = VSTParameter<SoftClippingLevel, SoftClippingLevel::denormalize, SoftClippingLevel::normalize>;
+using SoftClippingLevelParameter = VSTParameter<SoftClippingLevel, SoftClippingLevelParamConverter::denormalize, SoftClippingLevelParamConverter::normalize>;
 using LCDInputXParameter = VSTParameter<int, LCDInputXParamConverter::denormalize, LCDInputXParamConverter::normalize>;
 
 class HistoryState;

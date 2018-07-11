@@ -20,6 +20,7 @@ void LCDDisplayState::onMessage(Message const &message)
 
   if(fWindowSizeInMillis != fHistoryState->fLCDData.fWindowSizeInMillis)
   {
+    // TODO use LCDZoomFactorXParamConverter::toString (need parameter)
     char text[256];
     sprintf(text, "Zoom: %.1fs", fHistoryState->fLCDData.fWindowSizeInMillis / 1000.0);
     fLCDZoomFactorXMessage = std::make_unique<LCDMessage>(UTF8String(text), now);

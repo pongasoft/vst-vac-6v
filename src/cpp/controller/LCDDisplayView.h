@@ -10,7 +10,6 @@
 #include "VSTParameters.h"
 #include "../VAC6CIDs.h"
 #include <memory>
-#include <utility>
 
 namespace pongasoft {
 namespace VST {

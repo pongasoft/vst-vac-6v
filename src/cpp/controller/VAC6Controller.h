@@ -3,7 +3,6 @@
 #include <public.sdk/source/vst/vsteditcontroller.h>
 #include <vstgui4/vstgui/plugin-bindings/vst3editor.h>
 
-#include <utility>
 #include "CustomViewFactory.h"
 #include "VSTViewState.h"
 #include "LCDDisplayView.h"
@@ -15,7 +14,6 @@ namespace VST {
 namespace VAC6 {
 
 using namespace Steinberg;
-using namespace Steinberg::Vst;
 using namespace Common;
 
 /**

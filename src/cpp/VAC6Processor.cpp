@@ -424,7 +424,7 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
         switch(paramQueue->getParameterId())
         {
           case kSoftClippingLevel:
-            newState.fSoftClippingLevel = SoftClippingLevel::denormalize(value);
+            newState.fSoftClippingLevel = SoftClippingLevelParamConverter::denormalize(value);
             stateChanged |= newState.fSoftClippingLevel.getValueInSample() != fState.fSoftClippingLevel.getValueInSample();
             break;
 
@@ -463,12 +463,12 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
             break;
 
           case kGain1:
-            newState.fGain1 = Gain::denormalize(value);
+            newState.fGain1 = GainParamConverter::denormalize(value);
             stateChanged |= newState.fGain1.getValue() != fState.fGain1.getValue();
             break;
 
           case kGain2:
-            newState.fGain2 = Gain::denormalize(value);
+            newState.fGain2 = GainParamConverter::denormalize(value);
             stateChanged |= newState.fGain2.getValue() != fState.fGain2.getValue();
             break;
 

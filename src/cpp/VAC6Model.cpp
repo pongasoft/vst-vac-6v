@@ -1,5 +1,4 @@
 #include "VAC6Model.h"
-#include <string>
 
 namespace pongasoft {
 namespace VST {
@@ -86,7 +85,7 @@ MaxLevel MaxLevel::computeMaxLevel(MaxLevel const &iLeftMaxLevel, MaxLevel const
 ///////////////////////////////////
 // MaxLevel::toDbString
 ///////////////////////////////////
-std::string MaxLevel::toDbString() const
+std::string MaxLevel::toDbString(int iPrecision) const
 {
   // TODO use OStringStream instead
 
@@ -96,26 +95,45 @@ std::string MaxLevel::toDbString() const
   }
   else
   {
-    return VAC6::toDbString(fValue);
+    return VAC6::toDbString(fValue, iPrecision);
   }
 }
 
 ///////////////////////////////////
 // VAC6::toDbString
 ///////////////////////////////////
-std::string toDbString(TSample iSample)
+std::string toDbString(TSample iSample, int iPrecision)
 {
   if(iSample < 0)
     iSample = -iSample;
 
-  char text[128];
+  std::ostringstream s;
+
   if(iSample >= Common::Sample64SilentThreshold)
-    sprintf(text, "%+.2f", sampleToDb(iSample));
+  {
+    s.precision(iPrecision);
+    s.setf(std::ios::fixed);
+    s << std::showpos << sampleToDb(iSample) << "dB";
+  }
   else
-    sprintf(text, "-oo");
-  return std::string(text);
+    s << "-oo";
+  return s.str();
 }
 
+///////////////////////////////////
+// LCDZoomFactorXParamConverter::toString
+///////////////////////////////////
+std::string LCDZoomFactorXParamConverter::toString(const LCDZoomFactorXParamConverter::ParamType &iValue,
+                                                   int32 iPrecision)
+{
+  auto lerpInSeconds = Utils::Lerp<double>(HISTORY_SIZE_IN_SECONDS,
+                                           ACCUMULATOR_BATCH_SIZE_IN_MS * MAX_ARRAY_SIZE / 1000.0);
+  std::ostringstream s;
+  s.precision(iPrecision);
+  s.setf(std::ios::fixed);
+  s << lerpInSeconds.computeY(iValue) << "s";
+  return s.str();
+}
 }
 }
 }

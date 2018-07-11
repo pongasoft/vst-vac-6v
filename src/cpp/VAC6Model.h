@@ -3,6 +3,7 @@
 #include <pluginterfaces/vst/vsttypes.h>
 #include <pluginterfaces/vst/ivstattributes.h>
 #include <cmath>
+#include <sstream>
 #include "VAC6Constants.h"
 #include "ZoomWindow.h"
 #include "Parameter.h"
@@ -37,12 +38,45 @@ constexpr TSample HARD_CLIPPING_LEVEL = 1.0;
 constexpr double MIN_SOFT_CLIPPING_LEVEL_DB = -24;
 constexpr double MIN_VOLUME_DB = -60; // -60dB
 constexpr TSample MIN_AUDIO_SAMPLE = 0.001; // dbToSample<TSample>(-60.0)
-// zoom varies from 30s to 1.28s (5ms * 256=1.28s) and we want default to be 15s
-constexpr double DEFAULT_ZOOM_FACTOR_X = 0.52228412256267409131;
 constexpr bool DEFAULT_GAIN_FILTER = true;
 
 using LCDHistoryOffsetParamConverter = Common::PercentParamConverter;
-using LCDZoomFactorXParamConverter = Common::PercentParamConverter;
+
+///////////////////////////////////
+// LCDZoomFactorXParamConverter
+///////////////////////////////////
+
+// zoom varies from 30s to 1.28s (5ms * 256=1.28s) and we want default to be 15s
+constexpr double DEFAULT_ZOOM_FACTOR_X = 0.52228412256267409131;
+
+class LCDZoomFactorXParamConverter
+{
+private:
+  using PPC = Common::PercentParamConverter;
+
+public:
+  using ParamType = PPC::ParamType;
+
+  inline static ParamValue normalize(ParamType const &iValue)
+  {
+    return PPC::normalize(iValue);
+  }
+
+  inline static ParamType denormalize(ParamValue iNormalizedValue)
+  {
+    return PPC::denormalize(iNormalizedValue);
+  }
+
+  static std::string toString(ParamType const &iValue, int32 iPrecision);
+
+  inline static void toString(ParamType const &iValue, String128 iString, int32 iPrecision)
+  {
+    auto s = toString(iValue, iPrecision);
+    Steinberg::UString wrapper(iString, str16BufferSize (String128));
+    wrapper.fromAscii(s.c_str());
+  }
+};
+
 
 ///////////////////////////////////
 // LCDInputX
@@ -55,6 +89,8 @@ class LCDInputXParamConverter
 private:
   using DVC = Common::DiscreteValueParamConverter<MAX_LCD_INPUT_X + 1>;
 public:
+  using ParamType = DVC::ParamType;
+
   static inline ParamValue normalize(int const &iDiscreteValue)
   {
     return DVC::normalize(iDiscreteValue + 1);
@@ -63,6 +99,11 @@ public:
   static inline int denormalize(ParamValue iNormalizedValue)
   {
     return DVC::denormalize(iNormalizedValue) - 1;
+  }
+
+  inline static void toString(ParamType const &iValue, String128 iString, int32 iPrecision)
+  {
+    DVC::toString(iValue, iString, iPrecision);
   }
 };
 
@@ -89,7 +130,7 @@ inline TSample fromDisplayValue(double iDisplayValue, double iHeight)
 ///////////////////////////////////////////
 // // VAC6::toDbString
 ///////////////////////////////////////////
-std::string toDbString(TSample iSample);
+std::string toDbString(TSample iSample, int iPrecision = 2);
 
 ///////////////////////////////////
 // SoftClippingLevel
@@ -115,19 +156,35 @@ public:
     return (MIN_SOFT_CLIPPING_LEVEL_DB - getValueInDb()) / MIN_SOFT_CLIPPING_LEVEL_DB;
   }
 
-  static SoftClippingLevel denormalize(ParamValue value)
+private:
+  Sample64 fValueInSample;
+};
+
+///////////////////////////////////
+// SoftClippingLevelParamConverter
+///////////////////////////////////
+class SoftClippingLevelParamConverter
+{
+public:
+  using ParamType = SoftClippingLevel;
+
+  static inline ParamValue normalize(ParamType const &iValue)
   {
-    double sclIndB = -MIN_SOFT_CLIPPING_LEVEL_DB * value + MIN_SOFT_CLIPPING_LEVEL_DB;
+    return iValue.getNormalizedValue();
+  }
+
+  static inline ParamType denormalize(ParamValue iNormalizedValue)
+  {
+    double sclIndB = -MIN_SOFT_CLIPPING_LEVEL_DB * iNormalizedValue + MIN_SOFT_CLIPPING_LEVEL_DB;
     return SoftClippingLevel {dbToSample<TSample>(sclIndB)};
   }
 
-  static ParamValue normalize(SoftClippingLevel const &iSoftClippingLevel)
+  inline static void toString(ParamType const &iValue, String128 iString, int32 iPrecision)
   {
-    return iSoftClippingLevel.getNormalizedValue();
+    auto s = toDbString(iValue.getValueInSample());
+    Steinberg::UString wrapper(iString, str16BufferSize (String128));
+    wrapper.fromAscii(s.c_str());
   }
-
-private:
-  Sample64 fValueInSample;
 };
 
 ///////////////////////////////////
@@ -143,25 +200,10 @@ public:
 
   inline double getValue() const { return fValue; }
   inline double getValueInDb() const { return sampleToDb(fValue); }
-  inline ParamValue getNormalizedValue() const { return normalize(*this); }
-
-  /**
-   * Gain uses an x^3 curve with 0.7 (Param Value) being unity gain
-   */
-  static Gain denormalize(ParamValue value)
-  {
-    if(std::fabs(value - Factor) < 1e-5)
-      return Gain{};
-
-    // gain = (value / 0.7) ^ 3
-    double correctedGain = value / Factor;
-    return Gain{correctedGain * correctedGain * correctedGain};
-  }
-
-  static ParamValue normalize(Gain const &iGain)
+  inline ParamValue getNormalizedValue() const
   {
     // value = (gain ^ 1/3) * 0.7
-    return std::pow(iGain.fValue, 1.0/3) * Factor;
+    return std::pow(fValue, 1.0/3) * Factor;
   }
 
 private:
@@ -169,6 +211,39 @@ private:
 };
 
 constexpr Gain DEFAULT_GAIN = Gain{};
+
+class GainParamConverter
+{
+public:
+  using ParamType = Gain;
+
+  /**
+   * Gain uses an x^3 curve with 0.7 (Param Value) being unity gain
+   */
+  static Gain denormalize(ParamValue value)
+  {
+    if(std::fabs(value - Gain::Factor) < 1e-5)
+      return Gain{};
+
+    // gain = (value / 0.7) ^ 3
+    double correctedGain = value / Gain::Factor;
+    return Gain{correctedGain * correctedGain * correctedGain};
+  }
+
+  // normalize
+  static ParamValue normalize(Gain const &iGain)
+  {
+    return iGain.getNormalizedValue();
+  }
+
+  // toString
+  inline static void toString(ParamType const &iValue, String128 iString, int32 iPrecision)
+  {
+    auto s = toDbString(iValue.getValue(), iPrecision);
+    Steinberg::UString wrapper(iString, str16BufferSize (String128));
+    wrapper.fromAscii(s.c_str());
+  }
+};
 
 ///////////////////////////////////
 // FilteredGain - Gain which changes slowly to avoid nasty effects
@@ -233,7 +308,7 @@ struct MaxLevel
     return fValue < 0;
   }
 
-  std::string toDbString() const;
+  std::string toDbString(int iPrecision = 2) const;
 
   static MaxLevel computeMaxLevel(MaxLevel const &iLeftMaxLevel, MaxLevel const &iRightMaxLevel);
 };
