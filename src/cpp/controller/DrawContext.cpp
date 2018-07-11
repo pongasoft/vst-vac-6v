@@ -23,7 +23,7 @@ void RelativeDrawContext::drawString(UTF8String const &fText, RelativeRect const
 
     if(sdc.fAntialias)
       fDrawContext->setDrawMode(kAntiAliasing);
-    fDrawContext->setFont(sdc.fFontID);
+    fDrawContext->setFont(sdc.fFont ? sdc.fFont.get() : nullptr);
 
     // draw darker text (as shadow)
     if(sdc.fStyle & kShadowText)

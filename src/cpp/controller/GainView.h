@@ -25,6 +25,10 @@ public:
   CColor const &getFontColor() const { return fFontColor; }
   void setFontColor(CColor const &iColor) { fFontColor = iColor; }
 
+  // get/setFont
+  FontPtr getFont() const { return fFont; }
+  void setFont(FontPtr iFont) { fFont = std::move(iFont); }
+
 public:
   // draw => does the actual drawing job
   void draw(CDrawContext *iContext) override;
@@ -37,6 +41,8 @@ public:
 
 protected:
   CColor fFontColor{kWhiteCColor};
+  FontPtr fFont{nullptr};
+
   std::unique_ptr<GainParameter> fGain1Parameter{nullptr};
   std::unique_ptr<GainParameter> fGain2Parameter{nullptr};
 
@@ -51,6 +57,9 @@ public:
       registerColorAttribute("font-color",
                              &GainView::getFontColor,
                              &GainView::setFontColor);
+      registerFontAttribute("font",
+                            &GainView::getFont,
+                            &GainView::setFont);
     }
   };
 };

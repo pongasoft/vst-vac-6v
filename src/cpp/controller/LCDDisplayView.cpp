@@ -245,6 +245,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
     sdc.fHoriTxtAlign = kLeftText;
     sdc.fTextInset = {2, 2};
     sdc.fFontColor = fState->fLCDSoftClippingLevelMessage->fColor;
+    sdc.fFont = fFont;
     sdc.fShadowColor = kBlackCColor;
     sdc.fShadowColor.alpha = fState->fLCDSoftClippingLevelMessage->fColor.alpha;
 
@@ -258,6 +259,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
     sdc.fHoriTxtAlign = kCenterText;
     sdc.fTextInset = {2, 2};
     sdc.fFontColor = fState->fLCDZoomFactorXMessage->fColor;
+    sdc.fFont = fFont;
 
     rdc.drawString(fState->fLCDZoomFactorXMessage->fText, RelativeRect{0, 0, MAX_ARRAY_SIZE, 20}, sdc);
   }

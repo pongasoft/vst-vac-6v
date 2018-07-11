@@ -32,17 +32,13 @@ public:
 
   LCDDisplayView(const LCDDisplayView &c) = delete;
 
-  // getSoftClippingLevelColor
-  const CColor &getSoftClippingLevelColor() const
-  {
-    return fSoftClippingLevelColor;
-  }
+  // get/setSoftClippingLevelColor
+  const CColor &getSoftClippingLevelColor() const { return fSoftClippingLevelColor; }
+  void setSoftClippingLevelColor(const CColor &iSoftClippingLevelColor) { fSoftClippingLevelColor = iSoftClippingLevelColor; }
 
-  // setSoftClippingLevelColor
-  void setSoftClippingLevelColor(const CColor &iSoftClippingLevelColor)
-  {
-    fSoftClippingLevelColor = iSoftClippingLevelColor;
-  }
+  // get/setFont
+  FontPtr getFont() const { return fFont; }
+  void setFont(FontPtr iFont) { fFont = std::move(iFont); }
 
   // setState
   void setState(LCDDisplayState *iState);
@@ -90,6 +86,7 @@ public:
 
 protected:
   CColor fSoftClippingLevelColor{};
+  FontPtr fFont{nullptr};
 
   // the state
   LCDDisplayState *fState{nullptr};
@@ -110,6 +107,9 @@ public:
       registerColorAttribute("soft-clipping-level-color",
                              &LCDDisplayView::getSoftClippingLevelColor,
                              &LCDDisplayView::setSoftClippingLevelColor);
+      registerFontAttribute("font",
+                            &LCDDisplayView::getFont,
+                            &LCDDisplayView::setFont);
     }
   };
 

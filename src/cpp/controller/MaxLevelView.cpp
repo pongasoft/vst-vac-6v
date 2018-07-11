@@ -73,6 +73,7 @@ void MaxLevelView::draw(CDrawContext *iContext)
   sdc.fHoriTxtAlign = kCenterText;
   sdc.fTextInset = {2, 2};
   sdc.fFontColor = fontColor;
+  sdc.fFont = fFont;
 
   rdc.drawString(maxLevel.toDbString(), sdc);
 }

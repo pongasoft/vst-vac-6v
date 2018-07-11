@@ -34,6 +34,10 @@ public:
   const CColor &getNoDataColor() const { return fNoDataColor;  }
   void setNoDataColor(const CColor &iNoDataColor) { fNoDataColor = iNoDataColor; }
 
+  // get/setFont
+  FontPtr getFont() const { return fFont; }
+  void setFont(FontPtr iFont) { fFont = std::move(iFont); }
+
   // getMaxLevel
   MaxLevel getMaxLevel() const;
 
@@ -46,6 +50,7 @@ protected:
   MaxLevelState *fState{nullptr};
 
   CColor fNoDataColor{};
+  FontPtr fFont{nullptr};
 
 public:
   class Creator : public CustomViewCreator<MaxLevelView, HistoryView>
@@ -57,6 +62,9 @@ public:
       registerColorAttribute("no-data-color",
                              &MaxLevelView::getNoDataColor,
                              &MaxLevelView::setNoDataColor);
+      registerFontAttribute("font",
+                            &MaxLevelView::getFont,
+                            &MaxLevelView::setFont);
     }
   };
 };

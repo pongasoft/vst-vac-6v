@@ -28,6 +28,7 @@ void GainView::draw(CDrawContext *iContext)
   sdc.fHoriTxtAlign = kCenterText;
   sdc.fTextInset = {2, 2};
   sdc.fFontColor = getFontColor();
+  sdc.fFont = fFont;
 
   Gain gain = Gain{fGain1Parameter->getValue().getValue() * fGain2Parameter->getValue().getValue()};
 

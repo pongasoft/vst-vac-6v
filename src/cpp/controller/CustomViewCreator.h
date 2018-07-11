@@ -11,6 +11,7 @@
 #include <map>
 #include <memory>
 #include "../logging/loguru.hpp"
+#include "Types.h"
 
 #if VSTGUI_LIVE_EDITING
 #define EDITOR_MODE 1
@@ -23,26 +24,24 @@ namespace GUI {
 using namespace VSTGUI;
 
 /**
- * Turns a CBitmap * (which is reference counted internally) into a std::shared_ptr<CBitmap> which will properly
+ * Turns a ReferenceCounted* into a std::shared_ptr<ReferenceCounted> which will properly
  * decrements the counter when no more shared references are held. The issue with the sdk SharedPointer concept
  * is that it behaves differently than the native std::shared_ptr concept (for example, bool operator to test if null).
  */
-inline std::shared_ptr<CBitmap> toSharedPtr(CBitmap *iBitmap)
+template<typename RefCounted>
+inline std::shared_ptr<RefCounted> toSharedPtr(RefCounted *iRefCounted)
 {
-  if(iBitmap)
+  if(iRefCounted)
   {
-    auto deleter = [](CBitmap *bm) {
-      bm->forget();
+    auto deleter = [](RefCounted *rf) {
+      rf->forget();
       // NO DELETE on purpose!
     };
-    iBitmap->remember();
-    return std::shared_ptr<CBitmap>(iBitmap, deleter);
+    iRefCounted->remember();
+    return std::shared_ptr<RefCounted>(iRefCounted, deleter);
   }
   return nullptr;
 }
-
-// Defines a BitmapPtr shortcut notation
-using BitmapPtr = std::shared_ptr<CBitmap>;
 
 /**
  * Base abstract class for an attribute of a view
@@ -461,6 +460,74 @@ private:
     Setter fSetter;
   };
 
+  /**
+ * Specialization for a bitmap attribute. The view must have getter and setter as defined by the
+ * types below.
+ */
+  class FontAttribute : public ViewAttribute
+  {
+  public:
+    using Getter = FontPtr(TView::*)() const;
+    using Setter = void (TView::*)(FontPtr);
+
+    FontAttribute(std::string const &iName,
+                    Getter iGetter,
+                    Setter iSetter) :
+      ViewAttribute(iName),
+      fGetter{iGetter},
+      fSetter{iSetter}
+    {
+    }
+
+    // getType
+    IViewCreator::AttrType getType() override
+    {
+      return IViewCreator::kFontType;
+    }
+
+    // apply => set a font to the view
+    bool apply(CView *iView, const UIAttributes &iAttributes, const IUIDescription *iDescription) override
+    {
+      auto *tv = dynamic_cast<TView *>(iView);
+      if(tv != nullptr)
+      {
+        auto fontAttr = iAttributes.getAttributeValue(getName());
+        if(fontAttr)
+        {
+          auto font = iDescription->getFont(fontAttr->c_str());
+          if(font)
+          {
+            (tv->*fSetter)(toSharedPtr(font));
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    // getAttributeValue => get a font from the view
+    bool getAttributeValue(CView *iView, const IUIDescription *iDescription, std::string &oStringValue) const override
+    {
+      auto *tv = dynamic_cast<TView *>(iView);
+      if(tv != nullptr)
+      {
+        auto font = (tv->*fGetter)();
+        if(font)
+        {
+          auto fontName = iDescription->lookupFontName(font.get());
+          if(fontName)
+            oStringValue = fontName;
+        }
+        return true;
+      }
+      return false;
+    }
+
+  private:
+    Getter fGetter;
+    Setter fSetter;
+  };
+
 public:
   // Constructor
   explicit TCustomViewCreator(char const *iViewName = nullptr,
@@ -532,6 +599,16 @@ public:
                               typename BitmapAttribute::Setter iSetter)
   {
     registerAttribute<BitmapAttribute>(iName, iGetter, iSetter);
+  }
+
+  /**
+   * Registers a font attribute with the given name and getter/setter
+   */
+  void registerFontAttribute(std::string const &iName,
+                             typename FontAttribute::Getter iGetter,
+                             typename FontAttribute::Setter iSetter)
+  {
+    registerAttribute<FontAttribute>(iName, iGetter, iSetter);
   }
 
   /**

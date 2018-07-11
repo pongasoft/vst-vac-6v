@@ -3,6 +3,8 @@
 #include <vstgui4/vstgui/lib/cdrawcontext.h>
 #include <vstgui4/vstgui/lib/cview.h>
 
+#include "Types.h"
+
 namespace pongasoft {
 namespace VST {
 namespace GUI {
@@ -13,7 +15,7 @@ struct StringDrawContext
 {
   CHoriTxtAlign fHoriTxtAlign{kCenterText};
   int32_t fStyle{0};
-  CFontRef fFontID{nullptr};
+  FontPtr fFont{nullptr};
   CColor fFontColor{kWhiteCColor};
   CColor fShadowColor{kBlackCColor};
   CPoint fTextInset{0, 0};
