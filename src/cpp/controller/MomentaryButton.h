@@ -20,6 +20,9 @@ using namespace VSTGUI;
 2018-06-11 10:47:59.433 ( 177.281s) [           1F4B2]      VAC6Processor.cpp:307      0| VAC6Processor::getState => fSoftClippingLevel=0.170968
 2018-06-11 10:47:59.433 ( 177.281s) [           1F4B2]     VAC6Controller.cpp:168      0| VAC6Controller::getState()
 2018-06-11 10:47:59.441 ( 177.289s) [           1F561]      VAC6Processor.cpp:263      0| VAC6Processor::processParameters => kMaxLevelReset=1.000000
+
+ Update 2018/07/12 Cannot reproduce with Editor or Maschine 2... only happens in Reason so may just be an implementation
+                   issue with VST plugins in Reason
  */
 
 /**

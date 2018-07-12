@@ -11,7 +11,6 @@ MaxLevel LCDData::Channel::computeInWindowMaxLevel() const
 {
   MaxLevel res = {};
 
-  // TODO optimization: reverse the loop and return right away when found
   if(fOn)
   {
     auto ptr = &fSamples[0];
@@ -35,17 +34,16 @@ MaxLevel LCDData::Channel::computeSinceResetMaxLevel() const
 {
   MaxLevel oSinceReset = {fMaxLevelSinceReset, -1};
 
-  // TODO optimization: reverse the loop and return right away when found
-
   if(fOn)
   {
-    auto ptr = &fSamples[0];
-    for(int i = 0; i < MAX_ARRAY_SIZE; i++)
+    auto ptr = &fSamples[MAX_ARRAY_SIZE - 1];
+    for(int i = MAX_ARRAY_SIZE - 1; i >= 0; i--)
     {
-      TSample sample = *ptr++;
+      TSample sample = *ptr--;
       if(sample == fMaxLevelSinceReset)
       {
         oSinceReset.fIndex = i;
+        return oSinceReset;
       }
     }
   }

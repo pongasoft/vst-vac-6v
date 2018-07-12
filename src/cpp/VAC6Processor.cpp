@@ -158,7 +158,6 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
   delete fLeftChannelProcessor;
   delete fZoomWindow;
 
-  // TODO communicate sample rate to UI so that we can get rid of this in the processing side
   fMaxAccumulatorBatchSize = fClock.getSampleCountFor(ACCUMULATOR_BATCH_SIZE_IN_MS);
 
   fZoomWindow = new ZoomWindow(MAX_ARRAY_SIZE, SAMPLE_BUFFER_SIZE);
@@ -293,7 +292,6 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   // Scrollbar has been moved (should happen only in pause mode)
   if(fPreviousState.fLCDHistoryOffset != fState.fLCDHistoryOffset)
   {
-    // TODO "should happen only in pause mode" is not the right assumption (see Maschine knob...)
     fZoomWindow->setWindowOffset(fState.fLCDHistoryOffset);
     fLeftChannelProcessor->setDirty();
     fRightChannelProcessor->setDirty();
