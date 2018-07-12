@@ -1,5 +1,4 @@
 #include <vstgui4/vstgui/plugin-bindings/vst3editor.h>
-#include <base/source/fstreamer.h>
 #include "../logging/loguru.hpp"
 #include "VAC6Controller.h"
 
@@ -27,10 +26,15 @@ public:
     Builder &precision(int32 iPrecision) { fPrecision = iPrecision; return *this; }
 
     // method to call to add to parameter container
-    Vst::Parameter *add(ParameterContainer &iParameterContainer) { return iParameterContainer.addParameter(create()); }
+    Parameter<ParamConverter> *add(ParameterContainer &iParameterContainer)
+    {
+      auto parameter = create();
+      iParameterContainer.addParameter(parameter);
+      return parameter;
+    }
 
     // parameter factory method
-    virtual Vst::Parameter *create() const { return new Parameter(*this); }
+    virtual Parameter<ParamConverter> *create() const { return new Parameter(*this); }
 
     // fields
     ParamID fTag;
@@ -276,60 +280,12 @@ tresult VAC6Controller::setComponentState(IBStream *state)
   // using helper to read the stream
   IBStreamer streamer(state, kLittleEndian);
 
-  // EVAC6ParamID::kSoftClippingLevel
-  double savedParamSoftLevelClipping = 0.f;
-  if(!streamer.readDouble(savedParamSoftLevelClipping))
-    savedParamSoftLevelClipping = DEFAULT_SOFT_CLIPPING_LEVEL;
-  setParamNormalized(EVAC6ParamID::kSoftClippingLevel,
-                     SoftClippingLevel{savedParamSoftLevelClipping}.getNormalizedValue());
-
-  // EVAC6ParamID::kLCDZoomFactorX
-  double savedParamZoomFactorX = 0.f;
-  if(!streamer.readDouble(savedParamZoomFactorX))
-    savedParamZoomFactorX = DEFAULT_ZOOM_FACTOR_X;
-  setParamNormalized(EVAC6ParamID::kLCDZoomFactorX,
-                     LCDZoomFactorXParamConverter::normalize(savedParamZoomFactorX));
-
-  // EVAC6ParamID::kLCDLeftChannel
-  bool savedLeftChannelOn;
-  if(!streamer.readBool(savedLeftChannelOn))
-    savedLeftChannelOn = true;
-  setParamNormalized(EVAC6ParamID::kLCDLeftChannel, BooleanParamConverter::normalize(savedLeftChannelOn));
-
-  // EVAC6ParamID::kLCDRightChannel
-  bool savedRightChannelOn;
-  if(!streamer.readBool(savedRightChannelOn))
-    savedRightChannelOn = true;
-  setParamNormalized(EVAC6ParamID::kLCDRightChannel, BooleanParamConverter::normalize(savedRightChannelOn));
-
-  // EVAC6ParamID::kGain1
-  double savedGain1 = 0.f;
-  if(!streamer.readDouble(savedGain1))
-    savedGain1 = Gain::Unity;
-  setParamNormalized(EVAC6ParamID::kGain1,
-                     Gain{savedGain1}.getNormalizedValue());
-
-  // EVAC6ParamID::kGain2
-  double savedGain2 = 0.f;
-  if(!streamer.readDouble(savedGain2))
-    savedGain2 = Gain::Unity;
-  setParamNormalized(EVAC6ParamID::kGain2,
-                     Gain{savedGain2}.getNormalizedValue());
-
-  // EVAC6ParamID::kGainFilter
-  bool savedGainFilter;
-  if(!streamer.readBool(savedGainFilter))
-    savedGainFilter = DEFAULT_GAIN_FILTER;
-  setParamNormalized(EVAC6ParamID::kGainFilter, BooleanParamConverter::normalize(savedGainFilter));
-
-
-//  DLOG_F(INFO, "VAC6Controller::setComponentState => kSoftClippingLevel=%f, kLCDZoomFactorX=%f, kLCDLeftChannel=%d, kLCDRightChannel=%d, kGain1=%f, kGain2=%f",
-//         savedParamSoftLevelClipping,
-//         savedParamZoomFactorX,
-//         savedLeftChannelOn,
-//         savedRightChannelOn,
-//         savedGain1,
-//         savedGain2);
+  setParamNormalized<LCDZoomFactorXParamConverter>(EVAC6ParamID::kLCDZoomFactorX, streamer, DEFAULT_ZOOM_FACTOR_X);
+  setParamNormalized<BooleanParamConverter>(EVAC6ParamID::kLCDLeftChannel, streamer, true);
+  setParamNormalized<BooleanParamConverter>(EVAC6ParamID::kLCDRightChannel, streamer, true);
+  setParamNormalized<GainParamConverter>(EVAC6ParamID::kGain1, streamer, DEFAULT_GAIN);
+  setParamNormalized<GainParamConverter>(EVAC6ParamID::kGain2, streamer, DEFAULT_GAIN);
+  setParamNormalized<BooleanParamConverter>(EVAC6ParamID::kGainFilter, streamer, DEFAULT_GAIN_FILTER);
 
   return kResultOk;
 }
@@ -346,21 +302,9 @@ tresult VAC6Controller::setState(IBStream *state)
 
   IBStreamer streamer(state, kLittleEndian);
 
-  // EVAC6ParamID::kMaxLevelSinceResetMarker
-  {
-    bool savedParam;
-    if(!streamer.readBool(savedParam))
-      savedParam = true;
-    setParamNormalized(EVAC6ParamID::kMaxLevelSinceResetMarker, BooleanParamConverter::normalize(savedParam));
-  }
-
-  // EVAC6ParamID::kMaxLevelInWindowMarker
-  {
-    bool savedParam;
-    if(!streamer.readBool(savedParam))
-      savedParam = true;
-    setParamNormalized(EVAC6ParamID::kMaxLevelInWindowMarker, BooleanParamConverter::normalize(savedParam));
-  }
+  setParamNormalized<BooleanParamConverter>(EVAC6ParamID::kMaxLevelSinceResetMarker, streamer, true);
+  setParamNormalized<BooleanParamConverter>(EVAC6ParamID::kMaxLevelInWindowMarker, streamer, true);
+  setParamNormalized<SoftClippingLevelParamConverter>(EVAC6ParamID::kSoftClippingLevel, streamer, SoftClippingLevel{DEFAULT_SOFT_CLIPPING_LEVEL});
 
   return kResultOk;
 }
@@ -377,8 +321,9 @@ tresult VAC6Controller::getState(IBStream *state)
 
   IBStreamer streamer(state, kLittleEndian);
 
-  streamer.writeBool(BooleanParamConverter::denormalize(getParamNormalized(EVAC6ParamID::kMaxLevelSinceResetMarker)));
-  streamer.writeBool(BooleanParamConverter::denormalize(getParamNormalized(EVAC6ParamID::kMaxLevelInWindowMarker)));
+  streamer.writeDouble(getParamNormalized(EVAC6ParamID::kMaxLevelSinceResetMarker));
+  streamer.writeDouble(getParamNormalized(EVAC6ParamID::kMaxLevelInWindowMarker));
+  streamer.writeDouble(getParamNormalized(EVAC6ParamID::kSoftClippingLevel));
 
   return kResultOk;
 }
@@ -411,6 +356,18 @@ tresult VAC6Controller::notify(IMessage *message)
   }
 
   return kResultOk;
+}
+
+///////////////////////////////////
+// VAC6Controller::setParamNormalized
+///////////////////////////////////
+template<typename ParamConverter>
+void VAC6Controller::setParamNormalized(ParamID iParamID, IBStreamer &iStreamer, typename ParamConverter::ParamType const &iDefaultValue)
+{
+  double value;
+  if(!iStreamer.readDouble(value))
+    value = ParamConverter::normalize(iDefaultValue);
+  EditController::setParamNormalized(iParamID, value);
 }
 
 }

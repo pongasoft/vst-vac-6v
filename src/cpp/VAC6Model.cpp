@@ -87,8 +87,6 @@ MaxLevel MaxLevel::computeMaxLevel(MaxLevel const &iLeftMaxLevel, MaxLevel const
 ///////////////////////////////////
 std::string MaxLevel::toDbString(int iPrecision) const
 {
-  // TODO use OStringStream instead
-
   if(isUndefined())
   {
     return "---.--";

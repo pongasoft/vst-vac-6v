@@ -2,6 +2,7 @@
 
 #include <public.sdk/source/vst/vsteditcontroller.h>
 #include <vstgui4/vstgui/plugin-bindings/vst3editor.h>
+#include <base/source/fstreamer.h>
 
 #include "CustomViewFactory.h"
 #include "VSTViewState.h"
@@ -63,6 +64,9 @@ public:
     return (IEditController *) new VAC6Controller();
   }
 
+protected:
+  template<typename ParamConverter>
+  void setParamNormalized(ParamID iParamID, IBStreamer &iStreamer, typename ParamConverter::ParamType const &iDefaultValue);
 
 private:
   // the name of the xml file (relative) which contains the ui description

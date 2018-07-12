@@ -95,7 +95,6 @@ protected:
 private:
   struct State
   {
-    SoftClippingLevel fSoftClippingLevel{DEFAULT_SOFT_CLIPPING_LEVEL}; // TODO migrate to UI (not used in processing)
     double fZoomFactorX{DEFAULT_ZOOM_FACTOR_X};
     bool fLeftChannelOn{true};
     bool fRightChannelOn{true};

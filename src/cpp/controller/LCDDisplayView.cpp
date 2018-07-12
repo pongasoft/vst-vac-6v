@@ -236,7 +236,6 @@ void LCDDisplayView::draw(CDrawContext *iContext)
   rdc.drawLine(0, top, getWidth(), top, getSoftClippingLevelColor());
 
 
-  // TODO handle font: use default?
   // print the level
   if(fState->fLCDSoftClippingLevelMessage)
   {

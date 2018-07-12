@@ -423,11 +423,6 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
       {
         switch(paramQueue->getParameterId())
         {
-          case kSoftClippingLevel:
-            newState.fSoftClippingLevel = SoftClippingLevelParamConverter::denormalize(value);
-            stateChanged |= newState.fSoftClippingLevel.getValueInSample() != fState.fSoftClippingLevel.getValueInSample();
-            break;
-
           case kMaxLevelReset:
             fMaxLevelResetRequested = BooleanParamConverter::denormalize(value);
             break;
@@ -495,6 +490,19 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
 }
 
 ///////////////////////////////////
+// ::readParam
+///////////////////////////////////
+template<typename ParamConverter>
+void readParam(IBStreamer &iStreamer, const typename ParamConverter::ParamType &iDefaultValue, typename ParamConverter::ParamType &oValue)
+{
+  double value;
+  if(iStreamer.readDouble(value))
+    oValue = ParamConverter::denormalize(value);
+  else
+    oValue = iDefaultValue;
+}
+
+///////////////////////////////////
 // VAC6Processor::setState
 ///////////////////////////////////
 tresult VAC6Processor::setState(IBStream *state)
@@ -506,75 +514,27 @@ tresult VAC6Processor::setState(IBStream *state)
 
   IBStreamer streamer(state, kLittleEndian);
 
-  // soft clipping level
-  {
-    double savedParam = 0;
-    if(!streamer.readDouble(savedParam))
-      savedParam = DEFAULT_SOFT_CLIPPING_LEVEL;
-    newState.fSoftClippingLevel = SoftClippingLevel{savedParam};
-  }
-
-  // zoom factor X
-  {
-    double savedParam = 0;
-    if(!streamer.readDouble(savedParam))
-      savedParam = DEFAULT_ZOOM_FACTOR_X;
-    newState.fZoomFactorX = savedParam;
-  }
-
-  // left channel on
-  {
-    bool savedParam;
-    if(!streamer.readBool(savedParam))
-      savedParam = true;
-    newState.fLeftChannelOn = savedParam;
-  }
-
-  // right channel on
-  {
-    bool savedParam;
-    if(!streamer.readBool(savedParam))
-      savedParam = true;
-    newState.fRightChannelOn = savedParam;
-  }
-
-  // gain1
-  {
-    double savedParam;
-    if(!streamer.readDouble(savedParam))
-      savedParam = Gain::Unity;
-    newState.fGain1 = Gain{savedParam};
-  }
-
-  // gain2
-  {
-    double savedParam;
-    if(!streamer.readDouble(savedParam))
-      savedParam = Gain::Unity;
-    newState.fGain2 = Gain{savedParam};
-  }
-
-  // gain filter
-  {
-    bool savedParam;
-    if(!streamer.readBool(savedParam))
-      savedParam = true;
-    newState.fGainFilter = savedParam;
-  }
+  readParam<LCDZoomFactorXParamConverter>(streamer, DEFAULT_ZOOM_FACTOR_X, newState.fZoomFactorX);
+  readParam<BooleanParamConverter>(streamer, true, newState.fLeftChannelOn);
+  readParam<BooleanParamConverter>(streamer, true, newState.fRightChannelOn);
+  readParam<GainParamConverter>(streamer, DEFAULT_GAIN, newState.fGain1);
+  readParam<GainParamConverter>(streamer, DEFAULT_GAIN, newState.fGain2);
+  readParam<BooleanParamConverter>(streamer, true, newState.fGainFilter);
 
   // lcd live view IGNORED! (does not make sense to not be in live view when loading)
 
   fStateUpdate.push(newState);
 
-//  DLOG_F(INFO, "VAC6Processor::setState => fSoftClippingLevel=%f, fZoomFactorX=%f, fLeftChannelOn=%d, fRightChannelOn=%d, fGain1=%f, fGain2=%f",
-//         newState.fSoftClippingLevel.getValueInSample(),
-//         newState.fZoomFactorX,
-//         newState.fLeftChannelOn,
-//         newState.fRightChannelOn,
-//         newState.fGain1.getValue(),
-//         newState.fGain2.getValue());
-
   return kResultOk;
+}
+
+///////////////////////////////////
+// ::readParam
+///////////////////////////////////
+template<typename ParamConverter>
+void writeParam(IBStreamer &iStreamer, typename ParamConverter::ParamType const &iValue)
+{
+  iStreamer.writeDouble(ParamConverter::normalize(iValue));
 }
 
 ///////////////////////////////////
@@ -589,21 +549,12 @@ tresult VAC6Processor::getState(IBStream *state)
 
   IBStreamer streamer(state, kLittleEndian);
 
-  streamer.writeDouble(latestState.fSoftClippingLevel.getValueInSample());
-  streamer.writeDouble(latestState.fZoomFactorX);
-  streamer.writeBool(latestState.fLeftChannelOn);
-  streamer.writeBool(latestState.fRightChannelOn);
-  streamer.writeDouble(latestState.fGain1.getValue());
-  streamer.writeDouble(latestState.fGain2.getValue());
-  streamer.writeBool(latestState.fGainFilter);
-
-//  DLOG_F(INFO, "VAC6Processor::getState => fSoftClippingLevel=%f, fZoomFactorX=%f, fLeftChannelOn=%d, fRightChannelOn=%d, fGain1=%f, fGain2=%f",
-//         latestState.fSoftClippingLevel.getValueInSample(),
-//         latestState.fZoomFactorX,
-//         latestState.fLeftChannelOn,
-//         latestState.fRightChannelOn,
-//         latestState.fGain1.getValue(),
-//         latestState.fGain2.getValue());
+  writeParam<LCDZoomFactorXParamConverter>(streamer, latestState.fZoomFactorX);
+  writeParam<BooleanParamConverter>(streamer, latestState.fLeftChannelOn);
+  writeParam<BooleanParamConverter>(streamer, latestState.fRightChannelOn);
+  writeParam<GainParamConverter>(streamer, latestState.fGain1);
+  writeParam<GainParamConverter>(streamer, latestState.fGain2);
+  writeParam<BooleanParamConverter>(streamer, latestState.fGainFilter);
 
   return kResultOk;
 }
