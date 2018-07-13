@@ -95,6 +95,7 @@ protected:
 private:
   struct State
   {
+    bool fBypass{false};
     double fZoomFactorX{DEFAULT_ZOOM_FACTOR_X};
     bool fLeftChannelOn{true};
     bool fRightChannelOn{true};

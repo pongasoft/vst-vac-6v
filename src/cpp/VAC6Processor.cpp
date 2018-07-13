@@ -320,8 +320,10 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   auto leftChannel = out.getLeftChannel();
   auto rightChannel = out.getRightChannel();
 
-  fLeftChannelProcessor->genericProcessChannel<SampleType>(fZoomWindow, in.getLeftChannel(), leftChannel, fGain.getValue());
-  fRightChannelProcessor->genericProcessChannel<SampleType>(fZoomWindow, in.getRightChannel(), rightChannel, fGain.getValue());
+  auto gain = fState.fBypass ? Gain::Unity : fGain.getValue();
+
+  fLeftChannelProcessor->genericProcessChannel<SampleType>(fZoomWindow, in.getLeftChannel(), leftChannel, gain);
+  fRightChannelProcessor->genericProcessChannel<SampleType>(fZoomWindow, in.getRightChannel(), rightChannel, gain);
 
   // if reset of max level is requested (pressing momentary button) then we need to reset the accumulator
   if(fMaxLevelResetRequested)
@@ -421,6 +423,11 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
       {
         switch(paramQueue->getParameterId())
         {
+          case kBypass:
+            newState.fBypass = BooleanParamConverter::denormalize(value);
+            stateChanged |= newState.fBypass != fState.fBypass;
+            break;
+
           case kMaxLevelReset:
             fMaxLevelResetRequested = BooleanParamConverter::denormalize(value);
             break;
@@ -527,6 +534,7 @@ tresult VAC6Processor::setState(IBStream *state)
   readParam<GainParamConverter>(streamer, DEFAULT_GAIN, newState.fGain1);
   readParam<GainParamConverter>(streamer, DEFAULT_GAIN, newState.fGain2);
   readParam<BooleanParamConverter>(streamer, true, newState.fGainFilter);
+  readParam<BooleanParamConverter>(streamer, false, newState.fBypass);
 
   // lcd live view IGNORED! (does not make sense to not be in live view when loading)
 
@@ -565,6 +573,7 @@ tresult VAC6Processor::getState(IBStream *state)
   writeParam<GainParamConverter>(streamer, latestState.fGain1);
   writeParam<GainParamConverter>(streamer, latestState.fGain2);
   writeParam<BooleanParamConverter>(streamer, latestState.fGainFilter);
+  writeParam<BooleanParamConverter>(streamer, latestState.fBypass);
 
   return kResultOk;
 }

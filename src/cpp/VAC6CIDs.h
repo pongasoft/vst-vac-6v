@@ -14,6 +14,8 @@ static const ::Steinberg::FUID VAC6ControllerUID(0x3415c383, 0x5e904dcf, 0xb6ccf
 // tags associated to parameters
 enum EVAC6ParamID : Steinberg::Vst::ParamID
 {
+  kBypass = 1000,
+
   kMaxLevelReset = 1010,
   kMaxLevelSinceResetMarker = 1030,
   kMaxLevelInWindowMarker = 1031,

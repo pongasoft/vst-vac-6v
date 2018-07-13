@@ -113,6 +113,13 @@ tresult VAC6Controller::initialize(FUnknown *context)
   CFrame::kDefaultKnobMode = CKnobMode::kLinearMode;
   setKnobMode(CKnobMode::kLinearMode);
 
+  // bypass
+  BooleanParameter::Builder(EVAC6ParamID::kBypass, STR16 ("Bypass"))
+    .defaultValue(false)
+    .flags(ParameterInfo::kCanAutomate | ParameterInfo::kIsBypass)
+    .shortTitle(STR16 ("Bypass"))
+    .add(parameters);
+
   // the knob that changes the soft clipping level
   Parameter<SoftClippingLevelParamConverter>::Builder(EVAC6ParamID::kSoftClippingLevel, STR16 ("Soft Clipping Level"))
     .defaultValue(SoftClippingLevel{DEFAULT_SOFT_CLIPPING_LEVEL})
@@ -295,6 +302,7 @@ tresult VAC6Controller::setComponentState(IBStream *state)
   setParamNormalized<GainParamConverter>(EVAC6ParamID::kGain1, streamer, DEFAULT_GAIN);
   setParamNormalized<GainParamConverter>(EVAC6ParamID::kGain2, streamer, DEFAULT_GAIN);
   setParamNormalized<BooleanParamConverter>(EVAC6ParamID::kGainFilter, streamer, DEFAULT_GAIN_FILTER);
+  setParamNormalized<BooleanParamConverter>(EVAC6ParamID::kBypass, streamer, false);
 
   return kResultOk;
 }
