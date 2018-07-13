@@ -512,6 +512,15 @@ tresult VAC6Processor::setState(IBStream *state)
 
   IBStreamer streamer(state, kLittleEndian);
 
+  uint16 stateVersion;
+  if(!streamer.readInt16u(stateVersion))
+    stateVersion = PROCESSOR_STATE_VERSION;
+
+  if(stateVersion != PROCESSOR_STATE_VERSION)
+  {
+    DLOG_F(WARNING, "unexpected processor state version %d", stateVersion);
+  }
+
   readParam<LCDZoomFactorXParamConverter>(streamer, DEFAULT_ZOOM_FACTOR_X, newState.fZoomFactorX);
   readParam<BooleanParamConverter>(streamer, true, newState.fLeftChannelOn);
   readParam<BooleanParamConverter>(streamer, true, newState.fRightChannelOn);
@@ -546,6 +555,9 @@ tresult VAC6Processor::getState(IBStream *state)
   auto latestState = fLatestState.get();
 
   IBStreamer streamer(state, kLittleEndian);
+
+  // write version for later upgrade
+  streamer.writeInt16u(PROCESSOR_STATE_VERSION);
 
   writeParam<LCDZoomFactorXParamConverter>(streamer, latestState.fZoomFactorX);
   writeParam<BooleanParamConverter>(streamer, latestState.fLeftChannelOn);

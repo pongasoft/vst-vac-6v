@@ -63,7 +63,7 @@ public:
   }
 
   /**
-   * Using fToString if it exists otherwise the default
+   * Using ParamConverter::toString
    */
   void toString(ParamValue iNormalizedValue, String128 iString) const override
   {
@@ -280,6 +280,15 @@ tresult VAC6Controller::setComponentState(IBStream *state)
   // using helper to read the stream
   IBStreamer streamer(state, kLittleEndian);
 
+  uint16 stateVersion;
+  if(!streamer.readInt16u(stateVersion))
+    stateVersion = PROCESSOR_STATE_VERSION;
+
+  if(stateVersion != PROCESSOR_STATE_VERSION)
+  {
+    DLOG_F(WARNING, "unexpected processor state version %d", stateVersion);
+  }
+
   setParamNormalized<LCDZoomFactorXParamConverter>(EVAC6ParamID::kLCDZoomFactorX, streamer, DEFAULT_ZOOM_FACTOR_X);
   setParamNormalized<BooleanParamConverter>(EVAC6ParamID::kLCDLeftChannel, streamer, true);
   setParamNormalized<BooleanParamConverter>(EVAC6ParamID::kLCDRightChannel, streamer, true);
@@ -302,6 +311,15 @@ tresult VAC6Controller::setState(IBStream *state)
 
   IBStreamer streamer(state, kLittleEndian);
 
+  uint16 stateVersion;
+  if(!streamer.readInt16u(stateVersion))
+    stateVersion = CONTROLLER_STATE_VERSION;
+
+  if(stateVersion != CONTROLLER_STATE_VERSION)
+  {
+    DLOG_F(WARNING, "unexpected controller state version %d", stateVersion);
+  }
+
   setParamNormalized<BooleanParamConverter>(EVAC6ParamID::kMaxLevelSinceResetMarker, streamer, true);
   setParamNormalized<BooleanParamConverter>(EVAC6ParamID::kMaxLevelInWindowMarker, streamer, true);
   setParamNormalized<SoftClippingLevelParamConverter>(EVAC6ParamID::kSoftClippingLevel, streamer, SoftClippingLevel{DEFAULT_SOFT_CLIPPING_LEVEL});
@@ -320,6 +338,9 @@ tresult VAC6Controller::getState(IBStream *state)
   // DLOG_F(INFO, "VAC6Controller::getState()");
 
   IBStreamer streamer(state, kLittleEndian);
+
+  // write version for later upgrade
+  streamer.writeInt16u(CONTROLLER_STATE_VERSION);
 
   streamer.writeDouble(getParamNormalized(EVAC6ParamID::kMaxLevelSinceResetMarker));
   streamer.writeDouble(getParamNormalized(EVAC6ParamID::kMaxLevelInWindowMarker));

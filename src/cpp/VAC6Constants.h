@@ -25,6 +25,10 @@ constexpr int HISTORY_SIZE_IN_SECONDS = 30; // how long is the history in second
 // enough samples to fit ACCUMULATOR_BATCH_SIZE_IN_MS
 constexpr int SAMPLE_BUFFER_SIZE = HISTORY_SIZE_IN_SECONDS * 1000 / ACCUMULATOR_BATCH_SIZE_IN_MS; // 6000 samples
 
+// keeping track of the version of the state being saved so that it can be upgraded more easily later
+constexpr uint16 PROCESSOR_STATE_VERSION = 1;
+constexpr uint16 CONTROLLER_STATE_VERSION = 1;
+
 /**
  * State of max level (hard clipping means above 0dB, soft clipping means above some defined threshold)
  */

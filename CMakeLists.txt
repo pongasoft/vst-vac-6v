@@ -7,6 +7,8 @@ option(SMTG_CREATE_VST2_VERSION "Use VST2" ON)
 # Platform Detection
 #-------------------------------------------------------------------------------
 
+# TODO Fix broken link created to VST3
+
 if(APPLE)
     set(MAC TRUE)
 elseif(WIN32)
