@@ -45,6 +45,7 @@ protected:
 
   std::unique_ptr<GainParameter> fGain1Parameter{nullptr};
   std::unique_ptr<GainParameter> fGain2Parameter{nullptr};
+  std::unique_ptr<BooleanParameter> fBypassParameter{nullptr};
 
 public:
   // Creator class
