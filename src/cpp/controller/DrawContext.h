@@ -107,6 +107,11 @@ public:
     fDrawContext->drawLine(toAbsolutePoint(x1, y1), toAbsolutePoint(x2, y2));
   }
 
+  void fillRect(RelativeCoord x1, RelativeCoord y1, RelativeCoord x2, RelativeCoord y2, CColor const &iColor)
+  {
+    fillRect(RelativeRect{x1, y1, x2, y2}, iColor);
+  }
+
   void fillRect(RelativeRect const &iRect, CColor const &iColor)
   {
     fDrawContext->setFillColor(iColor);

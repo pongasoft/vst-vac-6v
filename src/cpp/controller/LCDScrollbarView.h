@@ -22,17 +22,13 @@ public:
   // deleting copy constructor
   LCDScrollbarView(const LCDScrollbarView &c) = delete;
 
-  // getScrollbarMinSize
-  int const& getScrollbarMinSize() const
-  {
-    return fScrollbarMinSize;
-  }
+  // get/setScrollbarMinSize
+  int32_t getScrollbarMinSize() const { return fScrollbarMinSize; }
+  void setScrollbarMinSize(int32_t iScrollbarMinSize) { fScrollbarMinSize = iScrollbarMinSize; }
 
-  // setScrollbarMinSize
-  void setScrollbarMinSize(int const &iScrollbarMinSize)
-  {
-    fScrollbarMinSize = iScrollbarMinSize;
-  }
+  // get/setHandleColor
+  CColor const& getHandleColor() const { return fHandleColor; }
+  void setHandleColor(CColor const &iHandleColor) { fHandleColor = iHandleColor; }
 
 public:
   // draw => does the actual drawing job
@@ -63,25 +59,13 @@ protected:
     RelativeCoord fCenter;
     CCoord fHalfWidth;
 
-    bool isFull() const
-    {
-      return fMinCenter == fMaxCenter;
-    }
+    bool isFull() const { return fMinCenter == fMaxCenter; }
 
-    RelativeCoord getLeft() const
-    {
-      return fCenter - fHalfWidth;
-    }
+    RelativeCoord getLeft() const { return fCenter - fHalfWidth; }
 
-    RelativeCoord getRight() const
-    {
-      return getLeft() + getWidth();
-    }
+    RelativeCoord getRight() const { return getLeft() + getWidth(); }
 
-    CCoord getWidth() const
-    {
-      return fHalfWidth * 2.0;
-    }
+    CCoord getWidth() const { return fHalfWidth * 2.0; }
 
     RelativeCoord computeCenter(double iPercent) const
     {
@@ -103,7 +87,8 @@ protected:
   ZoomBox computeZoomBox() const;
 
 protected:
-  int fScrollbarMinSize{17};
+  CColor fHandleColor{kWhiteCColor};
+  int32_t fScrollbarMinSize{17};
 
   std::unique_ptr<BooleanParameter> fLCDLiveViewParameter{nullptr};
 
@@ -123,7 +108,8 @@ public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
       CustomViewCreator(iViewName, iDisplayName)
     {
-      // TODO add min-scrollbar-size and handle-color
+      registerColorAttribute("handle-color", &LCDScrollbarView::getHandleColor, &LCDScrollbarView::setHandleColor);
+      registerIntAttribute("scrollbar-min-size", &LCDScrollbarView::getScrollbarMinSize, &LCDScrollbarView::setScrollbarMinSize);
     }
   };
 
