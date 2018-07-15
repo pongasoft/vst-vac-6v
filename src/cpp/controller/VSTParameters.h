@@ -2,6 +2,7 @@
 
 #include <public.sdk/source/vst/vstparameters.h>
 #include <public.sdk/source/vst/vsteditcontroller.h>
+#include <memory>
 #include "../logging/loguru.hpp"
 #include "../Parameter.h"
 

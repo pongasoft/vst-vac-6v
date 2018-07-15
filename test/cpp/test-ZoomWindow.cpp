@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 #include <random>
 #include <vector>
+#include <chrono>
 #include <src/cpp/Utils.h>
 
 namespace pongasoft {
@@ -45,8 +46,8 @@ TEST(ZoomTest, NoZoom)
   ASSERT_EQ(-73, zoom.getZoomPointIndexFromOffset(-73));
 }
 
-template <int batchSize = 10>
-void testZoom(double zoomFactor, int iBatchSize, int iBatchSizeInSamples, int const *iExpectedBatchSizes, int const *iExpectedOffSets)
+template <int batchSize, int batchSizeInSamples>
+void testZoom(double zoomFactor, int const *iExpectedBatchSizes, int const *iExpectedOffSets)
 {
   std::default_random_engine generator;
   std::uniform_real_distribution<double> distribution(0.0,1.0);
@@ -55,8 +56,8 @@ void testZoom(double zoomFactor, int iBatchSize, int iBatchSizeInSamples, int co
 
   zoom.setZoomFactor(zoomFactor);
 
-  ASSERT_EQ(iBatchSize, zoom.getBatchSize());
-  ASSERT_EQ(iBatchSizeInSamples, zoom.getBatchSizeInSamples());
+  ASSERT_EQ(batchSize, zoom.getBatchSize());
+  ASSERT_EQ(batchSizeInSamples, zoom.getBatchSizeInSamples());
 
   // we test that offset is properly computed
   int index = -1;
@@ -92,7 +93,7 @@ void testZoom(double zoomFactor, int iBatchSize, int iBatchSizeInSamples, int co
   index = -1;
   for(int m = 0; m < 5; m++)
   {
-    for(int i = 0; i < iBatchSize; i++)
+    for(int i = 0; i < batchSize; i++)
     {
       int computedOffset = 0;
 
@@ -101,8 +102,8 @@ void testZoom(double zoomFactor, int iBatchSize, int iBatchSizeInSamples, int co
       auto accumulator = zoom.getAccumulatorFromIndex(index--, computedOffset);
 
       // creating a random array of elements
-      double elements[iBatchSizeInSamples];
-      for(int k = 0; k < iBatchSizeInSamples; k++)
+      double elements[batchSizeInSamples];
+      for(int k = 0; k < batchSizeInSamples; k++)
         elements[k] = distribution(generator);
 
       // batchIndex represents ZoomAccumulator::fBatchSizeIdx
@@ -113,7 +114,7 @@ void testZoom(double zoomFactor, int iBatchSize, int iBatchSizeInSamples, int co
       double max = 0;
 
       // accumulating all the elements in the array
-      for(int j = 0; j < iBatchSizeInSamples; j++)
+      for(int j = 0; j < batchSizeInSamples; j++)
       {
         TSample s = -1.0;
         bool complete = accumulator.accumulate(elements[j], s);
@@ -125,7 +126,7 @@ void testZoom(double zoomFactor, int iBatchSize, int iBatchSizeInSamples, int co
           ASSERT_TRUE(complete);
           ASSERT_EQ(s, max);
           batchIndex++;
-          if(batchIndex == iBatchSize)
+          if(batchIndex == batchSize)
             batchIndex = 0;
           size = iExpectedBatchSizes[batchIndex];
           max = 0;
@@ -179,7 +180,7 @@ TEST(ZoomTest, Zoom2x)
   int expectedBatchSizes[10] = {  2,   2,  2,    2,   2,   2,  2,  2,  2,  2};
   int expectedOffSets[10]    = {-20, -18, -16, -14, -12, -10, -8, -6, -4, -2};
 
-  testZoom<10>(2.0, 10, 20, expectedBatchSizes, expectedOffSets);
+  testZoom<10, 20>(2.0, expectedBatchSizes, expectedOffSets);
 }
 
 
@@ -189,7 +190,7 @@ TEST(ZoomTest, Zoom1Point3x)
   int expectedBatchSizes[10] = {  1,   1,   1,   2,  1,  1,  2,  1,  1,  2};
   int expectedOffSets[10]    = {-13, -12, -11, -10, -8, -7, -6, -4, -3, -2};
 
-  testZoom<10>(1.3, 10, 13, expectedBatchSizes, expectedOffSets);
+  testZoom<10, 13>(1.3, expectedBatchSizes, expectedOffSets);
 }
 
 // ZoomTest - Zoom3Point4x (3.4x)
@@ -198,7 +199,7 @@ TEST(ZoomTest, Zoom3Point4x)
   int expectedBatchSizes[10] = {  3,   3,   4,   3,   4,   3,   3,   4,  3,  4};
   int expectedOffSets[10]    = {-34, -31, -28, -24, -21, -17, -14, -11, -7, -4};
 
-  testZoom<10>(3.4, 10, 34, expectedBatchSizes, expectedOffSets);
+  testZoom<10, 34>(3.4, expectedBatchSizes, expectedOffSets);
 }
 
 class ZoomWindowTest : public ::testing::Test

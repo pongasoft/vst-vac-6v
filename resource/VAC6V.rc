@@ -1,0 +1,62 @@
+#include <windows.h>
+#include "version.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+
+VAC6.uidesc                     DATA  "VAC6.uidesc"
+Background.png		            PNG  "Background.png"
+Background_2x.png		        PNG  "Background_2x.png"
+Button_Bypass_2frames.png        PNG "Button_Bypass_2frames.png"
+Button_Bypass_2frames_2x.png     PNG "Button_Bypass_2frames_2x.png"
+Button_InWindow_2frames.png      PNG "Button_InWindow_2frames.png"
+Button_InWindow_2frames_2x.png   PNG "Button_InWindow_2frames_2x.png"
+Button_Live_4frames.png          PNG "Button_Live_4frames.png"
+Button_Live_4frames_2x.png       PNG "Button_Live_4frames_2x.png"
+Button_SinceReset_2frames.png    PNG "Button_SinceReset_2frames.png"
+Button_SinceReset_2frames_2x.png PNG "Button_SinceReset_2frames_2x.png"
+Button_small_2frames.png         PNG "Button_small_2frames.png"
+Button_small_2frames_2x.png      PNG "Button_small_2frames_2x.png"
+Knob_big_63frames.png            PNG "Knob_big_63frames.png"
+Knob_big_63frames_2x.png         PNG "Knob_big_63frames_2x.png"
+Knob_mini_63frames.png           PNG "Knob_mini_63frames.png"
+Knob_mini_63frames_2x.png        PNG "Knob_mini_63frames_2x.png"
+
+/////////////////////////////////////////////////////////////////////////////
+// Version
+/////////////////////////////////////////////////////////////////////////////
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION MAJOR_VERSION_INT,MINOR_VERSION_INT,PATCH_NUMBER_INT
+ PRODUCTVERSION MAJOR_VERSION_INT,MINOR_VERSION_INT,PATCH_NUMBER_INT
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040004e4"
+        BEGIN
+            VALUE "FileVersion",      FULL_VERSION_STR"\0"
+            VALUE "ProductVersion",   FULL_VERSION_STR"\0"
+            VALUE "OriginalFilename", stringOriginalFilename"\0"
+            VALUE "FileDescription",  stringFileDescription"\0"
+            VALUE "InternalName",     stringFileDescription"\0"
+            VALUE "ProductName",      stringFileDescription"\0"
+            VALUE "CompanyName",      stringCompanyName"\0"
+            VALUE "LegalCopyright",   stringLegalCopyright"\0"
+            //VALUE "PrivateBuild",     " \0"
+            //VALUE "SpecialBuild",     " \0"
+            //VALUE "Comments",         " \0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x400, 1252
+    END
+END
+

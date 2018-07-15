@@ -249,7 +249,8 @@ void LCDDisplayView::draw(CDrawContext *iContext)
     sdc.fShadowColor.alpha = fState->fLCDSoftClippingLevelMessage->fColor.alpha;
 
     auto textTop = top + 3;
-    rdc.drawString(fState->fLCDSoftClippingLevelMessage->fText, RelativeRect{0, textTop, MAX_ARRAY_SIZE, textTop + 20}, sdc);
+    rdc.drawString(fState->fLCDSoftClippingLevelMessage->fText,
+                   RelativeRect{0, textTop, static_cast<RelativeCoord>(MAX_ARRAY_SIZE), textTop + 20}, sdc);
   }
 
   if(fState->fLCDZoomFactorXMessage)
@@ -260,7 +261,8 @@ void LCDDisplayView::draw(CDrawContext *iContext)
     sdc.fFontColor = fState->fLCDZoomFactorXMessage->fColor;
     sdc.fFont = fFont;
 
-    rdc.drawString(fState->fLCDZoomFactorXMessage->fText, RelativeRect{0, 0, MAX_ARRAY_SIZE, 20}, sdc);
+    rdc.drawString(fState->fLCDZoomFactorXMessage->fText,
+                   RelativeRect{0, 0, static_cast<RelativeCoord>(MAX_ARRAY_SIZE), 20}, sdc);
   }
 }
 

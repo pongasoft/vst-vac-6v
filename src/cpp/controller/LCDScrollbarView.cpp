@@ -100,7 +100,7 @@ CMouseEventResult LCDScrollbarView::onMouseDown(CPoint &where, const CButtonStat
   }
 
   // if after move, the cursor is in the handle => allow for drag
-  if(x >= box.getLeft() and x <= box.getRight())
+  if(x >= box.getLeft() && x <= box.getRight())
   {
     // beginning of drag gesture...
     fLCDInputHistoryOffsetEditor = fLCDInputHistoryOffsetParameter->edit(box.computePercent());

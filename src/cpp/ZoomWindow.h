@@ -369,7 +369,7 @@ private:
 
   inline Utils::Lerp<double> getWindowOffsetLerp() const
   {
-    return {static_cast<double>(fMinWindowOffset), MAX_WINDOW_OFFSET};
+    return {static_cast<double>(fMinWindowOffset), static_cast<double>(MAX_WINDOW_OFFSET)};
   }
 
   inline Utils::Lerp<double> getZoomFactorLerp() const

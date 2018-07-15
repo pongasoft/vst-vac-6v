@@ -136,7 +136,7 @@ smtg_add_vst3_resource(${target} "resource/VAC6.uidesc")
 if(MAC)
 	smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/mac/Info.plist" PREPROCESS)
 elseif(WIN)
-	target_sources(${target} PRIVATE resource/VAC6.rc)
+	target_sources(${target} PRIVATE resource/VAC6V.rc)
 endif()
 
 ###################################################
