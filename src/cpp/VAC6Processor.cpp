@@ -226,8 +226,8 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   AudioBuffers<SampleType> in(data.inputs[0], data.numSamples);
   AudioBuffers<SampleType> out(data.outputs[0], data.numSamples);
 
-  // making sure we are being called properly...
-  if(in.getNumChannels() != 2 || out.getNumChannels() != 2)
+  // Handling mono or stereo only
+  if(in.getNumChannels() < 1 || in.getNumChannels() > 2 || out.getNumChannels() < 1 || out.getNumChannels() > 2)
     return kResultFalse;
 
   bool isNewLiveView = false;
@@ -316,14 +316,17 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
 
   // we need to adjust the filtered gain
   fGain.adjust();
-
-  auto leftChannel = out.getLeftChannel();
-  auto rightChannel = out.getRightChannel();
-
   auto gain = fState.fBypass ? Gain::Unity : fGain.getValue();
 
+  // in mono case there could be only one channel
+  auto leftChannel = out.getLeftChannel();
   fLeftChannelProcessor->genericProcessChannel<SampleType>(fZoomWindow, in.getLeftChannel(), leftChannel, gain);
-  fRightChannelProcessor->genericProcessChannel<SampleType>(fZoomWindow, in.getRightChannel(), rightChannel, gain);
+
+  if(in.getNumChannels() == 2)
+  {
+    auto rightChannel = out.getNumChannels() == 2 ? out.getRightChannel() : leftChannel;
+    fRightChannelProcessor->genericProcessChannel<SampleType>(fZoomWindow, in.getRightChannel(), rightChannel, gain);
+  }
 
   // if reset of max level is requested (pressing momentary button) then we need to reset the accumulator
   if(fMaxLevelResetRequested)

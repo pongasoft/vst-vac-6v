@@ -110,7 +110,7 @@ if(MAC OR WIN)
 	set(vst_sources ${vst_sources} ${vst2_sources})
 endif()
 
-set(target pongasoft_VAC6)
+set(target pongasoft_VAC6V)
 smtg_add_vst3plugin(${target} ${VST3_SDK_ROOT} ${vst_sources})
 target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
 target_link_libraries(${target} PRIVATE base sdk vstgui_support)
@@ -159,14 +159,14 @@ add_custom_command(OUTPUT ${ARCHIVE_PATH}
 
 if(MAC)
 	add_custom_command(OUTPUT ${ARCHIVE_PATH}.zip
-			COMMAND ${CMAKE_COMMAND} -E copy_directory ${VST3_OUTPUT_DIR}/${target}.${VST3_EXTENSION} ${ARCHIVE_PATH}/VAC6.vst3
+			COMMAND ${CMAKE_COMMAND} -E copy_directory ${VST3_OUTPUT_DIR}/${target}.${VST3_EXTENSION} ${ARCHIVE_PATH}/VAC-6V.vst3
 			DEPENDS ${target}
 			DEPENDS ${ARCHIVE_PATH}
 			WORKING_DIRECTORY archive
 			)
 elseif(WIN)
 	add_custom_command(OUTPUT ${ARCHIVE_PATH}.zip
-			COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${target}> ${ARCHIVE_PATH}/VAC6.vst3
+			COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${target}> ${ARCHIVE_PATH}/VAC-6V.vst3
 			DEPENDS ${target}
 			DEPENDS ${ARCHIVE_PATH}
 			WORKING_DIRECTORY archive

@@ -6,6 +6,6 @@
 {
   return Steinberg::Vst::Vst2Wrapper::create(GetPluginFactory(),
                                              pongasoft::VST::VAC6ProcessorUID,
-                                             'TBDx',
+                                             'gyjp',
                                              audioMaster);
 }

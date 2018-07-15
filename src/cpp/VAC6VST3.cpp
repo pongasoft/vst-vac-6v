@@ -13,7 +13,7 @@
 using namespace Steinberg::Vst;
 
 
-#define stringPluginName "VAC-6 VST"
+#define stringPluginName "VAC-6V"
 
 //------------------------------------------------------------------------
 //  Module init/exit

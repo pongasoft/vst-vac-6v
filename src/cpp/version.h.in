@@ -12,11 +12,11 @@
 // Version with build number
 #define FULL_VERSION_STR "@PLUGIN_VERSION@"
 
-#define stringOriginalFilename	"pongasoft_VAC6.vst3"
+#define stringOriginalFilename	"VAC-6V.vst3"
 #if PLATFORM_64
-#define stringFileDescription	"VAC-6 VST plugin by pongasoft (64Bit)"
+#define stringFileDescription	"VAC-6V VST plugin by pongasoft (64Bit)"
 #else
-#define stringFileDescription	"VAC-6 VST plugin by pongasoft"
+#define stringFileDescription	"VAC-6V VST plugin by pongasoft"
 #endif
 #define stringCompanyName		"pongasoft\0"
 #define stringLegalCopyright	"© 2018 pongasoft LLC"
