@@ -8,8 +8,6 @@ set(SMTG_CREATE_VST3_LINK OFF)
 # Platform Detection
 #-------------------------------------------------------------------------------
 
-# TODO Fix broken link created to VST3
-
 if(APPLE)
     set(MAC TRUE)
 elseif(WIN32)

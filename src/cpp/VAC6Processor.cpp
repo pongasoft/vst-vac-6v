@@ -233,6 +233,18 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   bool isNewLiveView = false;
   bool isNewPause = false;
 
+  // some DAW like Maschine exposes the controls which then bypasses pause => force into pause
+  if(fPreviousState.fLCDInputX != fState.fLCDInputX ||
+     fPreviousState.fLCDHistoryOffset != fState.fLCDHistoryOffset)
+  {
+    if(fState.fLCDLiveView)
+    {
+      fState.updateLCDLiveView(data, false);
+    }
+  }
+
+  // TODO: in Maschine 2, updating vst parameters from processing does not change the knob in the Maschine 2 interface
+
   // live view/pause has changed
   if(fPreviousState.fLCDLiveView != fState.fLCDLiveView)
   {
@@ -289,7 +301,7 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
     fRightChannelProcessor->setDirty();
   }
 
-  // Scrollbar has been moved (should happen only in pause mode)
+  // Scrollbar has been moved
   if(fPreviousState.fLCDHistoryOffset != fState.fLCDHistoryOffset)
   {
     fZoomWindow->setWindowOffset(fState.fLCDHistoryOffset);
@@ -628,5 +640,15 @@ void VAC6Processor::State::updateLCDHistoryOffset(ProcessData &iData, double iLC
   addOutputParameterChange(iData, EVAC6ParamID::kLCDHistoryOffset, LCDHistoryOffsetParamConverter::normalize(fLCDHistoryOffset));
 
 }
+
+///////////////////////////////////////////
+// VAC6Processor::State::updateLCDLiveView
+///////////////////////////////////////////
+void VAC6Processor::State::updateLCDLiveView(ProcessData &iData, bool iLCDLiveView)
+{
+  fLCDLiveView = iLCDLiveView;
+  addOutputParameterChange(iData, EVAC6ParamID::kLCDLiveView, BooleanParamConverter::normalize(fLCDLiveView));
+}
+
 }
 }

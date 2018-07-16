@@ -108,6 +108,7 @@ private:
 
     void updateLCDInputX(ProcessData& iData, int iLCDInputX);
     void updateLCDHistoryOffset(ProcessData& iData, double iLCDHistoryOffset);
+    void updateLCDLiveView(ProcessData& iData, bool iLCDLiveView);
   };
 
   bool fMaxLevelResetRequested;

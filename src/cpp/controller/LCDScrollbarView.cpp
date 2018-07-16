@@ -69,7 +69,6 @@ CMouseEventResult LCDScrollbarView::onMouseDown(CPoint &where, const CButtonStat
 
   if(fLCDLiveViewParameter->getValue())
   {
-    DLOG_F(INFO, "LCDScrollbarView::onMouseDown() => stopping");
     fLCDLiveViewParameter->setValue(false);
   }
 
