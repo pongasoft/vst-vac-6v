@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 3.9)
 
 # build VST 2 by default
 option(SMTG_CREATE_VST2_VERSION "Use VST2" ON)
+set(SMTG_CREATE_VST3_LINK OFF)
 
 #-------------------------------------------------------------------------------
 # Platform Detection
@@ -127,8 +128,6 @@ smtg_add_vst3_resource(${target} "resource/Button_SinceReset_2frames.png")
 smtg_add_vst3_resource(${target} "resource/Button_SinceReset_2frames_2x.png")
 smtg_add_vst3_resource(${target} "resource/Button_small_2frames.png")
 smtg_add_vst3_resource(${target} "resource/Button_small_2frames_2x.png")
-smtg_add_vst3_resource(${target} "resource/Knob_big_63frames.png")
-smtg_add_vst3_resource(${target} "resource/Knob_big_63frames_2x.png")
 smtg_add_vst3_resource(${target} "resource/Knob_mini_63frames.png")
 smtg_add_vst3_resource(${target} "resource/Knob_mini_63frames_2x.png")
 smtg_add_vst3_resource(${target} "resource/VAC6.uidesc")

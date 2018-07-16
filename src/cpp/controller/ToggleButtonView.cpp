@@ -26,19 +26,23 @@ void ToggleButtonView::draw(CDrawContext *iContext)
 {
   CustomView::draw(iContext);
 
+  bool on = isOn();
+  if(fInverse)
+    on = !on;
+
   if(fImage)
   {
     int frameIndex;
     CCoord frameHeight = fImage->getHeight() / getFrames();
     if(getFrames() == 4)
     {
-      frameIndex = isOn() ? 2 : 0;
+      frameIndex = on ? 2 : 0;
       if(fPressed)
         frameIndex++;
     }
     else
     {
-      frameIndex = isOn() ? 1 : 0;
+      frameIndex = on ? 1 : 0;
     }
 
     fImage->draw(iContext, getViewSize(), CPoint{0, frameIndex * frameHeight});
@@ -47,7 +51,7 @@ void ToggleButtonView::draw(CDrawContext *iContext)
   {
     // no image => simply fill the surface with appropriate color (background and "on" color)
     // so that the button is fully functioning right away
-    if(isOn())
+    if(on)
     {
       iContext->setFillColor(getOnColor());
       iContext->drawRect(getViewSize(), kDrawFilled);

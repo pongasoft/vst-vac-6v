@@ -42,6 +42,10 @@ public:
   CColor const &getOnColor() const { return fOnColor; }
   void setOnColor(CColor const &iColor) { fOnColor = iColor; }
 
+  // get/setInverse (toggles which image is on and which is off)
+  bool getInverse() const { return fInverse; }
+  void setInverse(bool iInverse) { fInverse = iInverse; }
+
   /**
    * get/setImage for the button which should have 2 or 4 frames depending on the fFrames value
    * The images should contain the following :
@@ -64,6 +68,7 @@ protected:
   int fFrames{4};
   CColor fOnColor{kRedCColor};
   BitmapPtr fImage{nullptr};
+  bool fInverse{false};
 
   bool fPressed{false};
 
@@ -77,6 +82,7 @@ public:
       registerIntAttribute("frames", &ToggleButtonView::getFrames, &ToggleButtonView::setFrames);
       registerColorAttribute("on-color", &ToggleButtonView::getOnColor, &ToggleButtonView::setOnColor);
       registerBitmapAttribute("button-image", &ToggleButtonView::getImage, &ToggleButtonView::setImage);
+      registerBooleanAttribute("inverse", &ToggleButtonView::getInverse, &ToggleButtonView::setInverse);
     }
   };
 };
