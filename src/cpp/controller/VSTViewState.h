@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vstgui4/vstgui/lib/iviewlistener.h>
-#include "../logging/loguru.hpp"
+#include <pongasoft/logging/loguru.hpp>
 
 namespace pongasoft {
 namespace VST {

@@ -5,7 +5,7 @@
 namespace pongasoft {
 namespace VST {
 namespace Common {
-namespace SpinLock {
+namespace Concurrent {
 
 /*
  * One of the big issue in the VST world comes from the fact that the processing thread maintains the state but it

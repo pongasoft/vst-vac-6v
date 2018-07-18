@@ -10,7 +10,7 @@
 #include <vstgui4/vstgui/lib/cbitmap.h>
 #include <map>
 #include <memory>
-#include "../logging/loguru.hpp"
+#include <pongasoft/logging/loguru.hpp>
 #include "Types.h"
 
 #if VSTGUI_LIVE_EDITING

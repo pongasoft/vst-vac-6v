@@ -2,7 +2,7 @@
 
 #include <pluginterfaces/vst/ivstaudioprocessor.h>
 #include <cmath>
-#include "logging/loguru.hpp"
+#include <pongasoft/logging/loguru.hpp>
 
 namespace pongasoft {
 namespace VST {

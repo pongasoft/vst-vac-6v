@@ -1,5 +1,5 @@
 #include <vstgui4/vstgui/plugin-bindings/vst3editor.h>
-#include "../logging/loguru.hpp"
+#include <pongasoft/logging/loguru.hpp>
 #include "VAC6Controller.h"
 
 namespace pongasoft {

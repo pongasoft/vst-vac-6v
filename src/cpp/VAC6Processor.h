@@ -1,9 +1,9 @@
 #pragma once
 
 #include <public.sdk/source/vst/vstaudioeffect.h>
-#include <pongasoft/VST/Common/SpinLock/Concurrent.h>
+#include <pongasoft/VST/Common/Concurrent/Concurrent.h>
 #include "VAC6Constants.h"
-#include "logging/loguru.hpp"
+#include <pongasoft/logging/loguru.hpp>
 #include "VAC6Model.h"
 #include "AudioBuffer.h"
 #include "CircularBuffer.h"
@@ -120,8 +120,8 @@ private:
 
   SampleRateBasedClock fClock;
 
-  SpinLock::SingleElementQueue<State> fStateUpdate;
-  SpinLock::AtomicValue<State> fLatestState;
+  Concurrent::SingleElementQueue<State> fStateUpdate;
+  Concurrent::AtomicValue<State> fLatestState;
 
   uint32 fMaxAccumulatorBatchSize;
   ZoomWindow *fZoomWindow;
@@ -131,7 +131,7 @@ private:
 
   Timer *fTimer;
   SampleRateBasedClock::RateLimiter fRateLimiter;
-  SpinLock::SingleElementQueue<LCDData> fLCDDataUpdate;
+  Concurrent::SingleElementQueue<LCDData> fLCDDataUpdate;
 
 };
 

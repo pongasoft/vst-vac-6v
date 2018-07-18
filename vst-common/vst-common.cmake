@@ -9,7 +9,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/VST3_SDK.cmake)
 #-------------------------------------------------------------------------------
 
 set(VST_COMMON_CPP_SOURCES ${CMAKE_CURRENT_LIST_DIR}/src/cpp)
-
+set(LOGURU_IMPL ${VST_COMMON_CPP_SOURCES}/pongasoft/logging/logging.cpp)
 include_directories(${VST_COMMON_CPP_SOURCES})
 
 set(VST_COMMON_SRC_COMMON_DIR ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Common)
@@ -17,11 +17,13 @@ set(VST_COMMON_SRC_GUI_DIR ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI)
 set(VST_COMMON_SRC_RT_DIR ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/RT)
 
 set(VST_COMMON_sources_Common_h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/logging/loguru.hpp
     ${VST_COMMON_SRC_COMMON_DIR}/Plugin.h
-    ${VST_COMMON_SRC_COMMON_DIR}/SpinLock/Concurrent.h
+    ${VST_COMMON_SRC_COMMON_DIR}/Concurrent/Concurrent.h
     )
 
 set(VST_COMMON_sources_Common_cpp
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/logging/logging.cpp
     ${VST_COMMON_SRC_COMMON_DIR}/Plugin.cpp
     )
 

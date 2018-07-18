@@ -79,8 +79,6 @@ set(vst_sources
 		${CPP_SOURCES}/VAC6VST3.cpp
 		${CPP_SOURCES}/ZoomWindow.h
 		${CPP_SOURCES}/ZoomWindow.cpp
-		${CPP_SOURCES}/logging/loguru.hpp
-		${CPP_SOURCES}/logging/logging.cpp
 		)
 
 # VST2 is only defined for macOS and Windows
@@ -177,8 +175,8 @@ endif()
 ####################################################
 file(GLOB_RECURSE TEST_SRC_FILES RELATIVE ${PROJECT_SOURCE_DIR} test/cpp/*cpp)
 set(test_sources ${test_sources}
+		${LOGURU_IMPL}
 		${CPP_SOURCES}/ZoomWindow.cpp
-		${CPP_SOURCES}/logging/logging.cpp
 		)
 
 vst_add_test(${PROJECT_NAME}_test "${TEST_SRC_FILES}" "${test_sources}" "")
