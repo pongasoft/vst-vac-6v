@@ -5,6 +5,7 @@
 
 #include "VAC6Processor.h"
 #include "VAC6CIDs.h"
+#include <pongasoft/VST/Common/Plugin.h>
 
 namespace pongasoft {
 namespace VST {

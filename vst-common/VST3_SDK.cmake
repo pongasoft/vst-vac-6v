@@ -1,4 +1,24 @@
 #-------------------------------------------------------------------------------
+# Platform Detection
+#-------------------------------------------------------------------------------
+
+if(APPLE)
+  set(MAC TRUE)
+elseif(WIN32)
+  set(WIN TRUE)
+elseif(UNIX)
+  set(LINUX TRUE)
+endif()
+
+if(MAC)
+  set(VST3_SDK_ROOT "/Users/Shared/Steinberg/VST_SDK.369/VST3_SDK" CACHE PATH "Location of VST3 SDK")
+elseif(WIN)
+  set(VST3_SDK_ROOT "C:/Users/Public/Documents/Steinberg/VST_SDK.369/VST3_SDK" CACHE PATH "Location of VST3 SDK")
+else()
+  set(VST3_SDK_ROOT "" CACHE PATH "Location of VST3 SDK")
+endif()
+
+#-------------------------------------------------------------------------------
 # Includes
 #-------------------------------------------------------------------------------
 
@@ -26,15 +46,15 @@ include(AddVST3Options)
 # Run the validator after building
 message(STATUS "Redefining smtg_run_vst_validator to fix VST3.6.9 version.")
 function(smtg_run_vst_validator target)
-    add_dependencies(${target} validator)
-    if(WIN)
-        set(TARGET_PATH $<TARGET_FILE:${target}>)
-    elseif(XCODE)
-        set(TARGET_PATH "${VST3_OUTPUT_DIR}/${CMAKE_BUILD_TYPE}/${target}.vst3")
-    else()
-        set(TARGET_PATH "${VST3_OUTPUT_DIR}/${target}.vst3")
-    endif()
-    add_custom_command(TARGET ${target} POST_BUILD COMMAND $<TARGET_FILE:validator> "${TARGET_PATH}" WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+  add_dependencies(${target} validator)
+  if(WIN)
+    set(TARGET_PATH $<TARGET_FILE:${target}>)
+  elseif(XCODE)
+    set(TARGET_PATH "${VST3_OUTPUT_DIR}/${CMAKE_BUILD_TYPE}/${target}.vst3")
+  else()
+    set(TARGET_PATH "${VST3_OUTPUT_DIR}/${target}.vst3")
+  endif()
+  add_custom_command(TARGET ${target} POST_BUILD COMMAND $<TARGET_FILE:validator> "${TARGET_PATH}" WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 endfunction()
 
 #-------------------------------------------------------------------------------
@@ -42,18 +62,18 @@ endfunction()
 #-------------------------------------------------------------------------------
 setupPlatformToolset()
 
-set(ROOT "${VST3_SDK_ROOT}")
-
 # Here you can define where the VST 3 SDK is located
-set(SDK_ROOT "${ROOT}")
+set(SDK_ROOT "${VST3_SDK_ROOT}")
+set_property(GLOBAL PROPERTY SDK_ROOT ${SDK_ROOT})
 
 # Here you can define where the VSTGUI is located
 if(SMTG_ADD_VSTGUI)
-  set(VSTGUI_ROOT "${ROOT}")
+  set(VSTGUI_ROOT "${VST3_SDK_ROOT}")
   setupVstGuiSupport()
+  set_property(GLOBAL PROPERTY VSTGUI_ROOT ${VSTGUI_ROOT})
 endif()
 
-include_directories(${ROOT} ${SDK_ROOT})
+include_directories(${SDK_ROOT})
 
 #-------------------------------------------------------------------------------
 # From Here this is optional...

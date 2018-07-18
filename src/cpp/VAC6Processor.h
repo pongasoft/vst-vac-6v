@@ -1,13 +1,13 @@
 #pragma once
 
 #include <public.sdk/source/vst/vstaudioeffect.h>
+#include <pongasoft/VST/Common/SpinLock/Concurrent.h>
 #include "VAC6Constants.h"
 #include "logging/loguru.hpp"
 #include "VAC6Model.h"
 #include "AudioBuffer.h"
 #include "CircularBuffer.h"
 #include "ZoomWindow.h"
-#include "Concurrent.h"
 #include "Clock.h"
 #include "VAC6AudioChannelProcessor.h"
 #include <base/source/timer.h>

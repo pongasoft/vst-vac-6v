@@ -4,26 +4,6 @@ cmake_minimum_required (VERSION 3.9)
 option(SMTG_CREATE_VST2_VERSION "Use VST2" ON)
 set(SMTG_CREATE_VST3_LINK OFF)
 
-#-------------------------------------------------------------------------------
-# Platform Detection
-#-------------------------------------------------------------------------------
-
-if(APPLE)
-    set(MAC TRUE)
-elseif(WIN32)
-    set(WIN TRUE)
-elseif(UNIX)
-    set(LINUX TRUE)
-endif()
-
-if(MAC)
-  set(VST3_SDK_ROOT "/Users/Shared/Steinberg/VST_SDK.369/VST3_SDK" CACHE PATH "Location of VST3 SDK")
-elseif(WIN)
-  set(VST3_SDK_ROOT "C:/Users/Public/Documents/Steinberg/VST_SDK.369/VST3_SDK" CACHE PATH "Location of VST3 SDK")
-else()
-  set(VST3_SDK_ROOT "" CACHE PATH "Location of VST3 SDK")
-endif()
-
 set(PLUGIN_MAJOR_VERSION 1)
 set(PLUGIN_MINOR_VERSION 0)
 set(PLUGIN_PATCH_VERSION 0)
@@ -31,7 +11,7 @@ set(PLUGIN_VERSION "${PLUGIN_MAJOR_VERSION}.${PLUGIN_MINOR_VERSION}.${PLUGIN_PAT
 
 project(VST_VAC6)
 
-include(VST3_SDK.cmake)
+include(vst-common/vst-common.cmake)
 
 set(CPP_SOURCES src/cpp)
 
@@ -85,7 +65,6 @@ set(vst_sources
 		${CPP_SOURCES}/AudioUtils.h
 		${CPP_SOURCES}/CircularBuffer.h
 		${CPP_SOURCES}/Clock.h
-		${CPP_SOURCES}/Concurrent.h
 		${CPP_SOURCES}/Messaging.h
 		${CPP_SOURCES}/Parameter.h
 		${CPP_SOURCES}/Utils.h
@@ -112,7 +91,7 @@ endif()
 set(target pongasoft_VAC6V)
 smtg_add_vst3plugin(${target} ${VST3_SDK_ROOT} ${vst_sources})
 target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
-target_link_libraries(${target} PRIVATE base sdk vstgui_support)
+target_link_libraries(${target} PRIVATE base sdk vstgui_support pongasoft-vst-common)
 
 smtg_add_vst3_resource(${target} "resource/Background.png")
 smtg_add_vst3_resource(${target} "resource/Background_2x.png")
@@ -193,32 +172,16 @@ add_custom_target(archive
 		)
 endif()
 
-###################################################
-# Testing
-###################################################
-# Download and unpack googletest at configure time
-include(gtest.cmake)
-enable_testing()
-set(PROJECT_TEST_NAME ${PROJECT_NAME}_test)
-
+####################################################
+## Testing
+####################################################
 file(GLOB_RECURSE TEST_SRC_FILES RELATIVE ${PROJECT_SOURCE_DIR} test/cpp/*cpp)
-message(STATUS "Test case source files: " ${TEST_SRC_FILES})
-
-set(test_sources
+set(test_sources ${test_sources}
 		${CPP_SOURCES}/ZoomWindow.cpp
 		${CPP_SOURCES}/logging/logging.cpp
 		)
 
-add_executable(${PROJECT_TEST_NAME} ${TEST_SRC_FILES} ${test_sources})
-target_link_libraries(${PROJECT_TEST_NAME} gtest_main)
-target_include_directories(${PROJECT_TEST_NAME} PUBLIC ${PROJECT_SOURCE_DIR})
-target_include_directories(${PROJECT_TEST_NAME} PUBLIC ${GTEST_INCLUDE_DIRS})
-
-include(GoogleTest)
-gtest_add_tests(
-		TARGET      ${PROJECT_TEST_NAME}
-		TEST_LIST   ${PROJECT_TEST_NAME}_targets
-)
+vst_add_test(${PROJECT_NAME}_test "${TEST_SRC_FILES}" "${test_sources}" "")
 
 ###################################################
 # Dev help
