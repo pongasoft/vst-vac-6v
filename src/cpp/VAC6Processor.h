@@ -1,16 +1,16 @@
 #pragma once
 
+#include <base/source/timer.h>
 #include <public.sdk/source/vst/vstaudioeffect.h>
-#include <pongasoft/VST/Common/Concurrent/Concurrent.h>
-#include "VAC6Constants.h"
+#include <pongasoft/Utils/Concurrent/Concurrent.h>
+#include <pongasoft/Utils/Collection/CircularBuffer.h>
 #include <pongasoft/logging/loguru.hpp>
+#include "VAC6Constants.h"
 #include "VAC6Model.h"
 #include "AudioBuffer.h"
-#include "CircularBuffer.h"
 #include "ZoomWindow.h"
 #include "Clock.h"
 #include "VAC6AudioChannelProcessor.h"
-#include <base/source/timer.h>
 
 namespace pongasoft {
 namespace VST {
@@ -19,7 +19,7 @@ namespace VAC6 {
 using namespace Steinberg;
 using namespace Steinberg::Vst;
 
-using namespace VST::Common;
+using namespace pongasoft::Utils;
 
 /**
  * class VAC6Processor, main processor for VAC6 VST
@@ -120,8 +120,8 @@ private:
 
   SampleRateBasedClock fClock;
 
-  Concurrent::SingleElementQueue<State> fStateUpdate;
-  Concurrent::AtomicValue<State> fLatestState;
+  Concurrent::WithSpinLock::SingleElementQueue<State> fStateUpdate;
+  Concurrent::WithSpinLock::AtomicValue<State> fLatestState;
 
   uint32 fMaxAccumulatorBatchSize;
   ZoomWindow *fZoomWindow;
@@ -131,7 +131,7 @@ private:
 
   Timer *fTimer;
   SampleRateBasedClock::RateLimiter fRateLimiter;
-  Concurrent::SingleElementQueue<LCDData> fLCDDataUpdate;
+  Concurrent::WithSpinLock::SingleElementQueue<LCDData> fLCDDataUpdate;
 
 };
 

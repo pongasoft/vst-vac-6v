@@ -16,31 +16,20 @@ set(VST_COMMON_SRC_COMMON_DIR ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Common)
 set(VST_COMMON_SRC_GUI_DIR ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI)
 set(VST_COMMON_SRC_RT_DIR ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/RT)
 
-set(VST_COMMON_sources_Common_h
+set(VST_COMMON_sources_h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/logging/loguru.hpp
-    ${VST_COMMON_SRC_COMMON_DIR}/Plugin.h
-    ${VST_COMMON_SRC_COMMON_DIR}/Concurrent/Concurrent.h
+
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/Utils/Collection/CircularBuffer.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/Utils/Concurrent/Concurrent.h
+
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Common/Plugin.h
     )
 
-set(VST_COMMON_sources_Common_cpp
-    ${VST_COMMON_CPP_SOURCES}/pongasoft/logging/logging.cpp
-    ${VST_COMMON_SRC_COMMON_DIR}/Plugin.cpp
-    )
+set(VST_COMMON_sources_cpp
+    ${LOGURU_IMPL}
 
-set(VST_COMMON_sources_GUI_h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Common/Plugin.cpp
     )
-
-set(VST_COMMON_sources_GUI_cpp
-    )
-
-set(VST_COMMON_sources_RT_h
-    )
-
-set(VST_COMMON_sources_RT_cpp
-    )
-
-set(VST_COMMON_sources_h ${VST_COMMON_sources_Common_h} ${VST_COMMON_sources_GUI_h} ${VST_COMMON_sources_RT_h})
-set(VST_COMMON_sources_cpp ${VST_COMMON_sources_Common_cpp} ${VST_COMMON_sources_GUI_cpp} ${VST_COMMON_sources_RT_cpp})
 
 add_library(pongasoft-vst-common STATIC ${VST_COMMON_sources_h} ${VST_COMMON_sources_cpp})
 target_include_directories(pongasoft-vst-common PUBLIC ${VST3_SDK_ROOT})

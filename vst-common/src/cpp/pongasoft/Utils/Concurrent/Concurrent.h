@@ -3,8 +3,7 @@
 #include <atomic>
 
 namespace pongasoft {
-namespace VST {
-namespace Common {
+namespace Utils {
 namespace Concurrent {
 
 /*
@@ -110,6 +109,11 @@ private:
 
   std::atomic_flag fFlag;
 };
+
+/**
+ * The purpose of this namespace is to emphasize the fact that the implementation is using a spinlock
+ */
+namespace WithSpinLock {
 
 /**
  * This class implements a queue which has at most 1 element (0 or 1). If there is already an element and the

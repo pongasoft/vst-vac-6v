@@ -2,7 +2,7 @@
 
 #include <pluginterfaces/vst/vsttypes.h>
 #include <algorithm>
-#include "CircularBuffer.h"
+#include <pongasoft/Utils/Collection/CircularBuffer.h>
 #include "VAC6Constants.h"
 #include "VAC6Model.h"
 #include "Clock.h"

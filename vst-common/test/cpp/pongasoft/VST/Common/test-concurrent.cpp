@@ -1,4 +1,4 @@
-#include <pongasoft/VST/Common/Concurrent/Concurrent.h>
+#include <pongasoft/Utils/Concurrent/Concurrent.h>
 #include <gtest/gtest.h>
 #include <thread>
 
@@ -6,7 +6,7 @@ namespace pongasoft {
 namespace VST {
 namespace Test {
 
-using namespace pongasoft::VST::Common::Concurrent;
+using namespace pongasoft::Utils::Concurrent::WithSpinLock;
 
 struct MyTestValue
 {

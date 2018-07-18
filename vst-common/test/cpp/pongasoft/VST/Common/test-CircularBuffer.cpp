@@ -1,9 +1,9 @@
-#include <src/cpp/CircularBuffer.h>
+#include <pongasoft/Utils/Collection/CircularBuffer.h>
 #include <gtest/gtest.h>
 
 namespace pongasoft {
-namespace VST {
-namespace Common {
+namespace Utils {
+namespace Collection {
 namespace Test {
 
 // CircularBuffer - copyToBuffer

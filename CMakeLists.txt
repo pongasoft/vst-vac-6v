@@ -63,7 +63,6 @@ set(vst_sources
 		${CPP_SOURCES}/controller/VSTViewState.h
 		${CPP_SOURCES}/AudioBuffer.h
 		${CPP_SOURCES}/AudioUtils.h
-		${CPP_SOURCES}/CircularBuffer.h
 		${CPP_SOURCES}/Clock.h
 		${CPP_SOURCES}/Messaging.h
 		${CPP_SOURCES}/Parameter.h

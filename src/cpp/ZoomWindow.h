@@ -3,14 +3,15 @@
 #include <pluginterfaces/vst/vsttypes.h>
 #include <algorithm>
 #include <cmath>
-#include "CircularBuffer.h"
 #include <pongasoft/logging/loguru.hpp>
+#include <pongasoft/Utils/Collection/CircularBuffer.h>
 #include "Utils.h"
 
 namespace pongasoft {
 namespace VST {
 namespace Common {
 
+using namespace pongasoft::Utils::Collection;
 
 using TSample = Steinberg::Vst::Sample64;
 

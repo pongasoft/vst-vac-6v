@@ -4,8 +4,8 @@
 #include <memory>
 
 namespace pongasoft {
-namespace VST {
-namespace Common {
+namespace Utils {
+namespace Collection {
 
 template<typename T>
 class CircularBuffer
