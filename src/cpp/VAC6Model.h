@@ -2,18 +2,17 @@
 
 #include <pluginterfaces/vst/vsttypes.h>
 #include <pluginterfaces/vst/ivstattributes.h>
+#include <pongasoft/VST/ParamConverters.h>
 #include <cmath>
 #include <sstream>
 #include "VAC6Constants.h"
 #include "ZoomWindow.h"
-#include "pongasoft/VST/ParamConverters.h"
 
 namespace pongasoft {
 namespace VST {
 namespace VAC6 {
 
 using namespace Steinberg::Vst;
-
 
 ///////////////////////////////////
 // dbToSample

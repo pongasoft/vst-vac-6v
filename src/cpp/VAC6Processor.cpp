@@ -93,7 +93,8 @@ VAC6Processor::VAC6Processor() :
   fTimer{nullptr},
   fRateLimiter{},
   fLCDDataUpdate{},
-  fPlugin{Plugin::Type::kRT}
+  fParameters{},
+  fRTState{fParameters}
 {
   setControllerClass(VAC6ControllerUID);
   DLOG_F(INFO, "VAC6Processor::VAC6Processor()");
@@ -443,7 +444,7 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
           case kBypass:
 //            newState.fBypass = BooleanParamConverter::denormalize(value);
 //            stateChanged |= newState.fBypass != fState.fBypass;
-            stateChanged |= fPlugin.fBypassParam->rtSetState(value, newState.fBypass);
+            stateChanged |= fRTState.fBypass->update(value);
             break;
 
           case kMaxLevelReset:
@@ -552,8 +553,8 @@ tresult VAC6Processor::setState(IBStream *state)
   readParam<GainParamConverter>(streamer, DEFAULT_GAIN, newState.fGain1);
   readParam<GainParamConverter>(streamer, DEFAULT_GAIN, newState.fGain2);
   readParam<BooleanParamConverter>(streamer, true, newState.fGainFilter);
-//  readParam<BooleanParamConverter>(streamer, false, newState.fBypass);
-  fPlugin.fBypassParam->rtReadState(streamer, newState.fBypass);
+  readParam<BooleanParamConverter>(streamer, false, newState.fBypass);
+//  fPlugin.fBypassParam.read(streamer);
 
   // lcd live view IGNORED! (does not make sense to not be in live view when loading)
 
@@ -592,8 +593,8 @@ tresult VAC6Processor::getState(IBStream *state)
   writeParam<GainParamConverter>(streamer, latestState.fGain1);
   writeParam<GainParamConverter>(streamer, latestState.fGain2);
   writeParam<BooleanParamConverter>(streamer, latestState.fGainFilter);
-  fPlugin.fBypassParam->rtWriteState(latestState.fBypass, streamer);
-//  writeParam<BooleanParamConverter>(streamer, latestState.fBypass);
+//  fPlugin.fBypassParam->rtWriteState(latestState.fBypass, streamer);
+  writeParam<BooleanParamConverter>(streamer, latestState.fBypass);
 
   return kResultOk;
 }

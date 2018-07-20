@@ -1,7 +1,9 @@
 #pragma once
 
 #include <pongasoft/VST/Plugin.h>
-#include <pongasoft/VST/Parameter.h>
+#include <pongasoft/VST/Parameters.h>
+#include <pluginterfaces/vst/ivstaudioprocessor.h>
+#include <pongasoft/VST/RT/RTState.h>
 #include "VAC6Model.h"
 #include "VAC6CIDs.h"
 
@@ -22,16 +24,16 @@ struct State
   Gain fGain2{};
   bool fGainFilter{DEFAULT_GAIN_FILTER};
 
-  void updateLCDInputX(ProcessData& iData, int iLCDInputX);
-  void updateLCDHistoryOffset(ProcessData& iData, double iLCDHistoryOffset);
-  void updateLCDLiveView(ProcessData& iData, bool iLCDLiveView);
+  void updateLCDInputX(Vst::ProcessData& iData, int iLCDInputX);
+  void updateLCDHistoryOffset(Vst::ProcessData& iData, double iLCDHistoryOffset);
+  void updateLCDLiveView(Vst::ProcessData& iData, bool iLCDLiveView);
 };
 
-class VAC6Plugin : public Plugin
+class VAC6Parameters : public Parameters
 {
 public:
-  VAC6Plugin(Type iType) :
-    Plugin(iType),
+  VAC6Parameters() :
+    Parameters(),
     fBypassParam{
       build<BooleanParamConverter>(EVAC6ParamID::kBypass, STR16 ("Bypass"))
         .defaultValue(false)
@@ -52,10 +54,22 @@ public:
 
   }
 
-  std::shared_ptr<Parameter<BooleanParamConverter>> fBypassParam;
-  std::shared_ptr<Parameter<SoftClippingLevelParamConverter>> fSoftClippingLevelParam;
+  ParamDefSPtr<BooleanParamConverter> fBypassParam;
+  ParamDefSPtr<SoftClippingLevelParamConverter> fSoftClippingLevelParam;
 };
 
+using namespace RT;
+
+class VAC6RTState : public RTState
+{
+public:
+  explicit VAC6RTState(VAC6Parameters &iParams) :
+    fBypass{add(iParams.fBypassParam)}
+  {}
+
+public:
+  RTParamSPtr<BooleanParamConverter> fBypass;
+};
 
 }
 }

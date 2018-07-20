@@ -23,10 +23,13 @@ set(VST_COMMON_sources_h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/Utils/Concurrent/Concurrent.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/Utils/Misc.h
 
-    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Plugin.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/ParamConverters.h
-    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Parameter.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/ParamDef.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Parameters.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Plugin.h
 
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/RT/RTParameter.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/RT/RTState.h
     )
 
 set(VST_COMMON_sources_cpp

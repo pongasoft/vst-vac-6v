@@ -117,8 +117,8 @@ private:
   SampleRateBasedClock::RateLimiter fRateLimiter;
   Concurrent::WithSpinLock::SingleElementQueue<LCDData> fLCDDataUpdate;
 
-  VAC6Plugin fPlugin;
-
+  VAC6Parameters fParameters;
+  VAC6RTState fRTState;
 };
 
 }
