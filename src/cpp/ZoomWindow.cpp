@@ -1,4 +1,5 @@
 
+#include <pongasoft/Utils/Misc.h>
 #include "ZoomWindow.h"
 #include "AudioUtils.h"
 #include "Utils.h"
@@ -133,7 +134,7 @@ int ZoomWindow::__setRawZoomFactor(double iZoomFactor,
     }
   }
 
-  iOffsetFromLeftOfScreen = clamp(iOffsetFromLeftOfScreen, 0, fVisibleWindowSize - 1);
+  iOffsetFromLeftOfScreen = Utils::clamp(iOffsetFromLeftOfScreen, 0, fVisibleWindowSize - 1);
 
   return iOffsetFromLeftOfScreen;
 }

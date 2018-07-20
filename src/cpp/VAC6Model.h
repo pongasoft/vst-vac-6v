@@ -6,7 +6,7 @@
 #include <sstream>
 #include "VAC6Constants.h"
 #include "ZoomWindow.h"
-#include "Parameter.h"
+#include "pongasoft/VST/ParamConverters.h"
 
 namespace pongasoft {
 namespace VST {
@@ -40,7 +40,7 @@ constexpr double MIN_VOLUME_DB = -60; // -60dB
 constexpr TSample MIN_AUDIO_SAMPLE = 0.001; // dbToSample<TSample>(-60.0)
 constexpr bool DEFAULT_GAIN_FILTER = true;
 
-using LCDHistoryOffsetParamConverter = Common::PercentParamConverter;
+using LCDHistoryOffsetParamConverter = PercentParamConverter;
 
 ///////////////////////////////////
 // LCDZoomFactorXParamConverter
@@ -52,7 +52,7 @@ constexpr double DEFAULT_ZOOM_FACTOR_X = 0.52228412256267409131;
 class LCDZoomFactorXParamConverter
 {
 private:
-  using PPC = Common::PercentParamConverter;
+  using PPC = PercentParamConverter;
 
 public:
   using ParamType = PPC::ParamType;
@@ -87,7 +87,7 @@ constexpr int LCD_INPUT_X_NOTHING_SELECTED = -1;
 class LCDInputXParamConverter
 {
 private:
-  using DVC = Common::DiscreteValueParamConverter<MAX_LCD_INPUT_X + 1>;
+  using DVC = DiscreteValueParamConverter<MAX_LCD_INPUT_X + 1>;
 public:
   using ParamType = DVC::ParamType;
 

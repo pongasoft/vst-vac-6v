@@ -4,7 +4,7 @@
 #include <public.sdk/source/vst/vsteditcontroller.h>
 #include <memory>
 #include <pongasoft/logging/loguru.hpp>
-#include "../Parameter.h"
+#include <pongasoft/VST/ParamConverters.h>
 
 namespace pongasoft {
 namespace VST {
@@ -140,7 +140,7 @@ public:
 
   private:
     ParamID fParamID;
-    Parameter *fParameter;
+    Vst::Parameter *fParameter;
     ParameterOwner *const fParameterOwner;
     IChangeListener *const fChangeListener;
     bool fIsConnected;
@@ -211,7 +211,7 @@ public:
 
 private:
   ParamID fParamID;
-  Parameter *fParameter;
+  Vst::Parameter *fParameter;
   ParameterOwner *const fParameterOwner;
 };
 
@@ -409,10 +409,10 @@ private:
 // Common types
 ///////////////////////////////////////////
 
-using BooleanParameter = VSTParameter<Common::BooleanParamConverter>;
-using PercentParameter = VSTParameter<Common::PercentParamConverter>;
+using BooleanParameter = VSTParameter<BooleanParamConverter>;
+using PercentParameter = VSTParameter<PercentParamConverter>;
 template<int StepCount>
-using DiscreteParameter = VSTParameter<Common::DiscreteValueParamConverter<StepCount>>;
+using DiscreteParameter = VSTParameter<DiscreteValueParamConverter<StepCount>>;
 
 ///////////////////////////////////////////
 // class VSTParametersManager

@@ -1,5 +1,6 @@
 #include "LCDDisplayView.h"
 #include "../Clock.h"
+#include "../AudioUtils.h"
 #include <vstgui4/vstgui/lib/controls/ccontrol.h>
 
 namespace pongasoft {
@@ -178,7 +179,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
           displayValue = toDisplayValue(sample, height);
         }
 
-        top = clamp<RelativeCoord>(height - displayValue, -0.5, height);
+        top = Utils::clamp<RelativeCoord>(height - displayValue, -0.5, height);
 
         // color of the sample depends on its level
         CColor const &color = computeColor(fSoftClippingLevelParameter->getValue(), sample);
@@ -272,7 +273,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
 int LCDDisplayView::computeLCDInputX(CPoint &where) const
 {
   RelativeView rv(this);
-  return clamp(rv.fromAbsolutePoint(where).x, 0, MAX_LCD_INPUT_X);
+  return Utils::clamp(rv.fromAbsolutePoint(where).x, 0, MAX_LCD_INPUT_X);
 }
 
 ///////////////////////////////////////////

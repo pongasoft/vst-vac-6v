@@ -79,7 +79,7 @@ protected:
 
     void move(CCoord iDeltaX)
     {
-      fCenter = clamp(fCenter + iDeltaX, fMinCenter, fMaxCenter);
+      fCenter = Utils::clamp(fCenter + iDeltaX, fMinCenter, fMaxCenter);
     }
 
   };

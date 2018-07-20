@@ -11,6 +11,7 @@
 #include "ZoomWindow.h"
 #include "Clock.h"
 #include "VAC6AudioChannelProcessor.h"
+#include "VAC6Plugin.h"
 
 namespace pongasoft {
 namespace VST {
@@ -93,23 +94,6 @@ protected:
   }
 
 private:
-  struct State
-  {
-    bool fBypass{false};
-    double fZoomFactorX{DEFAULT_ZOOM_FACTOR_X};
-    bool fLeftChannelOn{true};
-    bool fRightChannelOn{true};
-    bool fLCDLiveView{true};
-    int fLCDInputX{MAX_LCD_INPUT_X};
-    double fLCDHistoryOffset{MAX_HISTORY_OFFSET};
-    Gain fGain1{};
-    Gain fGain2{};
-    bool fGainFilter{DEFAULT_GAIN_FILTER};
-
-    void updateLCDInputX(ProcessData& iData, int iLCDInputX);
-    void updateLCDHistoryOffset(ProcessData& iData, double iLCDHistoryOffset);
-    void updateLCDLiveView(ProcessData& iData, bool iLCDLiveView);
-  };
 
   bool fMaxLevelResetRequested;
 
@@ -132,6 +116,8 @@ private:
   Timer *fTimer;
   SampleRateBasedClock::RateLimiter fRateLimiter;
   Concurrent::WithSpinLock::SingleElementQueue<LCDData> fLCDDataUpdate;
+
+  VAC6Plugin fPlugin;
 
 };
 

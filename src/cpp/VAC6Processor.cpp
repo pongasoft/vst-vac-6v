@@ -5,7 +5,7 @@
 
 #include "VAC6Processor.h"
 #include "VAC6CIDs.h"
-#include <pongasoft/VST/Common/Plugin.h>
+#include <pongasoft/VST/Plugin.h>
 
 namespace pongasoft {
 namespace VST {
@@ -92,7 +92,8 @@ VAC6Processor::VAC6Processor() :
   fRightChannelProcessor{nullptr},
   fTimer{nullptr},
   fRateLimiter{},
-  fLCDDataUpdate{}
+  fLCDDataUpdate{},
+  fPlugin{Plugin::Type::kRT}
 {
   setControllerClass(VAC6ControllerUID);
   DLOG_F(INFO, "VAC6Processor::VAC6Processor()");
@@ -440,8 +441,9 @@ bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
         switch(paramQueue->getParameterId())
         {
           case kBypass:
-            newState.fBypass = BooleanParamConverter::denormalize(value);
-            stateChanged |= newState.fBypass != fState.fBypass;
+//            newState.fBypass = BooleanParamConverter::denormalize(value);
+//            stateChanged |= newState.fBypass != fState.fBypass;
+            stateChanged |= fPlugin.fBypassParam->rtSetState(value, newState.fBypass);
             break;
 
           case kMaxLevelReset:
@@ -550,7 +552,8 @@ tresult VAC6Processor::setState(IBStream *state)
   readParam<GainParamConverter>(streamer, DEFAULT_GAIN, newState.fGain1);
   readParam<GainParamConverter>(streamer, DEFAULT_GAIN, newState.fGain2);
   readParam<BooleanParamConverter>(streamer, true, newState.fGainFilter);
-  readParam<BooleanParamConverter>(streamer, false, newState.fBypass);
+//  readParam<BooleanParamConverter>(streamer, false, newState.fBypass);
+  fPlugin.fBypassParam->rtReadState(streamer, newState.fBypass);
 
   // lcd live view IGNORED! (does not make sense to not be in live view when loading)
 
@@ -589,7 +592,8 @@ tresult VAC6Processor::getState(IBStream *state)
   writeParam<GainParamConverter>(streamer, latestState.fGain1);
   writeParam<GainParamConverter>(streamer, latestState.fGain2);
   writeParam<BooleanParamConverter>(streamer, latestState.fGainFilter);
-  writeParam<BooleanParamConverter>(streamer, latestState.fBypass);
+  fPlugin.fBypassParam->rtWriteState(latestState.fBypass, streamer);
+//  writeParam<BooleanParamConverter>(streamer, latestState.fBypass);
 
   return kResultOk;
 }
@@ -623,10 +627,29 @@ void VAC6Processor::onTimer(Timer * /* timer */)
   }
 }
 
+/*
+ * Simple function to add a single parameter change at position 0 (which is the vast majority of cases) */
+inline tresult addOutputParameterChange(ProcessData &data, ParamID iParamID, ParamValue iNormalizedValue)
+{
+  IParameterChanges* outParamChanges = data.outputParameterChanges;
+  if(outParamChanges != nullptr)
+  {
+    int32 index = 0;
+    auto paramQueue = outParamChanges->addParameterData(iParamID, index);
+    if(paramQueue != nullptr)
+    {
+      int32 index2 = 0;
+      return paramQueue->addPoint(0, iNormalizedValue, index2);
+    }
+  }
+
+  return kResultFalse;
+}
+
 ///////////////////////////////////////////
 // VAC6Processor::State::updateLCDInputX
 ///////////////////////////////////////////
-void VAC6Processor::State::updateLCDInputX(ProcessData &iData, int iLCDInputX)
+void State::updateLCDInputX(ProcessData &iData, int iLCDInputX)
 {
   fLCDInputX = iLCDInputX;
   addOutputParameterChange(iData, EVAC6ParamID::kLCDInputX, LCDInputXParamConverter::normalize(fLCDInputX));
@@ -635,7 +658,7 @@ void VAC6Processor::State::updateLCDInputX(ProcessData &iData, int iLCDInputX)
 ///////////////////////////////////////////
 // VAC6Processor::State::updateLCDHistoryOffset
 ///////////////////////////////////////////
-void VAC6Processor::State::updateLCDHistoryOffset(ProcessData &iData, double iLCDHistoryOffset)
+void State::updateLCDHistoryOffset(ProcessData &iData, double iLCDHistoryOffset)
 {
   fLCDHistoryOffset = iLCDHistoryOffset;
   addOutputParameterChange(iData, EVAC6ParamID::kLCDHistoryOffset, LCDHistoryOffsetParamConverter::normalize(fLCDHistoryOffset));
@@ -645,7 +668,7 @@ void VAC6Processor::State::updateLCDHistoryOffset(ProcessData &iData, double iLC
 ///////////////////////////////////////////
 // VAC6Processor::State::updateLCDLiveView
 ///////////////////////////////////////////
-void VAC6Processor::State::updateLCDLiveView(ProcessData &iData, bool iLCDLiveView)
+void State::updateLCDLiveView(ProcessData &iData, bool iLCDLiveView)
 {
   fLCDLiveView = iLCDLiveView;
   addOutputParameterChange(iData, EVAC6ParamID::kLCDLiveView, BooleanParamConverter::normalize(fLCDLiveView));

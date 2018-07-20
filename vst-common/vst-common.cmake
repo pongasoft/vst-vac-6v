@@ -21,14 +21,18 @@ set(VST_COMMON_sources_h
 
     ${VST_COMMON_CPP_SOURCES}/pongasoft/Utils/Collection/CircularBuffer.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/Utils/Concurrent/Concurrent.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/Utils/Misc.h
 
-    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Common/Plugin.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Plugin.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/ParamConverters.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Parameter.h
+
     )
 
 set(VST_COMMON_sources_cpp
     ${LOGURU_IMPL}
 
-    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Common/Plugin.cpp
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Plugin.cpp
     )
 
 add_library(pongasoft-vst-common STATIC ${VST_COMMON_sources_h} ${VST_COMMON_sources_cpp})

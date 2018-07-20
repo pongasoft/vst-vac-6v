@@ -1,4 +1,5 @@
 #include "VAC6Model.h"
+#include "AudioUtils.h"
 
 namespace pongasoft {
 namespace VST {

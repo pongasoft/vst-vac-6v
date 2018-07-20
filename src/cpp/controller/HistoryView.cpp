@@ -72,7 +72,7 @@ MaxLevel HistoryState::getMaxLevelForSelection(int iLCDInputX) const
   if(iLCDInputX < 0)
     return MaxLevel{};
 
-  MaxLevel res{-1, clampE(iLCDInputX, 0, MAX_LCD_INPUT_X)};
+  MaxLevel res{-1, Utils::clampE(iLCDInputX, 0, MAX_LCD_INPUT_X)};
 
   TSample leftSample = fLCDData.fLeftChannel.fOn ? fLCDData.fLeftChannel.fSamples[res.fIndex] : -1;
   TSample rightSample = fLCDData.fRightChannel.fOn ? fLCDData.fRightChannel.fSamples[res.fIndex] : -1;
