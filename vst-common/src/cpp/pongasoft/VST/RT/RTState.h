@@ -7,6 +7,8 @@
 
 #include <map>
 #include <vector>
+#include <string>
+#include <sstream>
 
 namespace pongasoft {
 namespace VST {
@@ -40,7 +42,21 @@ protected:
       }
       return false;
     }
+
+#ifndef NDEBUG
+    std::string toString() const
+    {
+      std::ostringstream s;
+      s << "NormalizedState{";
+      for(int i = 0; i < fCount; i++)
+      {
+        s << fParamIDs[i] << "=" << fValues[i] << ",";
+      }
+      s << "}";
+      return s.str();
+    }
   };
+#endif
 
 public:
   
@@ -141,6 +157,8 @@ void RTState<ParamCount>::readNewState(IBStreamer &iStreamer)
       normalizedState.push(paramID, param->readNormalizedValue(iStreamer));
   }
 
+//  DLOG_F(INFO, "readNewState - %s", normalizedState.toString().c_str());
+
   fStateUpdate.push(normalizedState);
 }
 
@@ -157,6 +175,8 @@ void RTState<ParamCount>::writeLatestState(IBStreamer &oStreamer)
     if(!fParameters.at(state.fParamIDs[i])->getRawParamDef()->fTransient)
       oStreamer.writeDouble(state.fValues[i]);
   }
+
+//  DLOG_F(INFO, "writeLatestState - %s", state.toString().c_str());
 }
 
 //------------------------------------------------------------------------
@@ -165,6 +185,8 @@ void RTState<ParamCount>::writeLatestState(IBStreamer &oStreamer)
 template<int ParamCount>
 bool RTState<ParamCount>::applyNormalizedState(RTState::NormalizedState const &iNormalizedState)
 {
+//  DLOG_F(INFO, "applyNormalizedState - %s", iNormalizedState.toString().c_str());
+
   bool res = false;
 
   for(int i = 0; i < iNormalizedState.fCount; i ++)
@@ -199,7 +221,11 @@ bool RTState<ParamCount>::applyParameterChanges(IParameterChanges &inputParamete
       // we read the "last" point (ignoring multiple changes for now)
       if(paramQueue->getPoint(numPoints - 1, sampleOffset, value) == kResultOk)
       {
-        stateChanged |= fParameters.at(paramQueue->getParameterId())->updateNormalizedValue(value);
+        auto item = fParameters.find(paramQueue->getParameterId());
+        if(item != fParameters.cend())
+        {
+          stateChanged |= item->second->updateNormalizedValue(value);
+        }
       }
     }
   }
@@ -234,7 +260,10 @@ void RTState<ParamCount>::afterProcessing()
 
   // when the state has changed we update it
   if(stateChanged)
+  {
+//    DLOG_F(INFO, "afterProcessing - %s", getNormalizedState().toString().c_str());
     fLatestState.set(getNormalizedState());
+  }
 }
 
 //------------------------------------------------------------------------

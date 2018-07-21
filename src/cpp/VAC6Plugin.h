@@ -12,23 +12,6 @@ namespace pongasoft {
 namespace VST {
 namespace VAC6 {
 
-struct State
-{
-  double fZoomFactorX{DEFAULT_ZOOM_FACTOR_X};
-  bool fLeftChannelOn{true};
-  bool fRightChannelOn{true};
-  bool fLCDLiveView{true};
-  int fLCDInputX{MAX_LCD_INPUT_X};
-  double fLCDHistoryOffset{MAX_HISTORY_OFFSET};
-  Gain fGain1{};
-  Gain fGain2{};
-  bool fGainFilter{DEFAULT_GAIN_FILTER};
-
-  void updateLCDInputX(Vst::ProcessData& iData, int iLCDInputX);
-  void updateLCDHistoryOffset(Vst::ProcessData& iData, double iLCDHistoryOffset);
-  void updateLCDLiveView(Vst::ProcessData& iData, bool iLCDLiveView);
-};
-
 class VAC6Parameters : public Parameters
 {
 public:

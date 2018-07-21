@@ -648,33 +648,5 @@ inline tresult addOutputParameterChange(ProcessData &data, ParamID iParamID, Par
   return kResultFalse;
 }
 
-///////////////////////////////////////////
-// VAC6Processor::State::updateLCDInputX
-///////////////////////////////////////////
-void State::updateLCDInputX(ProcessData &iData, int iLCDInputX)
-{
-  fLCDInputX = iLCDInputX;
-  addOutputParameterChange(iData, EVAC6ParamID::kLCDInputX, LCDInputXParamConverter::normalize(fLCDInputX));
-}
-
-///////////////////////////////////////////
-// VAC6Processor::State::updateLCDHistoryOffset
-///////////////////////////////////////////
-void State::updateLCDHistoryOffset(ProcessData &iData, double iLCDHistoryOffset)
-{
-  fLCDHistoryOffset = iLCDHistoryOffset;
-  addOutputParameterChange(iData, EVAC6ParamID::kLCDHistoryOffset, LCDHistoryOffsetParamConverter::normalize(fLCDHistoryOffset));
-
-}
-
-///////////////////////////////////////////
-// VAC6Processor::State::updateLCDLiveView
-///////////////////////////////////////////
-void State::updateLCDLiveView(ProcessData &iData, bool iLCDLiveView)
-{
-  fLCDLiveView = iLCDLiveView;
-  addOutputParameterChange(iData, EVAC6ParamID::kLCDLiveView, BooleanParamConverter::normalize(fLCDLiveView));
-}
-
 }
 }
