@@ -80,7 +80,7 @@ VAC6Processor::VAC6Processor() :
   AudioEffect(),
   fParameters{},
   fState{fParameters},
-  fGain{fState.fGain1->v().getValue() * fState.fGain2->v().getValue(), DEFAULT_GAIN_FILTER},
+  fGain{fState.fGain1->getValue() * fState.fGain2->getValue(), DEFAULT_GAIN_FILTER},
   fClock{44100},
   fMaxAccumulatorBatchSize{fClock.getSampleCountFor(ACCUMULATOR_BATCH_SIZE_IN_MS)},
   fZoomWindow{nullptr},
@@ -233,65 +233,65 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   bool isNewPause = false;
 
   // some DAW like Maschine exposes the controls which then bypasses pause => force into pause
-  if(fState.fLCDInputX->hasChanged() || fState.fLCDHistoryOffset->hasChanged())
+  if(fState.fLCDInputX.hasChanged() || fState.fLCDHistoryOffset.hasChanged())
   {
-    if(fState.fLCDLiveView->v())
+    if(fState.fLCDLiveView)
     {
-      fState.fLCDLiveView->update(false);
-      fState.fLCDLiveView->addToOutput(data);
+      fState.fLCDLiveView.update(false);
+      fState.fLCDLiveView.addToOutput(data);
     }
   }
 
   // live view/pause has changed
-  if(fState.fLCDLiveView->hasChanged())
+  if(fState.fLCDLiveView.hasChanged())
   {
-    fLeftChannelProcessor->setIsLiveView(fState.fLCDLiveView->v());
-    fRightChannelProcessor->setIsLiveView(fState.fLCDLiveView->v());
+    fLeftChannelProcessor->setIsLiveView(fState.fLCDLiveView);
+    fRightChannelProcessor->setIsLiveView(fState.fLCDLiveView);
 
-    isNewLiveView = fState.fLCDLiveView->v();
+    isNewLiveView = fState.fLCDLiveView;
     isNewPause =!isNewLiveView;
   }
 
   // Gain filter has changed
-  if(fState.fGainFilter->hasChanged())
+  if(fState.fGainFilter.hasChanged())
   {
-    fGain.setFilterOn(fState.fGainFilter->v());
+    fGain.setFilterOn(fState.fGainFilter);
   }
 
     // gain has changed
-  if(fState.fGain1->hasChanged() || fState.fGain2->hasChanged())
+  if(fState.fGain1.hasChanged() || fState.fGain2.hasChanged())
   {
     // simply combine the 2 gains
-    fGain.setTargetValue(fState.fGain1->v().getValue() * fState.fGain2->v().getValue());
+    fGain.setTargetValue(fState.fGain1->getValue() * fState.fGain2->getValue());
   }
 
   // Zoom has changed
-  if(fState.fZoomFactorX->hasChanged())
+  if(fState.fZoomFactorX.hasChanged())
   {
-    if(fState.fLCDLiveView->v())
+    if(fState.fLCDLiveView)
     {
-      fZoomWindow->setZoomFactor(fState.fZoomFactorX->v());
+      fZoomWindow->setZoomFactor(fState.fZoomFactorX);
     }
     else
     {
       int newLCDInputX =
-        fZoomWindow->setZoomFactor(fState.fZoomFactorX->v(),
-                                   fState.fLCDInputX->v() != LCD_INPUT_X_NOTHING_SELECTED ? fState.fLCDInputX->v() : MAX_ARRAY_SIZE / 2,
-                                   { fState.fLeftChannelOn->v() ? &fLeftChannelProcessor->getMaxBuffer() : nullptr,
-                                     fState.fRightChannelOn->v() ? &fRightChannelProcessor->getMaxBuffer() : nullptr });
+        fZoomWindow->setZoomFactor(fState.fZoomFactorX,
+                                   fState.fLCDInputX != LCD_INPUT_X_NOTHING_SELECTED ? fState.fLCDInputX : MAX_ARRAY_SIZE / 2,
+                                   { fState.fLeftChannelOn ? &fLeftChannelProcessor->getMaxBuffer() : nullptr,
+                                     fState.fRightChannelOn ? &fRightChannelProcessor->getMaxBuffer() : nullptr });
 
-      if(fState.fLCDInputX->v() != LCD_INPUT_X_NOTHING_SELECTED && fState.fLCDInputX->v() != newLCDInputX)
+      if(fState.fLCDInputX != LCD_INPUT_X_NOTHING_SELECTED && fState.fLCDInputX != newLCDInputX)
       {
-        fState.fLCDInputX->update(newLCDInputX);
-        fState.fLCDInputX->addToOutput(data);
+        fState.fLCDInputX.update(newLCDInputX);
+        fState.fLCDInputX.addToOutput(data);
       }
 
       double newLCDHistoryOffset = fZoomWindow->getWindowOffset();
 
-      if(newLCDHistoryOffset != fState.fLCDHistoryOffset->v())
+      if(newLCDHistoryOffset != fState.fLCDHistoryOffset)
       {
-        fState.fLCDHistoryOffset->update(newLCDHistoryOffset);
-        fState.fLCDHistoryOffset->addToOutput(data);
+        fState.fLCDHistoryOffset.update(newLCDHistoryOffset);
+        fState.fLCDHistoryOffset.addToOutput(data);
       }
     }
 
@@ -300,9 +300,9 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   }
 
   // Scrollbar has been moved
-  if(fState.fLCDHistoryOffset->hasChanged())
+  if(fState.fLCDHistoryOffset.hasChanged())
   {
-    fZoomWindow->setWindowOffset(fState.fLCDHistoryOffset->v());
+    fZoomWindow->setWindowOffset(fState.fLCDHistoryOffset);
     fLeftChannelProcessor->setDirty();
     fRightChannelProcessor->setDirty();
   }
@@ -310,17 +310,17 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   // after we cancel pause we need to reset LCDInputX and LCDHistoryOffset
   if(isNewLiveView)
   {
-    if(fState.fLCDInputX->v() != LCD_INPUT_X_NOTHING_SELECTED)
+    if(fState.fLCDInputX != LCD_INPUT_X_NOTHING_SELECTED)
     {
-      fState.fLCDInputX->update(LCD_INPUT_X_NOTHING_SELECTED);
-      fState.fLCDInputX->addToOutput(data);
+      fState.fLCDInputX.update(LCD_INPUT_X_NOTHING_SELECTED);
+      fState.fLCDInputX.addToOutput(data);
     }
 
-    if(fState.fLCDHistoryOffset->v() != MAX_HISTORY_OFFSET)
+    if(fState.fLCDHistoryOffset != MAX_HISTORY_OFFSET)
     {
-      fState.fLCDHistoryOffset->update(MAX_HISTORY_OFFSET);
-      fState.fLCDHistoryOffset->addToOutput(data);
-      fZoomWindow->setWindowOffset(fState.fLCDHistoryOffset->v());
+      fState.fLCDHistoryOffset.update(MAX_HISTORY_OFFSET);
+      fState.fLCDHistoryOffset.addToOutput(data);
+      fZoomWindow->setWindowOffset(fState.fLCDHistoryOffset);
       fLeftChannelProcessor->setDirty();
       fRightChannelProcessor->setDirty();
     }
@@ -328,7 +328,7 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
 
   // we need to adjust the filtered gain
   fGain.adjust();
-  auto gain = fState.fBypass->v() ? Gain::Unity : fGain.getValue();
+  auto gain = fState.fBypass ? Gain::Unity : fGain.getValue();
 
   // in mono case there could be only one channel
   auto leftChannel = out.getLeftChannel();
@@ -341,7 +341,7 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   }
 
   // if reset of max level is requested (pressing momentary button) then we need to reset the accumulator
-  if(fState.fMaxLevelReset->v())
+  if(fState.fMaxLevelReset)
   {
     fLeftChannelProcessor->resetMaxLevelSinceReset();
     fRightChannelProcessor->resetMaxLevelSinceReset();
@@ -353,21 +353,21 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
     LCDData lcdData{};
 
     // left
-    if(fState.fLeftChannelOn->v())
+    if(fState.fLeftChannelOn)
     {
       fLeftChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fLeftChannel.fSamples);
       lcdData.fLeftChannel.fMaxLevelSinceReset = fLeftChannelProcessor->getMaxLevelSinceReset();
     }
-    lcdData.fLeftChannel.fOn = fState.fLeftChannelOn->v();
+    lcdData.fLeftChannel.fOn = fState.fLeftChannelOn;
 
 
     // right
-    if(fState.fRightChannelOn->v())
+    if(fState.fRightChannelOn)
     {
       fRightChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fRightChannel.fSamples);
       lcdData.fRightChannel.fMaxLevelSinceReset = fRightChannelProcessor->getMaxLevelSinceReset();
     }
-    lcdData.fRightChannel.fOn = fState.fRightChannelOn->v();
+    lcdData.fRightChannel.fOn = fState.fRightChannelOn;
 
     lcdData.fWindowSizeInMillis = getWindowSizeInMillis();
 

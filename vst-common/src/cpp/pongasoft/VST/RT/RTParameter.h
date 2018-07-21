@@ -120,12 +120,31 @@ void RTParameter<ParamConverter>::update(const ParamType &iNewValue)
   fNormalizedValue = normalize(fValue);
 }
 
-
 //------------------------------------------------------------------------
-// RTParamSPtr - definition to shorten the notation
+// RTParamSPtr - wrapper to make writing the code much simpler and natural
 //------------------------------------------------------------------------
 template<typename ParamConverter>
-using RTParamSPtr = std::shared_ptr<RTParameter<ParamConverter>>;
+class RTParamSPtr
+{
+  using ParamType = typename ParamConverter::ParamType;
+
+public:
+  RTParamSPtr(std::shared_ptr<RTParameter<ParamConverter>> iPtr) :
+    fPtr{std::move(iPtr)}
+  {}
+
+  inline void update(ParamType const &iNewValue) { fPtr->update(iNewValue); }
+  inline bool hasChanged() const { return fPtr->hasChanged(); }
+  inline tresult addToOutput(ProcessData &oData) { return fPtr->addToOutput(oData); }
+
+  // allow to use the param as the underlying ParamType (ex: "if(param)" in the case ParamType is bool))
+  inline operator ParamType const &() const { return fPtr->v(); }
+  // allow writing param->xxx to access the underlying type directly (if not a primitive)
+  inline ParamType const *operator->() const { return &fPtr->v(); }
+
+private:
+  std::shared_ptr<RTParameter<ParamConverter>> fPtr;
+};
 
 }
 }
