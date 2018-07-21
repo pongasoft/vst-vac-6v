@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __PONGASOFT_UTILS_COLLECTION_CIRCULAR_BUFFER_H__
+#define __PONGASOFT_UTILS_COLLECTION_CIRCULAR_BUFFER_H__
 
 #include <cassert>
 #include <memory>
@@ -259,3 +260,5 @@ private:
 }
 }
 }
+
+#endif // __PONGASOFT_UTILS_COLLECTION_CIRCULAR_BUFFER_H__

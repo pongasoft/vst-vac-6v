@@ -94,18 +94,12 @@ protected:
   }
 
 private:
-
-  bool fMaxLevelResetRequested;
-
-  State fState;
-  State fPreviousState;
+  VAC6Parameters fParameters;
+  VAC6RTState fState;
 
   FilteredGain fGain;
 
   SampleRateBasedClock fClock;
-
-  Concurrent::WithSpinLock::SingleElementQueue<State> fStateUpdate;
-  Concurrent::WithSpinLock::AtomicValue<State> fLatestState;
 
   uint32 fMaxAccumulatorBatchSize;
   ZoomWindow *fZoomWindow;
@@ -116,9 +110,6 @@ private:
   Timer *fTimer;
   SampleRateBasedClock::RateLimiter fRateLimiter;
   Concurrent::WithSpinLock::SingleElementQueue<LCDData> fLCDDataUpdate;
-
-  VAC6Parameters fParameters;
-  VAC6RTState fRTState;
 };
 
 }

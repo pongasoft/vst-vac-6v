@@ -1,8 +1,10 @@
-#pragma once
+#ifndef __PONGASOFT_VST_PARAMETERS_H__
+#define __PONGASOFT_VST_PARAMETERS_H__
+
+#include "ParamDef.h"
 
 #include <map>
 #include <vector>
-#include "ParamDef.h"
 
 namespace pongasoft {
 namespace VST {
@@ -24,8 +26,8 @@ public:
     ParamDefBuilder &unitID(int32 iUnitID) { fUnitID = iUnitID; return *this; }
     ParamDefBuilder &shortTitle(const TChar *iShortTitle) { fShortTitle = iShortTitle; return *this; }
     ParamDefBuilder &precision(int32 iPrecision) { fPrecision = iPrecision; return *this; }
-    ParamDefBuilder &uiOnly(bool iUIOnly) { fUIOnly = iUIOnly; return *this; }
-    ParamDefBuilder &save(bool iSave) { fSave = iSave; return *this; }
+    ParamDefBuilder &uiOnly() { fUIOnly = true; return *this; }
+    ParamDefBuilder &transient() { fTransient = true; return *this; }
 
     // parameter factory method
     ParamDefSPtr<ParamConverter> add() const;
@@ -41,12 +43,13 @@ public:
     const TChar *fShortTitle = nullptr;
     int32 fPrecision = 4;
     bool fUIOnly = false;
-    bool fSave = true;
+    bool fTransient = false;
 
     friend class Parameters;
 
   protected:
-    ParamDefBuilder(Parameters *iParameters, ParamID iParamID, const TChar* iTitle) : fParameters{iParameters}, fParamID{iParamID}, fTitle{iTitle} {}
+    ParamDefBuilder(Parameters *iParameters, ParamID iParamID, const TChar* iTitle) :
+      fParameters{iParameters}, fParamID{iParamID}, fTitle{iTitle} {}
 
   private:
     Parameters *fParameters;
@@ -105,7 +108,7 @@ ParamDefSPtr<ParamConverter> Parameters::add(ParamDefBuilder<ParamConverter> con
                                                           iBuilder.fShortTitle,
                                                           iBuilder.fPrecision,
                                                           iBuilder.fUIOnly,
-                                                          iBuilder.fSave);
+                                                          iBuilder.fTransient);
 
   std::shared_ptr<RawParamDef> raw = param;
 
@@ -123,20 +126,7 @@ Parameters::ParamDefBuilder<ParamConverter> Parameters::build(ParamID iParamID, 
   return Parameters::ParamDefBuilder<ParamConverter>(this, iParamID, iTitle);
 }
 
-
-//------------------------------------------------------------------------
-// Parameters::addRawParameter TODO (add?)
-//------------------------------------------------------------------------
-//void Parameters::addRawParameter(std::shared_ptr<RawParamDef> iParameter)
-//{
-//  DCHECK_F(iParameter != nullptr);
-//  DCHECK_F(fParameters.find(iParameter->fParamID) == fParameters.cend());
-//  fParameters[iParameter->fParamID] = iParameter;
-//  if(iParameter->fUIOnly)
-//    fGUIParameters.emplace_back(iParameter);
-//  else
-//    fRTParameters.emplace_back(iParameter);
-//}
-
 }
 }
+
+#endif // __PONGASOFT_VST_PARAMETERS_H__

@@ -1,10 +1,13 @@
-#pragma once
+#ifndef __PONGASOFT_VST_PARAM_CONVERTERS_H__
+#define __PONGASOFT_VST_PARAM_CONVERTERS_H__
+
+#include <pongasoft/Utils/Misc.h>
 
 #include <pluginterfaces/vst/vsttypes.h>
 #include <pluginterfaces/vst/ivstparameterchanges.h>
 #include <pluginterfaces/base/ustring.h>
 #include <pluginterfaces/base/ftypes.h>
-#include <pongasoft/Utils/Misc.h>
+
 #include <cmath>
 #include <algorithm>
 
@@ -127,3 +130,5 @@ public:
 
 }
 }
+
+#endif // __PONGASOFT_VST_PARAM_CONVERTERS_H__

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __PONGASOFT_UTILS_MISC_H__
+#define __PONGASOFT_UTILS_MISC_H__
 
 #include <pongasoft/logging/loguru.hpp>
 
@@ -31,3 +32,5 @@ inline static T clampE(const U &value, const T &lower, const T &upper)
 
 }
 }
+
+#endif // __PONGASOFT_UTILS_MISC_H__

@@ -26,7 +26,6 @@ set(VST_COMMON_sources_h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/ParamConverters.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/ParamDef.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Parameters.h
-    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Plugin.h
 
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/RT/RTParameter.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/RT/RTState.h
@@ -35,7 +34,8 @@ set(VST_COMMON_sources_h
 set(VST_COMMON_sources_cpp
     ${LOGURU_IMPL}
 
-    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Plugin.cpp
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/RT/RTParameter.cpp
+
     )
 
 add_library(pongasoft-vst-common STATIC ${VST_COMMON_sources_h} ${VST_COMMON_sources_cpp})

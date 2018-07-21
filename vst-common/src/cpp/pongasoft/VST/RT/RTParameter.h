@@ -1,4 +1,9 @@
-#pragma once
+#include <pluginterfaces/vst/ivstaudioprocessor.h>
+
+#include <utility>
+
+#ifndef __PONGASOFT_VST_RT_PARAMETER_H__
+#define __PONGASOFT_VST_RT_PARAMETER_H__
 
 #include <pongasoft/VST/ParamDef.h>
 #include <pongasoft/logging/loguru.hpp>
@@ -7,46 +12,81 @@ namespace pongasoft {
 namespace VST {
 namespace RT {
 
+/**
+ * RTRawParameter
+ */
 class RTRawParameter
 {
 public:
-  virtual bool update(ParamValue iNormalizedValue) = 0;
-  virtual ParamValue getNormalizedValue() const = 0;
+  explicit RTRawParameter(std::shared_ptr<RawParamDef> iParamDef) :
+    fRawParamDef{iParamDef},
+    fNormalizedValue{fRawParamDef->fDefaultNormalizedValue},
+    fPreviousNormalizedValue{fNormalizedValue}
+  {}
+
+  ParamID getParamID() const { return fRawParamDef->fParamID; }
+  std::shared_ptr<RawParamDef> getRawParamDef() const { return fRawParamDef; }
+
+  virtual bool updateNormalizedValue(ParamValue iNormalizedValue);
+
+  inline ParamValue const &getNormalizedValue() { return fNormalizedValue; }
+  inline ParamValue const &getPreviousNormalizedValue() { return fPreviousNormalizedValue; }
+
+  tresult addToOutput(ProcessData &oData);
+
+  inline bool hasChanged() const { return fNormalizedValue != fPreviousNormalizedValue; }
+
+  virtual bool resetPreviousValue();
+
+protected:
+  std::shared_ptr<RawParamDef> fRawParamDef;
+  ParamValue fNormalizedValue;
+  ParamValue fPreviousNormalizedValue;
 };
 
+
+/**
+ * RTParameter
+ */
 template<typename ParamConverter>
 class RTParameter : public RTRawParameter
 {
 public:
   using ParamType = typename ParamConverter::ParamType;
 
-  explicit RTParameter(ParamDefSPtr<ParamConverter> iParam) :
-    fParam{iParam},
-    fValue{iParam->getDefaultValue()},
+  explicit RTParameter(ParamDefSPtr<ParamConverter> iParamDef) :
+    RTRawParameter(iParamDef),
+    fValue{denormalize(fNormalizedValue)},
     fPreviousValue{fValue}
   {
-    DLOG_F(INFO, "RTParameter(%s)", String(fParam->fTitle).text8());
+    DLOG_F(INFO, "RTParameter(%s)", String(iParamDef->fTitle).text8());
   }
 
-  bool update(ParamValue iNormalizedValue) override;
-  ParamValue getNormalizedValue() const override { return normalize(fValue); }
+  bool updateNormalizedValue(ParamValue iNormalizedValue) override;
 
   inline ParamValue normalize(ParamType const &iValue) const { return ParamConverter::normalize(iValue); }
   inline ParamType denormalize(ParamValue iNormalizedValue) const { return ParamConverter::denormalize(iNormalizedValue); }
 
-public:
-  ParamType fValue;
-  ParamType fPreviousValue;
+  void update(ParamType const &iNewValue);
+
+  inline ParamType const &v() const { return fValue; }
+  inline ParamType const &pv() const { return fPreviousValue; }
 
 protected:
-  ParamDefSPtr<ParamConverter> fParam;
+  bool resetPreviousValue() override;
+
+protected:
+  ParamType fValue;
+  ParamType fPreviousValue;
 };
 
+//------------------------------------------------------------------------
+// RTParameter::updateNormalizedValue - update fValue to the new value and return true if it changed
+//------------------------------------------------------------------------
 template<typename ParamConverter>
-bool RTParameter<ParamConverter>::update(ParamValue iNormalizedValue)
+bool RTParameter<ParamConverter>::updateNormalizedValue(ParamValue iNormalizedValue)
 {
-  ParamValue previousNormalizedValue = normalize(fValue);
-  if(previousNormalizedValue != iNormalizedValue)
+  if(RTRawParameter::updateNormalizedValue(iNormalizedValue))
   {
     fValue = denormalize(iNormalizedValue);
     return true;
@@ -55,26 +95,40 @@ bool RTParameter<ParamConverter>::update(ParamValue iNormalizedValue)
   return false;
 }
 
+//------------------------------------------------------------------------
+// RTParameter::resetPreviousValue
+//------------------------------------------------------------------------
+template<typename ParamConverter>
+bool RTParameter<ParamConverter>::resetPreviousValue()
+{
+  if(RTRawParameter::resetPreviousValue())
+  {
+    fPreviousValue = fValue;
+    return true;
+  }
+
+  return false;
+}
+
+//------------------------------------------------------------------------
+// RTParameter::update
+//------------------------------------------------------------------------
+template<typename ParamConverter>
+void RTParameter<ParamConverter>::update(const ParamType &iNewValue)
+{
+  fValue = iNewValue;
+  fNormalizedValue = normalize(fValue);
+}
+
+
+//------------------------------------------------------------------------
+// RTParamSPtr - definition to shorten the notation
+//------------------------------------------------------------------------
 template<typename ParamConverter>
 using RTParamSPtr = std::shared_ptr<RTParameter<ParamConverter>>;
 
-//template<typename ParamConverter>
-//bool RTParameter<ParamConverter>::read(IBStreamer &iStreamer)
-//{
-//  if(fParam->fSave)
-//    return update(fParam->readNormalizedValue(iStreamer));
-//  else
-//    return false;
-//}
-//
-//template<typename ParamConverter>
-//void RTParameter<ParamConverter>::write(IBStreamer &oStreamer)
-//{
-//  if(fParam->fSave)
-//    oStreamer.writeDouble(fParam->normalize(fValue));
-//
-//}
+}
+}
+}
 
-}
-}
-}
+#endif // __PONGASOFT_VST_RT_PARAMETER_H__

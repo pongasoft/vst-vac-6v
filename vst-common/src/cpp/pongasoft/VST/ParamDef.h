@@ -1,11 +1,14 @@
-#pragma once
+#ifndef __PONGASOFT_VST_PARAM_DEF_H__
+#define __PONGASOFT_VST_PARAM_DEF_H__
+
+#include "ParamConverters.h"
 
 #include <base/source/fstreamer.h>
 #include <pluginterfaces/vst/vsttypes.h>
 #include <pluginterfaces/vst/ivsteditcontroller.h>
 #include <pluginterfaces/vst/ivstunits.h>
+
 #include <memory>
-#include "ParamConverters.h"
 
 namespace pongasoft {
 namespace VST {
@@ -26,7 +29,7 @@ public:
               TChar const *const iShortTitle,
               int32 const iPrecision,
               bool const iUIOnly,
-              bool const iSave) :
+              bool const iTransient) :
     fParamID{iParamID},
     fTitle{iTitle},
     fUnits{iUnits},
@@ -37,9 +40,24 @@ public:
     fShortTitle{iShortTitle},
     fPrecision{iPrecision},
     fUIOnly{iUIOnly},
-    fSave{iSave}
+    fTransient{iTransient}
   {}
 
+public:
+  ParamValue readNormalizedValue(IBStreamer &iStreamer) const
+  {
+    if(!fTransient)
+    {
+      double value;
+      if(!iStreamer.readDouble(value))
+        value = fDefaultNormalizedValue;
+      return value;
+    }
+    else
+      return fDefaultNormalizedValue;
+  }
+
+public:
   const ParamID fParamID;
   const TChar *const fTitle;
   const TChar *const fUnits;
@@ -50,7 +68,7 @@ public:
   const TChar *const fShortTitle;
   const int32 fPrecision;
   const bool fUIOnly;
-  const bool fSave;
+  const bool fTransient;
 };
 
 template<typename ParamConverter>
@@ -60,27 +78,27 @@ public:
   using ParamType = typename ParamConverter::ParamType;
 
   ParamDef(ParamID const iParamID,
-               TChar const *const iTitle,
-               TChar const *const iUnits,
-               ParamValue const iDefaultNormalizedValue,
-               int32 const iStepCount,
-               int32 const iFlags,
-               UnitID const iUnitID,
-               TChar const *const iShortTitle,
-               int32 const iPrecision,
-               bool const iUIOnly,
-               bool const iSave) :
+           TChar const *const iTitle,
+           TChar const *const iUnits,
+           ParamValue const iDefaultNormalizedValue,
+           int32 const iStepCount,
+           int32 const iFlags,
+           UnitID const iUnitID,
+           TChar const *const iShortTitle,
+           int32 const iPrecision,
+           bool const iUIOnly,
+           bool const iTransient) :
     RawParamDef(iParamID,
-                    iTitle,
-                    iUnits,
-                    iDefaultNormalizedValue,
-                    iStepCount,
-                    iFlags,
-                    iUnitID,
-                    iShortTitle,
-                    iPrecision,
-                    iUIOnly,
-                    iSave)
+                iTitle,
+                iUnits,
+                iDefaultNormalizedValue,
+                iStepCount,
+                iFlags,
+                iUnitID,
+                iShortTitle,
+                iPrecision,
+                iUIOnly,
+                iTransient)
   {
   }
 
@@ -88,17 +106,7 @@ public:
   inline ParamValue normalize(ParamType const &iValue) const { return ParamConverter::normalize(iValue); }
   inline ParamType denormalize(ParamValue iNormalizedValue) const { return ParamConverter::denormalize(iNormalizedValue); }
 
-  ParamValue readNormalizedValue(IBStreamer &iStreamer) const;
 };
-
-template<typename ParamConverter>
-ParamValue ParamDef<ParamConverter>::readNormalizedValue(IBStreamer &iStreamer) const
-{
-  double value;
-  if(!iStreamer.readDouble(value))
-    value = normalize(fDefaultNormalizedValue);
-  return value;
-}
 
 template<typename ParamConverter>
 using ParamDefSPtr = std::shared_ptr<ParamDef<ParamConverter>>;
@@ -129,3 +137,5 @@ using ParamDefSPtr = std::shared_ptr<ParamDef<ParamConverter>>;
 
 }
 }
+
+#endif // __PONGASOFT_VST_PARAM_DEF_H__

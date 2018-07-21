@@ -5,7 +5,6 @@
 
 #include "VAC6Processor.h"
 #include "VAC6CIDs.h"
-#include <pongasoft/VST/Plugin.h>
 
 namespace pongasoft {
 namespace VST {
@@ -79,12 +78,9 @@ bool VAC6AudioChannelProcessor::genericProcessChannel(ZoomWindow const *iZoomWin
 ///////////////////////////////////////////
 VAC6Processor::VAC6Processor() :
   AudioEffect(),
-  fMaxLevelResetRequested{false},
-  fState{},
-  fPreviousState{fState},
-  fGain{fState.fGain1.getValue() * fState.fGain2.getValue(), DEFAULT_GAIN_FILTER},
-  fStateUpdate{},
-  fLatestState{fState},
+  fParameters{},
+  fState{fParameters},
+  fGain{fState.fGain1->v().getValue() * fState.fGain2->v().getValue(), DEFAULT_GAIN_FILTER},
   fClock{44100},
   fMaxAccumulatorBatchSize{fClock.getSampleCountFor(ACCUMULATOR_BATCH_SIZE_IN_MS)},
   fZoomWindow{nullptr},
@@ -92,9 +88,7 @@ VAC6Processor::VAC6Processor() :
   fRightChannelProcessor{nullptr},
   fTimer{nullptr},
   fRateLimiter{},
-  fLCDDataUpdate{},
-  fParameters{},
-  fRTState{fParameters}
+  fLCDDataUpdate{}
 {
   setControllerClass(VAC6ControllerUID);
   DLOG_F(INFO, "VAC6Processor::VAC6Processor()");
@@ -205,17 +199,19 @@ tresult PLUGIN_API VAC6Processor::setActive(TBool state)
 tresult PLUGIN_API VAC6Processor::process(ProcessData &data)
 {
   // 1. we check if there was any state update (UI calls setState)
-  fStateUpdate.pop(fState);
+  fState.beforeProcessing();
 
   // 2. process parameter changes (this will override any update in step 1.)
   if(data.inputParameterChanges != nullptr)
-    processParameters(*data.inputParameterChanges);
+  {
+    fState.applyParameterChanges(*data.inputParameterChanges);
+  }
 
   // 3. process inputs
   tresult res = processInputs(data);
 
   // 4. update the previous state
-  fPreviousState = fState;
+  fState.afterProcessing();
 
   return res;
 }
@@ -237,66 +233,65 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   bool isNewPause = false;
 
   // some DAW like Maschine exposes the controls which then bypasses pause => force into pause
-  if(fPreviousState.fLCDInputX != fState.fLCDInputX ||
-     fPreviousState.fLCDHistoryOffset != fState.fLCDHistoryOffset)
+  if(fState.fLCDInputX->hasChanged() || fState.fLCDHistoryOffset->hasChanged())
   {
-    if(fState.fLCDLiveView)
+    if(fState.fLCDLiveView->v())
     {
-      fState.updateLCDLiveView(data, false);
+      fState.fLCDLiveView->update(false);
+      fState.fLCDLiveView->addToOutput(data);
     }
   }
 
-  // TODO: in Maschine 2, updating vst parameters from processing does not change the knob in the Maschine 2 interface
-
   // live view/pause has changed
-  if(fPreviousState.fLCDLiveView != fState.fLCDLiveView)
+  if(fState.fLCDLiveView->hasChanged())
   {
-    fLeftChannelProcessor->setIsLiveView(fState.fLCDLiveView);
-    fRightChannelProcessor->setIsLiveView(fState.fLCDLiveView);
+    fLeftChannelProcessor->setIsLiveView(fState.fLCDLiveView->v());
+    fRightChannelProcessor->setIsLiveView(fState.fLCDLiveView->v());
 
-    isNewLiveView = fState.fLCDLiveView;
+    isNewLiveView = fState.fLCDLiveView->v();
     isNewPause =!isNewLiveView;
   }
 
   // Gain filter has changed
-  if(fPreviousState.fGainFilter != fState.fGainFilter)
+  if(fState.fGainFilter->hasChanged())
   {
-    fGain.setFilterOn(fState.fGainFilter);
+    fGain.setFilterOn(fState.fGainFilter->v());
   }
 
     // gain has changed
-  if(fPreviousState.fGain1.getValue() != fState.fGain1.getValue() ||
-     fPreviousState.fGain2.getValue() != fState.fGain2.getValue())
+  if(fState.fGain1->hasChanged() || fState.fGain2->hasChanged())
   {
     // simply combine the 2 gains
-    fGain.setTargetValue(fState.fGain1.getValue() * fState.fGain2.getValue());
+    fGain.setTargetValue(fState.fGain1->v().getValue() * fState.fGain2->v().getValue());
   }
 
   // Zoom has changed
-  if(fPreviousState.fZoomFactorX != fState.fZoomFactorX)
+  if(fState.fZoomFactorX->hasChanged())
   {
-    if(fState.fLCDLiveView)
+    if(fState.fLCDLiveView->v())
     {
-      fZoomWindow->setZoomFactor(fState.fZoomFactorX);
+      fZoomWindow->setZoomFactor(fState.fZoomFactorX->v());
     }
     else
     {
       int newLCDInputX =
-        fZoomWindow->setZoomFactor(fState.fZoomFactorX,
-                                   fState.fLCDInputX != LCD_INPUT_X_NOTHING_SELECTED ? fState.fLCDInputX : MAX_ARRAY_SIZE / 2,
-                                   { fState.fLeftChannelOn ? &fLeftChannelProcessor->getMaxBuffer() : nullptr,
-                                     fState.fRightChannelOn ? &fRightChannelProcessor->getMaxBuffer() : nullptr });
+        fZoomWindow->setZoomFactor(fState.fZoomFactorX->v(),
+                                   fState.fLCDInputX->v() != LCD_INPUT_X_NOTHING_SELECTED ? fState.fLCDInputX->v() : MAX_ARRAY_SIZE / 2,
+                                   { fState.fLeftChannelOn->v() ? &fLeftChannelProcessor->getMaxBuffer() : nullptr,
+                                     fState.fRightChannelOn->v() ? &fRightChannelProcessor->getMaxBuffer() : nullptr });
 
-      if(fState.fLCDInputX != LCD_INPUT_X_NOTHING_SELECTED && fState.fLCDInputX != newLCDInputX)
+      if(fState.fLCDInputX->v() != LCD_INPUT_X_NOTHING_SELECTED && fState.fLCDInputX->v() != newLCDInputX)
       {
-        fState.updateLCDInputX(data, newLCDInputX);
+        fState.fLCDInputX->update(newLCDInputX);
+        fState.fLCDInputX->addToOutput(data);
       }
 
       double newLCDHistoryOffset = fZoomWindow->getWindowOffset();
 
-      if(newLCDHistoryOffset != fState.fLCDHistoryOffset)
+      if(newLCDHistoryOffset != fState.fLCDHistoryOffset->v())
       {
-        fState.updateLCDHistoryOffset(data, newLCDHistoryOffset);
+        fState.fLCDHistoryOffset->update(newLCDHistoryOffset);
+        fState.fLCDHistoryOffset->addToOutput(data);
       }
     }
 
@@ -305,9 +300,9 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   }
 
   // Scrollbar has been moved
-  if(fPreviousState.fLCDHistoryOffset != fState.fLCDHistoryOffset)
+  if(fState.fLCDHistoryOffset->hasChanged())
   {
-    fZoomWindow->setWindowOffset(fState.fLCDHistoryOffset);
+    fZoomWindow->setWindowOffset(fState.fLCDHistoryOffset->v());
     fLeftChannelProcessor->setDirty();
     fRightChannelProcessor->setDirty();
   }
@@ -315,15 +310,17 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   // after we cancel pause we need to reset LCDInputX and LCDHistoryOffset
   if(isNewLiveView)
   {
-    if(fState.fLCDInputX != LCD_INPUT_X_NOTHING_SELECTED)
+    if(fState.fLCDInputX->v() != LCD_INPUT_X_NOTHING_SELECTED)
     {
-      fState.updateLCDInputX(data, LCD_INPUT_X_NOTHING_SELECTED);
+      fState.fLCDInputX->update(LCD_INPUT_X_NOTHING_SELECTED);
+      fState.fLCDInputX->addToOutput(data);
     }
 
-    if(fState.fLCDHistoryOffset != MAX_HISTORY_OFFSET)
+    if(fState.fLCDHistoryOffset->v() != MAX_HISTORY_OFFSET)
     {
-      fState.updateLCDHistoryOffset(data, MAX_HISTORY_OFFSET);
-      fZoomWindow->setWindowOffset(fState.fLCDHistoryOffset);
+      fState.fLCDHistoryOffset->update(MAX_HISTORY_OFFSET);
+      fState.fLCDHistoryOffset->addToOutput(data);
+      fZoomWindow->setWindowOffset(fState.fLCDHistoryOffset->v());
       fLeftChannelProcessor->setDirty();
       fRightChannelProcessor->setDirty();
     }
@@ -331,7 +328,7 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
 
   // we need to adjust the filtered gain
   fGain.adjust();
-  auto gain = fState.fBypass ? Gain::Unity : fGain.getValue();
+  auto gain = fState.fBypass->v() ? Gain::Unity : fGain.getValue();
 
   // in mono case there could be only one channel
   auto leftChannel = out.getLeftChannel();
@@ -344,7 +341,7 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   }
 
   // if reset of max level is requested (pressing momentary button) then we need to reset the accumulator
-  if(fMaxLevelResetRequested)
+  if(fState.fMaxLevelReset->v())
   {
     fLeftChannelProcessor->resetMaxLevelSinceReset();
     fRightChannelProcessor->resetMaxLevelSinceReset();
@@ -356,21 +353,21 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
     LCDData lcdData{};
 
     // left
-    if(fState.fLeftChannelOn)
+    if(fState.fLeftChannelOn->v())
     {
       fLeftChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fLeftChannel.fSamples);
       lcdData.fLeftChannel.fMaxLevelSinceReset = fLeftChannelProcessor->getMaxLevelSinceReset();
     }
-    lcdData.fLeftChannel.fOn = fState.fLeftChannelOn;
+    lcdData.fLeftChannel.fOn = fState.fLeftChannelOn->v();
 
 
     // right
-    if(fState.fRightChannelOn)
+    if(fState.fRightChannelOn->v())
     {
       fRightChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fRightChannel.fSamples);
       lcdData.fRightChannel.fMaxLevelSinceReset = fRightChannelProcessor->getMaxLevelSinceReset();
     }
-    lcdData.fRightChannel.fOn = fState.fRightChannelOn;
+    lcdData.fRightChannel.fOn = fState.fRightChannelOn->v();
 
     lcdData.fWindowSizeInMillis = getWindowSizeInMillis();
 
@@ -418,100 +415,99 @@ tresult VAC6Processor::canProcessSampleSize(int32 symbolicSampleSize)
 ///////////////////////////////////////////
 // VAC6Processor::processParameters
 ///////////////////////////////////////////
-bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
-{
-  int32 numParamsChanged = inputParameterChanges.getParameterCount();
-  if(numParamsChanged <= 0)
-    return false;
-
-  bool stateChanged = false;
-  State newState{fState};
-
-  for(int i = 0; i < numParamsChanged; ++i)
-  {
-    IParamValueQueue *paramQueue = inputParameterChanges.getParameterData(i);
-    if(paramQueue != nullptr)
-    {
-      ParamValue value;
-      int32 sampleOffset;
-      int32 numPoints = paramQueue->getPointCount();
-
-      // we read the "last" point (ignoring multiple changes for now)
-      if(paramQueue->getPoint(numPoints - 1, sampleOffset, value) == kResultOk)
-      {
-        switch(paramQueue->getParameterId())
-        {
-          case kBypass:
-//            newState.fBypass = BooleanParamConverter::denormalize(value);
-//            stateChanged |= newState.fBypass != fState.fBypass;
-            stateChanged |= fRTState.fBypass->update(value);
-            break;
-
-          case kMaxLevelReset:
-            fMaxLevelResetRequested = BooleanParamConverter::denormalize(value);
-            break;
-
-          case kLCDZoomFactorX:
-            newState.fZoomFactorX = LCDZoomFactorXParamConverter::denormalize(value);
-            stateChanged |= newState.fZoomFactorX != fState.fZoomFactorX;
-            break;
-
-          case kLCDLeftChannel:
-            newState.fLeftChannelOn = BooleanParamConverter::denormalize(value);
-            stateChanged |= newState.fLeftChannelOn != fState.fLeftChannelOn;
-            break;
-
-          case kLCDRightChannel:
-            newState.fRightChannelOn = BooleanParamConverter::denormalize(value);
-            stateChanged |= newState.fRightChannelOn != fState.fRightChannelOn;
-            break;
-
-          case kLCDLiveView:
-            newState.fLCDLiveView = BooleanParamConverter::denormalize(value);
-            stateChanged |= newState.fLCDLiveView != fState.fLCDLiveView;
-            break;
-
-          case kLCDInputX:
-            newState.fLCDInputX = LCDInputXParamConverter::denormalize(value);
-            stateChanged |= newState.fLCDInputX != fState.fLCDInputX;
-            break;
-
-          case kLCDHistoryOffset:
-            newState.fLCDHistoryOffset = LCDHistoryOffsetParamConverter::denormalize(value);
-            stateChanged |= newState.fLCDHistoryOffset != fState.fLCDHistoryOffset;
-            break;
-
-          case kGain1:
-            newState.fGain1 = GainParamConverter::denormalize(value);
-            stateChanged |= newState.fGain1.getValue() != fState.fGain1.getValue();
-            break;
-
-          case kGain2:
-            newState.fGain2 = GainParamConverter::denormalize(value);
-            stateChanged |= newState.fGain2.getValue() != fState.fGain2.getValue();
-            break;
-
-          case kGainFilter:
-            newState.fGainFilter = BooleanParamConverter::denormalize(value);
-            stateChanged |= newState.fGainFilter != fState.fGainFilter;
-            break;
-
-          default:
-            // shouldn't happen?
-            break;
-        }
-      }
-    }
-  }
-
-  if(stateChanged)
-  {
-    fState = newState;
-    fLatestState.set(newState);
-  }
-
-  return stateChanged;
-}
+//bool VAC6Processor::processParameters(IParameterChanges &inputParameterChanges)
+//{
+//  int32 numParamsChanged = inputParameterChanges.getParameterCount();
+//  if(numParamsChanged <= 0)
+//    return false;
+//
+//  bool stateChanged = false;
+//  State newState{fState};
+//
+//  for(int i = 0; i < numParamsChanged; ++i)
+//  {
+//    IParamValueQueue *paramQueue = inputParameterChanges.getParameterData(i);
+//    if(paramQueue != nullptr)
+//    {
+//      ParamValue value;
+//      int32 sampleOffset;
+//      int32 numPoints = paramQueue->getPointCount();
+//
+//      // we read the "last" point (ignoring multiple changes for now)
+//      if(paramQueue->getPoint(numPoints - 1, sampleOffset, value) == kResultOk)
+//      {
+//        switch(paramQueue->getParameterId())
+//        {
+////          case kBypass:
+////            newState.fBypass = BooleanParamConverter::denormalize(value);
+////            stateChanged |= newState.fBypass != fState.fBypass;
+////            break;
+//
+//          case kMaxLevelReset:
+//            fMaxLevelResetRequested = BooleanParamConverter::denormalize(value);
+//            break;
+//
+//          case kLCDZoomFactorX:
+//            newState.fZoomFactorX = LCDZoomFactorXParamConverter::denormalize(value);
+//            stateChanged |= newState.fZoomFactorX != fState.fZoomFactorX;
+//            break;
+//
+//          case kLCDLeftChannel:
+//            newState.fLeftChannelOn = BooleanParamConverter::denormalize(value);
+//            stateChanged |= newState.fLeftChannelOn != fState.fLeftChannelOn;
+//            break;
+//
+//          case kLCDRightChannel:
+//            newState.fRightChannelOn = BooleanParamConverter::denormalize(value);
+//            stateChanged |= newState.fRightChannelOn != fState.fRightChannelOn;
+//            break;
+//
+//          case kLCDLiveView:
+//            newState.fLCDLiveView = BooleanParamConverter::denormalize(value);
+//            stateChanged |= newState.fLCDLiveView != fState.fLCDLiveView;
+//            break;
+//
+//          case kLCDInputX:
+//            newState.fLCDInputX = LCDInputXParamConverter::denormalize(value);
+//            stateChanged |= newState.fLCDInputX != fState.fLCDInputX;
+//            break;
+//
+//          case kLCDHistoryOffset:
+//            newState.fLCDHistoryOffset = LCDHistoryOffsetParamConverter::denormalize(value);
+//            stateChanged |= newState.fLCDHistoryOffset != fState.fLCDHistoryOffset;
+//            break;
+//
+//          case kGain1:
+//            newState.fGain1 = GainParamConverter::denormalize(value);
+//            stateChanged |= newState.fGain1.getValue() != fState.fGain1.getValue();
+//            break;
+//
+//          case kGain2:
+//            newState.fGain2 = GainParamConverter::denormalize(value);
+//            stateChanged |= newState.fGain2.getValue() != fState.fGain2.getValue();
+//            break;
+//
+//          case kGainFilter:
+//            newState.fGainFilter = BooleanParamConverter::denormalize(value);
+//            stateChanged |= newState.fGainFilter != fState.fGainFilter;
+//            break;
+//
+//          default:
+//            // shouldn't happen?
+//            break;
+//        }
+//      }
+//    }
+//  }
+//
+//  if(stateChanged)
+//  {
+//    fState = newState;
+//    fLatestState.set(newState);
+//  }
+//
+//  return stateChanged;
+//}
 
 ///////////////////////////////////
 // ::readParam
@@ -534,7 +530,6 @@ tresult VAC6Processor::setState(IBStream *state)
   if(state == nullptr)
     return kResultFalse;
 
-  State newState{};
 
   IBStreamer streamer(state, kLittleEndian);
 
@@ -547,18 +542,23 @@ tresult VAC6Processor::setState(IBStream *state)
     DLOG_F(WARNING, "unexpected processor state version %d", stateVersion);
   }
 
-  readParam<LCDZoomFactorXParamConverter>(streamer, DEFAULT_ZOOM_FACTOR_X, newState.fZoomFactorX);
-  readParam<BooleanParamConverter>(streamer, true, newState.fLeftChannelOn);
-  readParam<BooleanParamConverter>(streamer, true, newState.fRightChannelOn);
-  readParam<GainParamConverter>(streamer, DEFAULT_GAIN, newState.fGain1);
-  readParam<GainParamConverter>(streamer, DEFAULT_GAIN, newState.fGain2);
-  readParam<BooleanParamConverter>(streamer, true, newState.fGainFilter);
-  readParam<BooleanParamConverter>(streamer, false, newState.fBypass);
-//  fPlugin.fBypassParam.read(streamer);
+  fState.readNewState(streamer);
 
-  // lcd live view IGNORED! (does not make sense to not be in live view when loading)
+//  State newState{};
+//  readParam<LCDZoomFactorXParamConverter>(streamer, DEFAULT_ZOOM_FACTOR_X, newState.fZoomFactorX);
+//  readParam<BooleanParamConverter>(streamer, true, newState.fLeftChannelOn);
+//  readParam<BooleanParamConverter>(streamer, true, newState.fRightChannelOn);
+//  readParam<GainParamConverter>(streamer, DEFAULT_GAIN, newState.fGain1);
+//  readParam<GainParamConverter>(streamer, DEFAULT_GAIN, newState.fGain2);
+//  readParam<BooleanParamConverter>(streamer, true, newState.fGainFilter);
+//  readParam<BooleanParamConverter>(streamer, false, newState.fBypass);
+////  fPlugin.fBypassParam.read(streamer);
+//
+//  // lcd live view IGNORED! (does not make sense to not be in live view when loading)
+//
+//  fStateUpdate.push(newState);
 
-  fStateUpdate.push(newState);
+  //fRTStateUpdate.push(fRTState.readNewState(streamer));
 
   return kResultOk;
 }
@@ -580,21 +580,22 @@ tresult VAC6Processor::getState(IBStream *state)
   if(state == nullptr)
     return kResultFalse;
 
-  auto latestState = fLatestState.get();
 
   IBStreamer streamer(state, kLittleEndian);
 
   // write version for later upgrade
   streamer.writeInt16u(PROCESSOR_STATE_VERSION);
 
-  writeParam<LCDZoomFactorXParamConverter>(streamer, latestState.fZoomFactorX);
-  writeParam<BooleanParamConverter>(streamer, latestState.fLeftChannelOn);
-  writeParam<BooleanParamConverter>(streamer, latestState.fRightChannelOn);
-  writeParam<GainParamConverter>(streamer, latestState.fGain1);
-  writeParam<GainParamConverter>(streamer, latestState.fGain2);
-  writeParam<BooleanParamConverter>(streamer, latestState.fGainFilter);
-//  fPlugin.fBypassParam->rtWriteState(latestState.fBypass, streamer);
-  writeParam<BooleanParamConverter>(streamer, latestState.fBypass);
+  fState.writeLatestState(streamer);
+
+//  auto latestState = fLatestState.get();
+//  writeParam<LCDZoomFactorXParamConverter>(streamer, latestState.fZoomFactorX);
+//  writeParam<BooleanParamConverter>(streamer, latestState.fLeftChannelOn);
+//  writeParam<BooleanParamConverter>(streamer, latestState.fRightChannelOn);
+//  writeParam<GainParamConverter>(streamer, latestState.fGain1);
+//  writeParam<GainParamConverter>(streamer, latestState.fGain2);
+//  writeParam<BooleanParamConverter>(streamer, latestState.fGainFilter);
+//  writeParam<BooleanParamConverter>(streamer, latestState.fBypass);
 
   return kResultOk;
 }

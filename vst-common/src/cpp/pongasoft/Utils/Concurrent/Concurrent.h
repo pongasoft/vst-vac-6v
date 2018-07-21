@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __PONGASOFT_UTILS_CONCURRENT_CONCURRENT_H__
+#define __PONGASOFT_UTILS_CONCURRENT_CONCURRENT_H__
 
 #include <atomic>
 
@@ -211,3 +212,5 @@ private:
 }
 }
 }
+
+#endif // __PONGASOFT_UTILS_CONCURRENT_CONCURRENT_H__
