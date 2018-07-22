@@ -16,13 +16,16 @@ namespace RT {
 
 using namespace Utils;
 
-//------------------------------------------------------------------------
-// RTState - Templatized so as NOT to allocate memory at runtime in RT code
-//------------------------------------------------------------------------
+/**
+ * Encapsulates the state managed by the Real Time (RT).
+ *
+ * @tparam ParamCount Templatized so as NOT to allocate memory at runtime in RT code
+ */
 template<int ParamCount>
 class RTState
 {
 protected:
+  // Internal structure that gets exchanged between the UI thread and the RT thread (no memory allocation)
   struct NormalizedState
   {
     ParamID fParamIDs[ParamCount]{};
@@ -59,20 +62,45 @@ protected:
 #endif
 
 public:
-  
-  template<typename ParamConverter>
-  RTParamSPtr<ParamConverter> add(ParamDefSPtr<ParamConverter> iParamDef);
 
+  /**
+   * This method is called for each parameter managed by RTState. The order in which this method is called is
+   * important and reflects the order that will be used when reading/writing state to the stream
+   */
+  template<typename ParamConverter>
+  RTParam<ParamConverter> add(ParamDefSPtr<ParamConverter> iParamDef);
+
+  /**
+   * Call this method is the constructor to check that ParamCount matches the number of params registered */
   void sanityCheck() const;
 
+  /**
+   * This method should be call at the beginning of the process(ProcessData &data) method before doing anything else.
+   * The goal of this method is to update the current state with a state set by the UI (typical use case is to
+   * initialize the plugin when being loaded) */
   void beforeProcessing();
 
+  /**
+   * This method should be called in every frame when there are parameter changes to update this state accordingly
+   */
   bool applyParameterChanges(IParameterChanges &inputParameterChanges);
 
+  /**
+   * This method should be called at the end of process(ProcessData &data) method. It will update the previous state
+   * to the current one and save the latest changes (if necessary) so that it is accessible via writeLatestState.
+   */
   void afterProcessing();
 
+  /**
+   * This method should be called from Processor::setState to update this state to the state stored in the stream.
+   * Note that this method is called from the UI thread so the update is queued until the next frame.
+   */
   void readNewState(IBStreamer &iStreamer);
 
+  /**
+   * This method should be called from Processor::getState to store the latest state to the stream. Note that this
+   * method is called from the UI thread and gets the "latest" state as of the end of the last frame.
+   */
   void writeLatestState(IBStreamer &oStreamer);
 
 protected:
@@ -90,7 +118,12 @@ private:
   ParamID fRTParamIDs[ParamCount]{};
   int fRTParamIDsCount = 0;
 
+  // this queue is used to propagate a Processor::setState call (made from the UI thread) to this state
+  // the check happens in beforeProcessing
   Concurrent::WithSpinLock::SingleElementQueue<NormalizedState> fStateUpdate;
+
+  // this atomic value always hold the most current (and consistent) version of this state so that the UI thread
+  // can access it in Processor::getState. It is updated in afterProcessing.
   Concurrent::WithSpinLock::AtomicValue<NormalizedState> fLatestState{NormalizedState{}};
 };
 
@@ -99,7 +132,7 @@ private:
 //------------------------------------------------------------------------
 template<int ParamCount>
 template<typename ParamConverter>
-RTParamSPtr<ParamConverter> RTState<ParamCount>::add(ParamDefSPtr<ParamConverter> iParamDef)
+RTParam<ParamConverter> RTState<ParamCount>::add(ParamDefSPtr<ParamConverter> iParamDef)
 {
   auto rtParam = std::make_shared<RTParameter<ParamConverter>>(iParamDef);
   addRawParameter(rtParam);
@@ -121,6 +154,8 @@ void RTState<ParamCount>::addRawParameter(std::shared_ptr<RTRawParameter> iParam
 
   fParameters[paramID] = iParameter;
   fRTParamIDs[fRTParamIDsCount++] = paramID;
+
+  // we need to update the latest state since a parameter was added
   fLatestState.set(getNormalizedState());
 }
 

@@ -17,14 +17,23 @@ namespace VST {
 using namespace Steinberg;
 using namespace Steinberg::Vst;
 
-//template<typename T>
-//class ParamConverter
-//{
-//public:
-//  inline static ParamValue normalize(T const &iValue);
-//  inline static T denormalize(ParamValue iNormalizedValue);
-//};
+/**
+ * Conceptually a ParamConverter needs to be defined like this
+ *
+ * template<typename T>
+ * class ParamConverter
+ * {
+ *   public:
+ *     using ParamType = T;
+ *     inline static ParamValue normalize(T const &iValue);
+ *     inline static T denormalize(ParamValue iNormalizedValue);
+ *     inline static void toString(ParamValue const &iValue, String128 iString, int32 iPrecision)
+ * };
+ */
 
+/**
+ * This parameter is just a no-op wrapper to the ParamValue to adapt it to the use of the ParamConverter concept
+ */
 class RawParamConverter
 {
 public:
@@ -32,12 +41,12 @@ public:
 
   inline static ParamValue normalize(ParamValue const &iValue)
   {
-    return iValue;
+    return Utils::clamp(iValue, 0.0, 1.0);
   }
 
   inline static ParamValue denormalize(ParamValue iNormalizedValue)
   {
-    return iNormalizedValue;
+    return Utils::clamp(iNormalizedValue, 0.0, 1.0);;
   }
 
   inline static void toString(ParamValue const &iValue, String128 iString, int32 iPrecision)
@@ -48,7 +57,11 @@ public:
   }
 };
 
-
+/**
+ * Manages the very common case when a param represents a boolean value. To denormalize the range [0.0,1.0] this
+ * implementation uses false for [0.0, 0.5[ and true for [0.5, 1.0] so that it matches a DiscreteValueParamConverter
+ * with a step count of 1.
+ */
 class BooleanParamConverter
 {
 public:
@@ -75,7 +88,8 @@ public:
 };
 
 /**
- * A trivial percent converter.
+ * A trivial percent converter. The toString method returns the value as a percentage (precision is used to adjust
+ * how many digits to use for display)
  */
 class PercentParamConverter
 {
@@ -100,11 +114,17 @@ public:
   }
 };
 
+/**
+ * A converter to deal with a discrete value which has StepCount steps. It follows the formulas given in the SDK
+ * documentation.
+ */
 template<int StepCount>
 class DiscreteValueParamConverter
 {
 public:
   using ParamType = int;
+
+  static inline int getStepCount() { return StepCount; }
 
   static inline ParamValue normalize(int const &iDiscreteValue)
   {

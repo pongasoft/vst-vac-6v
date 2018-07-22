@@ -11,10 +11,15 @@ namespace VST {
 
 /**
  * This is the class which maintains all the registered parameters
+ * TODO provide example on how to use this class
  */
 class Parameters
 {
 public:
+  /**
+   * Implements the builder pattern for ease of build.
+   * @tparam ParamConverter the converter (see ParamConverters.h for an explanation of what is expected)
+   */
   template<typename ParamConverter>
   struct ParamDefBuilder
   {
@@ -26,8 +31,8 @@ public:
     ParamDefBuilder &unitID(int32 iUnitID) { fUnitID = iUnitID; return *this; }
     ParamDefBuilder &shortTitle(const TChar *iShortTitle) { fShortTitle = iShortTitle; return *this; }
     ParamDefBuilder &precision(int32 iPrecision) { fPrecision = iPrecision; return *this; }
-    ParamDefBuilder &uiOnly() { fUIOnly = true; return *this; }
-    ParamDefBuilder &transient() { fTransient = true; return *this; }
+    ParamDefBuilder &uiOnly(bool iUIOnly = true) { fUIOnly = iUIOnly; return *this; }
+    ParamDefBuilder &transient(bool iTransient = true) { fTransient = iTransient; return *this; }
 
     // parameter factory method
     ParamDefSPtr<ParamConverter> add() const;
@@ -57,11 +62,11 @@ public:
 
 public:
   // Constructor
-  explicit Parameters() {};
+  explicit Parameters() = default;
 
   /**
    * Used from derived classes to build a parameter.
-   * TODO add example + don't forget that order is important!
+   * TODO add example + don't forget that order is important (define the order in Maschine for example)
    */
   template<typename ParamConverter>
   ParamDefBuilder<ParamConverter> build(ParamID iParamID, const TChar* iTitle);
@@ -70,9 +75,6 @@ protected:
   // internally called by the builder
   template<typename ParamConverter>
   ParamDefSPtr<ParamConverter> add(ParamDefBuilder<ParamConverter> const &iBuilder);
-
-  // add raw parameter to the structures
-  void addRawParamDef(std::shared_ptr<RawParamDef> iParameter);
 
 private:
   // contains all the registered parameters (unique ID, will be checked on add)
@@ -125,6 +127,15 @@ Parameters::ParamDefBuilder<ParamConverter> Parameters::build(ParamID iParamID, 
 {
   return Parameters::ParamDefBuilder<ParamConverter>(this, iParamID, iTitle);
 }
+
+//------------------------------------------------------------------------
+// Parameters::build - specialization for BooleanParamConverter
+//------------------------------------------------------------------------
+template<>
+Parameters::ParamDefBuilder<BooleanParamConverter> Parameters::build(ParamID iParamID, const TChar *iTitle);
+
+// TODO should handle DiscreteValueParamConverter (because it is templated, it doesn't seem that I can do like BooleanParamConverter)
+// check https://stackoverflow.com/questions/87372/check-if-a-class-has-a-member-function-of-a-given-signature
 
 }
 }

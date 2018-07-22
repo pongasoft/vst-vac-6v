@@ -189,19 +189,19 @@ public:
 
 public:
   // saved state
-  RTParamSPtr<LCDZoomFactorXParamConverter> fZoomFactorX;
-  RTParamSPtr<BooleanParamConverter> fLeftChannelOn;
-  RTParamSPtr<BooleanParamConverter> fRightChannelOn;
-  RTParamSPtr<GainParamConverter> fGain1;
-  RTParamSPtr<GainParamConverter> fGain2;
-  RTParamSPtr<BooleanParamConverter> fGainFilter;
-  RTParamSPtr<BooleanParamConverter> fBypass;
+  RTParam<LCDZoomFactorXParamConverter> fZoomFactorX;
+  RTParam<BooleanParamConverter> fLeftChannelOn;
+  RTParam<BooleanParamConverter> fRightChannelOn;
+  RTParam<GainParamConverter> fGain1;
+  RTParam<GainParamConverter> fGain2;
+  RTParam<BooleanParamConverter> fGainFilter;
+  RTParam<BooleanParamConverter> fBypass;
 
   // transient state
-  RTParamSPtr<BooleanParamConverter> fLCDLiveView;
-  RTParamSPtr<BooleanParamConverter> fMaxLevelReset;
-  RTParamSPtr<LCDInputXParamConverter> fLCDInputX;
-  RTParamSPtr<LCDHistoryOffsetParamConverter> fLCDHistoryOffset;
+  RTParam<BooleanParamConverter> fLCDLiveView;
+  RTParam<BooleanParamConverter> fMaxLevelReset;
+  RTParam<LCDInputXParamConverter> fLCDInputX;
+  RTParam<LCDHistoryOffsetParamConverter> fLCDHistoryOffset;
 };
 
 }

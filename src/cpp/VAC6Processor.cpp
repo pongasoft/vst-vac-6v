@@ -237,8 +237,7 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   {
     if(fState.fLCDLiveView)
     {
-      fState.fLCDLiveView.update(false);
-      fState.fLCDLiveView.addToOutput(data);
+      fState.fLCDLiveView.update(false, data);
     }
   }
 
@@ -282,16 +281,14 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
 
       if(fState.fLCDInputX != LCD_INPUT_X_NOTHING_SELECTED && fState.fLCDInputX != newLCDInputX)
       {
-        fState.fLCDInputX.update(newLCDInputX);
-        fState.fLCDInputX.addToOutput(data);
+        fState.fLCDInputX.update(newLCDInputX, data);
       }
 
       double newLCDHistoryOffset = fZoomWindow->getWindowOffset();
 
       if(newLCDHistoryOffset != fState.fLCDHistoryOffset)
       {
-        fState.fLCDHistoryOffset.update(newLCDHistoryOffset);
-        fState.fLCDHistoryOffset.addToOutput(data);
+        fState.fLCDHistoryOffset.update(newLCDHistoryOffset, data);
       }
     }
 
@@ -312,14 +309,12 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   {
     if(fState.fLCDInputX != LCD_INPUT_X_NOTHING_SELECTED)
     {
-      fState.fLCDInputX.update(LCD_INPUT_X_NOTHING_SELECTED);
-      fState.fLCDInputX.addToOutput(data);
+      fState.fLCDInputX.update(LCD_INPUT_X_NOTHING_SELECTED, data);
     }
 
     if(fState.fLCDHistoryOffset != MAX_HISTORY_OFFSET)
     {
-      fState.fLCDHistoryOffset.update(MAX_HISTORY_OFFSET);
-      fState.fLCDHistoryOffset.addToOutput(data);
+      fState.fLCDHistoryOffset.update(MAX_HISTORY_OFFSET, data);
       fZoomWindow->setWindowOffset(fState.fLCDHistoryOffset);
       fLeftChannelProcessor->setDirty();
       fRightChannelProcessor->setDirty();

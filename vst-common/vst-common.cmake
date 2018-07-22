@@ -34,6 +34,8 @@ set(VST_COMMON_sources_h
 set(VST_COMMON_sources_cpp
     ${LOGURU_IMPL}
 
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Parameters.cpp
+
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/RT/RTParameter.cpp
 
     )

@@ -16,6 +16,9 @@ namespace VST {
 using namespace Steinberg;
 using namespace Steinberg::Vst;
 
+/**
+ * Base class for a raw parameter definition
+ */
 class RawParamDef
 {
 public:
@@ -67,10 +70,14 @@ public:
   const UnitID fUnitID;
   const TChar *const fShortTitle;
   const int32 fPrecision;
-  const bool fUIOnly;
-  const bool fTransient;
+  const bool fUIOnly; // not used in RT (saved in the UI stream)
+  const bool fTransient; // not saved in the stream
 };
 
+/**
+ * Typed parameter definition.
+ * @tparam ParamConverter the converter (see ParamConverters.h for an explanation of what is expected)
+ */
 template<typename ParamConverter>
 class ParamDef : public RawParamDef
 {
@@ -101,39 +108,13 @@ public:
                 iTransient)
   {
   }
-
-  inline ParamType getDefaultValue() const { return denormalize(fDefaultNormalizedValue); }
-  inline ParamValue normalize(ParamType const &iValue) const { return ParamConverter::normalize(iValue); }
-  inline ParamType denormalize(ParamValue iNormalizedValue) const { return ParamConverter::denormalize(iNormalizedValue); }
-
 };
 
+//------------------------------------------------------------------------
+// ParamDefSPtr - define shortcut notation
+//------------------------------------------------------------------------
 template<typename ParamConverter>
 using ParamDefSPtr = std::shared_ptr<ParamDef<ParamConverter>>;
-
-//template<typename ParamConverter, typename S>
-//class Binder
-//{
-//public:
-//  using ParamType = typename ParamConverter::ParamType;
-//
-//  Binder(ParamType S::*iBoundPtr) : fBoundPtr{iBoundPtr} {}
-//
-//  bool setState(ParamValue iNormalizedValue, S &oState)
-//  {
-//    ParamValue previousNormalizedValue = ParamConverter::normalize(oState.*fBoundPtr);
-//    if(previousNormalizedValue != iNormalizedValue)
-//    {
-//      oState.*fBoundPtr = ParamConverter::denormalize(iNormalizedValue);
-//      return true;
-//    }
-//
-//    return false;
-//  }
-//
-//private:
-//  ParamType S::*fBoundPtr;
-//};
 
 }
 }
