@@ -6,6 +6,8 @@
 #include <map>
 #include <vector>
 
+#include <public.sdk/source/vst/vstparameters.h>
+
 namespace pongasoft {
 namespace VST {
 
@@ -71,18 +73,77 @@ public:
   template<typename ParamConverter>
   ParamDefBuilder<ParamConverter> build(ParamID iParamID, const TChar* iTitle);
 
+  /**
+   * Used to change the default order (registration order) used when saving the RT state (getState/setState in the
+   * processor, setComponentState in the controller)
+   *
+   * @tparam Args can be any combination of ParamID, RawParamDef or ParamDef<ParamConverter>
+   */
+  template<typename... Args>
+  void setRTSaveStateOrder(Args... args);
+
+  /**
+   * @return the order used when saving the GUI state (getState/setState in the controller)
+   */
+  std::vector<ParamID> getGUISaveStateOrder() const { return fGUISaveStateOrder; }
+
+  /**
+   * Used to change the default order (registration order) used when saving the GUI state (getState/setState in
+   * the controller)
+   *
+   * @tparam Args can be any combination of ParamID, RawParamDef or ParamDef<ParamConverter>
+   */
+  template<typename... Args>
+  void setGUISaveStateOrder(Args... args);
+
+  /**
+   * @return the order used when saving the RT state (getState/setState in the processor, setComponentState in
+   *         the controller)
+   */
+  std::vector<ParamID> getRTSaveStateOrder() const { return fRTSaveStateOrder; }
+
+  /**
+   * This method is called from the GUI controller to register all the parameters to the ParameterContainer class
+   * which is the class managing the parameters in the vst sdk
+   */
+  void registerVstParameters(Vst::ParameterContainer &iParameterContainer) const;
+
 protected:
   // internally called by the builder
   template<typename ParamConverter>
   ParamDefSPtr<ParamConverter> add(ParamDefBuilder<ParamConverter> const &iBuilder);
 
+  void addRawParamDef(std::shared_ptr<RawParamDef> iParamDef);
+
 private:
   // contains all the registered parameters (unique ID, will be checked on add)
   std::map<ParamID, std::shared_ptr<RawParamDef>> fParameters{};
-  // maintains the insertion order and keeps track of parameters saved by the RT
-  std::vector<std::shared_ptr<RawParamDef>> fRTParameters{};
-  // maintains the insertion order and keeps track of parameters saved by the GUI (and not used by the RT)
-  std::vector<std::shared_ptr<RawParamDef>> fGUIParameters{};
+
+  std::vector<ParamID> fRegistrationOrder{};
+  std::vector<ParamID> fRTSaveStateOrder{};
+  std::vector<ParamID> fGUISaveStateOrder{};
+
+  // leaf of templated calls to build a list of ParamIDs from ParamID or ParamDefs
+  void buildParamIDs(std::vector<ParamID> &iParamIDs) {}
+
+  // case when ParamID
+  template<typename... Args>
+  void buildParamIDs(std::vector<ParamID> &iParamIDs, ParamID id, Args... args);
+
+  // case when RawParamDef
+  template<typename... Args>
+  void buildParamIDs(std::vector<ParamID> &iParamIDs, std::shared_ptr<RawParamDef> &iParamDef, Args... args)
+  {
+    buildParamIDs(iParamIDs, iParamDef->fParamID, args...);
+  }
+
+  // case when ParamDef
+  template<typename ParamConverver, typename... Args>
+  void buildParamIDs(std::vector<ParamID> &iParamIDs, std::shared_ptr<ParamDef<ParamConverver>> &iParamDef, Args... args)
+  {
+    buildParamIDs(iParamIDs, iParamDef->fParamID, args...);
+  }
+
 };
 
 //------------------------------------------------------------------------
@@ -112,9 +173,7 @@ ParamDefSPtr<ParamConverter> Parameters::add(ParamDefBuilder<ParamConverter> con
                                                           iBuilder.fUIOnly,
                                                           iBuilder.fTransient);
 
-  std::shared_ptr<RawParamDef> raw = param;
-
-//  addRawParamDef(raw);
+  addRawParamDef(param);
 
   return param;
 }
@@ -126,6 +185,91 @@ template<typename ParamConverter>
 Parameters::ParamDefBuilder<ParamConverter> Parameters::build(ParamID iParamID, const TChar *iTitle)
 {
   return Parameters::ParamDefBuilder<ParamConverter>(this, iParamID, iTitle);
+}
+
+//------------------------------------------------------------------------
+// Parameters::buildParamIDs
+//------------------------------------------------------------------------
+template<typename... Args>
+void Parameters::buildParamIDs(std::vector<ParamID> &iParamIDs, ParamID iParamID, Args... args)
+{
+  auto iter = fParameters.find(iParamID);
+  if(iter != fParameters.cend())
+  {
+    iParamIDs.emplace_back(iParamID);
+  }
+  else
+  {
+    ABORT_F("No such parameter %d", iParamID);
+  }
+  buildParamIDs(iParamIDs, args...);
+}
+
+//------------------------------------------------------------------------
+// Parameters::setRTSaveStateOrder
+//------------------------------------------------------------------------
+template<typename... Args>
+void Parameters::setRTSaveStateOrder(Args... args)
+{
+  std::vector<ParamID> ids{};
+  buildParamIDs(ids, args...);
+
+  for(auto id : ids)
+  {
+    DCHECK_F(!fParameters.at(id)->fTransient,
+             "Param [%d] cannot be used for RTSaveStateOrder as it is defined transient",
+             id);
+    DCHECK_F(!fParameters.at(id)->fUIOnly,
+             "Param [%d] cannot be used for RTSaveStateOrder as it is defined UIOnly",
+             id);
+  }
+
+  for(auto p : fParameters)
+  {
+    auto param = p.second;
+    if(!param->fUIOnly && !param->fTransient)
+    {
+      if(std::find(ids.cbegin(), ids.cend(), p.first) == ids.cend())
+      {
+        DLOG_F(WARNING, "Param [%d] is not marked transient. Either mark the parameter transient or add it to RTSaveStateOrder", p.first);
+      }
+    }
+  }
+
+  fRTSaveStateOrder = ids;
+}
+
+//------------------------------------------------------------------------
+// Parameters::setRTSaveStateOrder
+//------------------------------------------------------------------------
+template<typename... Args>
+void Parameters::setGUISaveStateOrder(Args... args)
+{
+  std::vector<ParamID> ids{};
+  buildParamIDs(ids, args...);
+  for(auto id : ids)
+  {
+    DCHECK_F(!fParameters.at(id)->fTransient,
+             "Param [%d] cannot be used for GUISaveStateOrder as it is defined transient",
+             id);
+    DCHECK_F(fParameters.at(id)->fUIOnly,
+             "Param [%d] cannot be used for GUISaveStateOrder as it is not defined UIOnly",
+             id);
+  }
+
+  for(auto p : fParameters)
+  {
+    auto param = p.second;
+    if(param->fUIOnly && !param->fTransient)
+    {
+      if(std::find(ids.cbegin(), ids.cend(), p.first) == ids.cend())
+      {
+        DLOG_F(WARNING, "Param [%d] is not marked transient. Either mark the parameter transient or add it to GUISaveStateOrder", p.first);
+      }
+    }
+  }
+
+  fGUISaveStateOrder = ids;
 }
 
 //------------------------------------------------------------------------

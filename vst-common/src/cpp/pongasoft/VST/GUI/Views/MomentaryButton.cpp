@@ -5,6 +5,7 @@
 namespace pongasoft {
 namespace VST {
 namespace GUI {
+namespace Views {
 
 using namespace VSTGUI;
 
@@ -109,6 +110,7 @@ bool MomentaryButton::sizeToFit()
 
 MomentaryButton::Creator __gMomentaryButtonCreator("pongasoft::MomentaryButton", "pongasoft - Momentary Button (on when pressed)");
 
+}
 }
 }
 }

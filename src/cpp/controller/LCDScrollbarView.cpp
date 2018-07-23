@@ -17,9 +17,9 @@ LCDScrollbarView::LCDScrollbarView(const CRect &size) : CustomView(size)
 ///////////////////////////////////////////
 void LCDScrollbarView::registerParameters()
 {
-  fLCDLiveViewParameter = registerBooleanParameter(EVAC6ParamID::kLCDLiveView);
-  fLCDInputHistoryOffsetParameter = registerPercentParameter(EVAC6ParamID::kLCDHistoryOffset);
-  fLCDZoomFactorXParameter = registerVSTParameter<LCDZoomFactorXParameter>(EVAC6ParamID::kLCDZoomFactorX);
+  fLCDLiveViewParameter = registerBooleanParam(EVAC6ParamID::kLCDLiveView);
+  fLCDInputHistoryOffsetParameter = registerPercentParam(EVAC6ParamID::kLCDHistoryOffset);
+  fLCDZoomFactorXParameter = registerGUIParam<LCDZoomFactorXParamConverter>(EVAC6ParamID::kLCDZoomFactorX);
 }
 
 ///////////////////////////////////////////

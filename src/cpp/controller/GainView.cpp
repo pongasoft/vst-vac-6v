@@ -1,6 +1,6 @@
 #include "GainView.h"
 #include "../VAC6CIDs.h"
-#include "DrawContext.h"
+#include "pongasoft/VST/GUI/DrawContext.h"
 
 namespace pongasoft {
 namespace VST {
@@ -11,9 +11,9 @@ namespace VAC6 {
 ///////////////////////////////////////////
 void GainView::registerParameters()
 {
-  fGain1Parameter = registerVSTParameter<GainParameter>(EVAC6ParamID::kGain1);
-  fGain2Parameter = registerVSTParameter<GainParameter>(EVAC6ParamID::kGain2);
-  fBypassParameter = registerBooleanParameter(EVAC6ParamID::kBypass);
+  fGain1Parameter = registerGUIParam<GainParamConverter>(EVAC6ParamID::kGain1);
+  fGain2Parameter = registerGUIParam<GainParamConverter>(EVAC6ParamID::kGain2);
+  fBypassParameter = registerBooleanParam(EVAC6ParamID::kBypass);
 }
 
 ///////////////////////////////////////////

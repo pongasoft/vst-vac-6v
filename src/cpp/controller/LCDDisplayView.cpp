@@ -341,9 +341,9 @@ CMouseEventResult LCDDisplayView::onMouseCancel()
 void LCDDisplayView::registerParameters()
 {
   HistoryView::registerParameters();
-  fMaxLevelSinceResetMarker = registerBooleanParameter(EVAC6ParamID::kMaxLevelSinceResetMarker);
-  fMaxLevelInWindowMarker = registerBooleanParameter(EVAC6ParamID::kMaxLevelInWindowMarker);
-  fLCDLiveViewParameter = registerBooleanParameter(EVAC6ParamID::kLCDLiveView);
+  fMaxLevelSinceResetMarker = registerBooleanParam(EVAC6ParamID::kMaxLevelSinceResetMarker);
+  fMaxLevelInWindowMarker = registerBooleanParam(EVAC6ParamID::kMaxLevelInWindowMarker);
+  fLCDLiveViewParameter = registerBooleanParam(EVAC6ParamID::kLCDLiveView);
 }
 
 ///////////////////////////////////////////

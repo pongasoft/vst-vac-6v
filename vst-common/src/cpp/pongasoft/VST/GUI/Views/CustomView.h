@@ -2,14 +2,17 @@
 
 #include <vstgui4/vstgui/lib/cview.h>
 #include <map>
+#include <pongasoft/VST/GUI/Params/GUIParameters.h>
+#include <pongasoft/VST/GUI/Params/GUIParamCxMgr.h>
 #include "CustomViewCreator.h"
-#include "VSTParameters.h"
 
 namespace pongasoft {
 namespace VST {
 namespace GUI {
+namespace Views {
 
 using namespace VSTGUI;
+using namespace Params;
 
 /**
  * Base class that all custom views will inherit from. Defines a basic back color.
@@ -75,7 +78,7 @@ using namespace VSTGUI;
  *   }
  * }
  */
-class CustomView : public CView, public RawParameter::IChangeListener, public CustomViewInitializer
+class CustomView : public CView, public GUIRawParameter::IChangeListener, public CustomViewInitializer
 {
 public:
   // Constructor
@@ -124,22 +127,31 @@ public:
   /**
    * Registers a raw parameter (no conversion)
    */
-  std::unique_ptr<RawParameter> registerRawParameter(ParamID iParamID, bool iSubscribeToChanges = true);
+  std::unique_ptr<GUIRawParameter> registerRawGUIParam(ParamID iParamID, bool iSubscribeToChanges = true);
+
+//  /**
+//   * Generic register with any kind of conversion
+//   */
+//  template<typename T>
+//  std::unique_ptr<T> registerGUIParam(ParamID iParamID, bool iSubscribeToChanges = true)
+//  {
+//    return std::make_unique<T>(registerRawGUIParam(iParamID, iSubscribeToChanges));
+//  }
 
   /**
-   * Generic register with any kind of conversion
-   */
-  template<typename T>
-  std::unique_ptr<T> registerVSTParameter(ParamID iParamID, bool iSubscribeToChanges = true)
+ * Generic register with any kind of conversion
+ */
+  template<typename ParamConverter>
+  GUIParamUPtr<ParamConverter> registerGUIParam(ParamID iParamID, bool iSubscribeToChanges = true)
   {
-    return std::make_unique<T>(registerRawParameter(iParamID, iSubscribeToChanges));
+    return std::make_unique<GUIParameter<ParamConverter>>(registerRawGUIParam(iParamID, iSubscribeToChanges));
   }
 
   // shortcut for BooleanParameter
-  std::unique_ptr<BooleanParameter> registerBooleanParameter(ParamID iParamID, bool iSubscribeToChanges = true);
+  GUIBooleanParamUPtr registerBooleanParam(ParamID iParamID, bool iSubscribeToChanges = true);
 
   // shortcut for PercentParameter
-  std::unique_ptr<PercentParameter> registerPercentParameter(ParamID iParamID, bool iSubscribeToChanges = true);
+  GUIPercentParamUPtr registerPercentParam(ParamID iParamID, bool iSubscribeToChanges = true);
 
   CLASS_METHODS_NOCOPY(CustomView, CControl)
 
@@ -155,9 +167,9 @@ protected:
   /**
    * Called during initialization
    */
-  virtual void initParameters(std::shared_ptr<VSTParameters> const &iParameters)
+  virtual void initParameters(GUIParameters const &iParameters)
   {
-    fParameters = iParameters->createManager();
+    fParamCxMgr = iParameters.createParamCxMgr();
   }
 
   /**
@@ -199,7 +211,7 @@ protected:
   CColor fBackColor;
 
   // Access to parameters
-  std::unique_ptr<VSTParametersManager> fParameters;
+  std::unique_ptr<GUIParamCxMgr> fParamCxMgr;
 
 public:
   class Creator : public TCustomViewCreator<CustomView>
@@ -252,7 +264,7 @@ public:
  * This base class automatically registers the custom control and also keeps a control value for the case when
  * the control does not exist (for example in editor the control tag may not be defined).
  */
-template<typename TVSTParameter>
+template<typename ParamConverter>
 class TCustomControlView : public CustomControlView
 {
 public:
@@ -263,26 +275,26 @@ public:
   CLASS_METHODS_NOCOPY(CustomControlView, TCustomControlView)
 
   // set/getControlValue
-  typename TVSTParameter::ParamType getControlValue() const;
-  void setControlValue(typename TVSTParameter::ParamType const &iControlValue);
+  typename ParamConverter::ParamType getControlValue() const;
+  void setControlValue(typename ParamConverter::ParamType const &iControlValue);
 
   // registerParameters
   void registerParameters() override;
 
 protected:
-  // the vst parameter tied to the control
-  std::unique_ptr<TVSTParameter> fControlParameter{nullptr};
+  // the gui parameter tied to the control
+  GUIParamUPtr<ParamConverter> fControlParameter{nullptr};
 
 #if EDITOR_MODE
   // the value (in sync with control parameter but may exist on its own in editor mode)
-  typename TVSTParameter::ParamType fControlValue{};
+  typename ParamConverter::ParamType fControlValue{};
 #endif
 
 public:
-  class Creator : public CustomViewCreator<TCustomControlView<TVSTParameter>, CustomControlView>
+  class Creator : public CustomViewCreator<TCustomControlView<ParamConverter>, CustomControlView>
   {
   private:
-    using CustomViewCreatorT = CustomViewCreator<TCustomControlView<TVSTParameter>, CustomControlView>;
+    using CustomViewCreatorT = CustomViewCreator<TCustomControlView<ParamConverter>, CustomControlView>;
   public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
       CustomViewCreatorT(iViewName, iDisplayName)
@@ -292,10 +304,10 @@ public:
 };
 
 ///////////////////////////////////////////
-// TCustomControlView<TVSTParameter>::getControlValue
+// TCustomControlView<TGUIParameter>::getControlValue
 ///////////////////////////////////////////
-template<typename TVSTParameter>
-typename TVSTParameter::ParamType TCustomControlView<TVSTParameter>::getControlValue() const
+template<typename TGUIParameter>
+typename TGUIParameter::ParamType TCustomControlView<TGUIParameter>::getControlValue() const
 {
 #if EDITOR_MODE
   if(fControlParameter)
@@ -308,10 +320,10 @@ typename TVSTParameter::ParamType TCustomControlView<TVSTParameter>::getControlV
 }
 
 ///////////////////////////////////////////
-// TCustomControlView<TVSTParameter>::setControlValue
+// TCustomControlView<TGUIParameter>::setControlValue
 ///////////////////////////////////////////
-template<typename TVSTParameter>
-void TCustomControlView<TVSTParameter>::setControlValue(typename TVSTParameter::ParamType const &iControlValue)
+template<typename TGUIParameter>
+void TCustomControlView<TGUIParameter>::setControlValue(typename TGUIParameter::ParamType const &iControlValue)
 {
 #if EDITOR_MODE
   fControlValue = iControlValue;
@@ -323,22 +335,22 @@ void TCustomControlView<TVSTParameter>::setControlValue(typename TVSTParameter::
 }
 
 ///////////////////////////////////////////
-// TCustomControlView<TVSTParameter>::registerParameters
+// TCustomControlView<TGUIParameter>::registerParameters
 ///////////////////////////////////////////
-template<typename TVSTParameter>
-void TCustomControlView<TVSTParameter>::registerParameters()
+template<typename TGUIParameter>
+void TCustomControlView<TGUIParameter>::registerParameters()
 {
   CustomControlView::registerParameters();
-  if(!fParameters)
-    ABORT_F("fParameters should have been registered");
+  if(!fParamCxMgr)
+    ABORT_F("fParamCxMgr should have been registered");
 
 #if EDITOR_MODE
   if(getControlTag() >= 0)
   {
     auto paramID = static_cast<ParamID>(getControlTag());
-    if(fParameters->exists(paramID))
+    if(fParamCxMgr->exists(paramID))
     {
-      fControlParameter = registerVSTParameter<TVSTParameter>(paramID);
+      fControlParameter = registerGUIParam<TGUIParameter>(paramID);
       fControlValue = fControlParameter->getValue();
     }
     else
@@ -349,13 +361,14 @@ void TCustomControlView<TVSTParameter>::registerParameters()
   }
 #else
   auto paramID = static_cast<ParamID>(getControlTag());
-  if(fParameters->exists(paramID))
-    fControlParameter = registerVSTParameter<TVSTParameter>(paramID);
+  if(fParamCxMgr->exists(paramID))
+    fControlParameter = registerGUIParam<TGUIParameter>(paramID);
   else
     ABORT_F("Could not find parameter for control tag [%d]", paramID);
 #endif
 }
-}
-}
-}
 
+}
+}
+}
+}

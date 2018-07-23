@@ -25,8 +25,8 @@ void HistoryView::registerParameters()
 {
   CustomView::registerParameters();
 
-  fSoftClippingLevelParameter = registerVSTParameter<SoftClippingLevelParameter>(EVAC6ParamID::kSoftClippingLevel);
-  fLCDInputXParameter = registerVSTParameter<LCDInputXParameter>(EVAC6ParamID::kLCDInputX);
+  fSoftClippingLevelParameter = registerGUIParam<SoftClippingLevelParamConverter>(EVAC6ParamID::kSoftClippingLevel);
+  fLCDInputXParameter = registerGUIParam<LCDInputXParamConverter>(EVAC6ParamID::kLCDInputX);
 }
 
 ///////////////////////////////////////////

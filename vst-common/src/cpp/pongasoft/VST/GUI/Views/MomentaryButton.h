@@ -1,11 +1,13 @@
 #pragma once
 
 #include <vstgui4/vstgui/lib/controls/ccontrol.h>
+#include <pongasoft/VST/GUI/Params/GUIParameter.h>
 #include "CustomView.h"
 
 namespace pongasoft {
 namespace VST {
 namespace GUI {
+namespace Views {
 
 using namespace VSTGUI;
 
@@ -30,7 +32,8 @@ using namespace VSTGUI;
  * CKickButton which is similar but it behaves improperly (for example, the button gets stuck in "pressed" state
  * for some reason...)
  */
-class MomentaryButton : public TCustomControlView<BooleanParameter>
+ // TODO rename MomentaryButtonView!
+class MomentaryButton : public TCustomControlView<BooleanParamConverter>
 {
 public:
   explicit MomentaryButton(const CRect &iSize) : TCustomControlView(iSize)
@@ -70,14 +73,14 @@ public:
   void setImage(BitmapPtr iImage) { fImage = std::move(iImage); }
 
 public:
-  CLASS_METHODS_NOCOPY(MomentaryButton, TCustomControlView<BooleanParameter>)
+  CLASS_METHODS_NOCOPY(MomentaryButton, TCustomControlView<BooleanParamConverter>)
 
 protected:
   CColor fOnColor{kRedCColor};
   BitmapPtr fImage{nullptr};
 
 public:
-  class Creator : public CustomViewCreator<MomentaryButton, TCustomControlView<BooleanParameter>>
+  class Creator : public CustomViewCreator<MomentaryButton, TCustomControlView<BooleanParamConverter>>
   {
     public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
@@ -89,6 +92,7 @@ public:
   };
 };
 
+}
 }
 }
 }

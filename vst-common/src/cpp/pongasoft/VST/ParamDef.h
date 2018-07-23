@@ -60,6 +60,8 @@ public:
       return fDefaultNormalizedValue;
   }
 
+  virtual void toString(ParamValue iNormalizedValue, String128 iString) const = 0;
+
 public:
   const ParamID fParamID;
   const TChar *const fTitle;
@@ -107,6 +109,14 @@ public:
                 iUIOnly,
                 iTransient)
   {
+  }
+
+  /**
+   * Using ParamConverter::toString
+   */
+  void toString(ParamValue iNormalizedValue, String128 iString) const override
+  {
+    ParamConverter::toString(ParamConverter::denormalize(iNormalizedValue), iString, fPrecision);
   }
 };
 

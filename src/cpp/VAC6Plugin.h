@@ -103,6 +103,7 @@ public:
       build<BooleanParamConverter>(EVAC6ParamID::kMaxLevelSinceResetMarker, STR16 ("Since Reset Marker"))
         .defaultValue(true)
         .shortTitle(STR16 ("Rst Mkr"))
+        .uiOnly()
         .add()
     },
 
@@ -111,6 +112,7 @@ public:
       build<BooleanParamConverter>(EVAC6ParamID::kMaxLevelInWindowMarker, STR16 ("In Window Marker"))
         .defaultValue(true)
         .shortTitle(STR16 ("Wdw Mkr"))
+        .uiOnly()
         .add()
     },
 
@@ -141,17 +143,30 @@ public:
         .transient()
         .add()
     }
+
   {
+    setRTSaveStateOrder(fZoomFactorXParam,
+                        fLeftChannelOnParam,
+                        fRightChannelOnParam,
+                        fGain1Param,
+                        fGain2Param,
+                        fGainFilterParam,
+                        fBypassParam);
+
+    setGUISaveStateOrder(fSinceResetMarkerParam,
+                         fInWindowMarkerParam,
+                         fSoftClippingLevelParam);
   }
 
+
   // saved
-  ParamDefSPtr<BooleanParamConverter> fBypassParam;
   ParamDefSPtr<LCDZoomFactorXParamConverter> fZoomFactorXParam;
-  ParamDefSPtr<GainParamConverter> fGain1Param;
-  ParamDefSPtr<GainParamConverter> fGain2Param;
   ParamDefSPtr<BooleanParamConverter> fLeftChannelOnParam;
   ParamDefSPtr<BooleanParamConverter> fRightChannelOnParam;
+  ParamDefSPtr<GainParamConverter> fGain1Param;
+  ParamDefSPtr<GainParamConverter> fGain2Param;
   ParamDefSPtr<BooleanParamConverter> fGainFilterParam;
+  ParamDefSPtr<BooleanParamConverter> fBypassParam;
 
   // transient
   ParamDefSPtr<BooleanParamConverter> fLCDLiveViewParam;
@@ -167,10 +182,11 @@ public:
 
 using namespace RT;
 
-class VAC6RTState : public RTState<11>
+class VAC6RTState : public RTState<7>
 {
 public:
   explicit VAC6RTState(VAC6Parameters &iParams) :
+    RTState(iParams),
     fZoomFactorX{add(iParams.fZoomFactorXParam)},
     fLeftChannelOn{add(iParams.fLeftChannelOnParam)},
     fRightChannelOn{add(iParams.fRightChannelOnParam)},
@@ -184,7 +200,7 @@ public:
     fLCDInputX{add(iParams.fLCDInputXParam)},
     fLCDHistoryOffset{add(iParams.fLCDHistoryOffsetParam)}
   {
-    sanityCheck();
+    init();
   }
 
 public:

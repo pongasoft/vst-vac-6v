@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../VAC6Model.h"
-#include "CustomView.h"
+#include <pongasoft/VST/GUI/Views/CustomView.h>
 
 namespace pongasoft {
 namespace VST {
@@ -9,9 +9,10 @@ namespace VAC6 {
 
 using namespace VSTGUI;
 using namespace Common;
-using namespace GUI;
 
-using GainParameter = VSTParameter<GainParamConverter>;
+using namespace GUI;
+using namespace GUI::Views;
+using namespace GUI::Params;
 
 /**
  * Combine the 2 gains to display the total amount of gain */
@@ -43,9 +44,9 @@ protected:
   CColor fFontColor{kWhiteCColor};
   FontPtr fFont{nullptr};
 
-  std::unique_ptr<GainParameter> fGain1Parameter{nullptr};
-  std::unique_ptr<GainParameter> fGain2Parameter{nullptr};
-  std::unique_ptr<BooleanParameter> fBypassParameter{nullptr};
+  GUIParamUPtr<GainParamConverter> fGain1Parameter{nullptr};
+  GUIParamUPtr<GainParamConverter> fGain2Parameter{nullptr};
+  GUIBooleanParamUPtr fBypassParameter{nullptr};
 
 public:
   // Creator class

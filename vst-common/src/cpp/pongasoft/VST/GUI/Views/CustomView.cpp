@@ -1,12 +1,12 @@
 #include <vstgui4/vstgui/uidescription/iviewcreator.h>
 #include <vstgui4/vstgui/lib/cdrawcontext.h>
 #include "CustomView.h"
-#include "CustomViewFactory.h"
-
+#include "pongasoft/VST/GUI/Views/CustomViewFactory.h"
 
 namespace pongasoft {
 namespace VST {
 namespace GUI {
+namespace Views {
 
 using namespace VSTGUI;
 
@@ -16,9 +16,9 @@ using namespace VSTGUI;
 CustomView::CustomView(const CRect &iSize)
   : CView(iSize),
     fTag{-1},
-    fBackColor{0,0,0},
+    fBackColor{0, 0, 0},
     fEditorMode{false},
-    fParameters{nullptr}
+    fParamCxMgr{nullptr}
 {
   setWantsFocus(true);
 }
@@ -68,30 +68,30 @@ void CustomView::onParameterChange(ParamID iParamID, ParamValue iNormalizedValue
 }
 
 ///////////////////////////////////////////
-// CustomView::registerRawParameter
+// CustomView::registerRawGUIParam
 ///////////////////////////////////////////
-std::unique_ptr<RawParameter> CustomView::registerRawParameter(ParamID iParamID, bool iSubscribeToChanges)
+std::unique_ptr<GUIRawParameter> CustomView::registerRawGUIParam(ParamID iParamID, bool iSubscribeToChanges)
 {
-  if(!fParameters)
-    ABORT_F("fParameters should have been registered");
+  if(!fParamCxMgr)
+    ABORT_F("fParamCxMgr should have been registered");
 
-  return fParameters->registerRawParameter(iParamID, iSubscribeToChanges ? this : nullptr);
+  return fParamCxMgr->registerGUIRawParam(iParamID, iSubscribeToChanges ? this : nullptr);
 }
 
 ///////////////////////////////////////////
-// CustomView::registerBooleanParameter
+// CustomView::registerBooleanParam
 ///////////////////////////////////////////
-std::unique_ptr<BooleanParameter> CustomView::registerBooleanParameter(ParamID iParamID, bool iSubscribeToChanges)
+GUIParamUPtr<BooleanParamConverter> CustomView::registerBooleanParam(ParamID iParamID, bool iSubscribeToChanges)
 {
-  return registerVSTParameter<BooleanParameter>(iParamID, iSubscribeToChanges);
+  return registerGUIParam<BooleanParamConverter>(iParamID, iSubscribeToChanges);
 }
 
 ///////////////////////////////////////////
-// CustomView::registerPercentParameter
+// CustomView::registerPercentParam
 ///////////////////////////////////////////
-std::unique_ptr<PercentParameter> CustomView::registerPercentParameter(ParamID iParamID, bool iSubscribeToChanges)
+GUIParamUPtr<PercentParamConverter> CustomView::registerPercentParam(ParamID iParamID, bool iSubscribeToChanges)
 {
-  return registerVSTParameter<PercentParameter>(iParamID, iSubscribeToChanges);
+  return registerGUIParam<PercentParamConverter>(iParamID, iSubscribeToChanges);
 }
 
 ///////////////////////////////////////////
@@ -127,9 +127,9 @@ bool CustomView::getEditorMode() const
 ///////////////////////////////////////////
 void CustomView::afterCreate(UIAttributes const &iAttributes, IUIDescription const *iDescription)
 {
-  auto provider = dynamic_cast<VSTParametersProvider const *>(iDescription->getViewFactory());
+  auto provider = dynamic_cast<GUIParametersProvider const *>(iDescription->getViewFactory());
   if(provider)
-    initParameters(provider->getVSTParameters());
+    initParameters(provider->getGUIParameters());
 }
 
 ///////////////////////////////////////////
@@ -145,10 +145,11 @@ void CustomView::beforeApply(UIAttributes const &iAttributes, IUIDescription con
 ///////////////////////////////////////////
 void CustomView::afterApply(UIAttributes const &iAttributes, IUIDescription const *iDescription)
 {
-  if(fParameters)
+  if(fParamCxMgr)
     registerParameters();
 }
-}
-}
-}
 
+}
+}
+}
+}

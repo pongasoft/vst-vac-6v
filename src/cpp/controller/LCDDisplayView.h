@@ -1,13 +1,12 @@
 #pragma once
 
-#include "CustomView.h"
+#include "pongasoft/VST/GUI/Views/CustomView.h"
 #include "VSTViewState.h"
-#include "DrawContext.h"
+#include "pongasoft/VST/GUI/DrawContext.h"
 #include "../VAC6Model.h"
 #include "../Messaging.h"
 #include "../Utils.h"
 #include "HistoryView.h"
-#include "VSTParameters.h"
 #include "../VAC6CIDs.h"
 #include <memory>
 
@@ -91,11 +90,11 @@ protected:
   // the state
   LCDDisplayState *fState{nullptr};
 
-  std::unique_ptr<BooleanParameter> fMaxLevelSinceResetMarker{nullptr};
-  std::unique_ptr<BooleanParameter> fMaxLevelInWindowMarker{nullptr};
-  std::unique_ptr<BooleanParameter> fLCDLiveViewParameter{nullptr};
+  GUIBooleanParamUPtr fMaxLevelSinceResetMarker{nullptr};
+  GUIBooleanParamUPtr fMaxLevelInWindowMarker{nullptr};
+  GUIBooleanParamUPtr fLCDLiveViewParameter{nullptr};
 
-  std::unique_ptr<LCDInputXParameter::Editor> fLCDInputXEditor{nullptr};
+  GUIParamEditorUPtr<LCDInputXParamConverter> fLCDInputXEditor{nullptr};
 
 public:
   class Creator : public CustomViewCreator<LCDDisplayView, HistoryView>

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "CustomView.h"
+#include <pongasoft/VST/GUI/Views/CustomView.h>
+#include <pongasoft/VST/GUI/DrawContext.h>
 #include "../VAC6Model.h"
 #include "../Utils.h"
-#include "DrawContext.h"
 
 namespace pongasoft {
 namespace VST {
@@ -12,6 +12,7 @@ namespace VAC6 {
 using namespace VSTGUI;
 using namespace Common;
 using namespace GUI;
+using namespace GUI::Views;
 
 class LCDScrollbarView : public CustomView
 {
@@ -90,14 +91,13 @@ protected:
   CColor fHandleColor{kWhiteCColor};
   int32_t fScrollbarMinSize{17};
 
-  std::unique_ptr<BooleanParameter> fLCDLiveViewParameter{nullptr};
+  GUIBooleanParamUPtr fLCDLiveViewParameter{nullptr};
 
-  std::unique_ptr<PercentParameter> fLCDInputHistoryOffsetParameter{nullptr};
+  GUIPercentParamUPtr fLCDInputHistoryOffsetParameter{nullptr};
 
-  using LCDZoomFactorXParameter = VSTParameter<LCDZoomFactorXParamConverter>;
-  std::unique_ptr<LCDZoomFactorXParameter> fLCDZoomFactorXParameter{nullptr};
+  GUIParamUPtr<LCDZoomFactorXParamConverter> fLCDZoomFactorXParameter{nullptr};
 
-  std::unique_ptr<PercentParameter::Editor> fLCDInputHistoryOffsetEditor{nullptr};
+  GUIParamEditorUPtr<PercentParamConverter> fLCDInputHistoryOffsetEditor{nullptr};
   std::unique_ptr<ZoomBox> fStartDragGestureZoomBox{nullptr};
   RelativeCoord fStarDragGestureX{-1.0};
 

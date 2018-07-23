@@ -29,6 +29,21 @@ set(VST_COMMON_sources_h
 
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/RT/RTParameter.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/RT/RTState.h
+
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIParamCxMgr.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIParameter.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIParameters.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIRawParameter.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/HostParameters.h
+
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/CustomView.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/CustomViewCreator.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/CustomViewFactory.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/MomentaryButton.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/ToggleButtonView.h
+
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/DrawContext.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Types.h
     )
 
 set(VST_COMMON_sources_cpp
@@ -38,10 +53,17 @@ set(VST_COMMON_sources_cpp
 
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/RT/RTParameter.cpp
 
-    )
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIParamCxMgr.cpp
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIParameters.cpp
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIRawParameter.cpp
 
-add_library(pongasoft-vst-common STATIC ${VST_COMMON_sources_h} ${VST_COMMON_sources_cpp})
-target_include_directories(pongasoft-vst-common PUBLIC ${VST3_SDK_ROOT})
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/CustomView.cpp
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/MomentaryButton.cpp
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/ToggleButtonView.cpp
+
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/DrawContext.cpp
+
+    )
 
 ###################################################
 # Testing

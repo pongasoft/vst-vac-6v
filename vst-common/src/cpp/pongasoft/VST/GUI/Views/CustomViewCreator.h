@@ -11,7 +11,7 @@
 #include <map>
 #include <memory>
 #include <pongasoft/logging/loguru.hpp>
-#include "Types.h"
+#include <pongasoft/VST/GUI/Types.h>
 
 #if VSTGUI_LIVE_EDITING
 #define EDITOR_MODE 1
@@ -20,6 +20,7 @@
 namespace pongasoft {
 namespace VST {
 namespace GUI {
+namespace Views {
 
 using namespace VSTGUI;
 
@@ -792,6 +793,7 @@ public:
   }
 };
 
+}
 }
 }
 }

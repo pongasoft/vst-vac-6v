@@ -2,17 +2,16 @@
 
 #include "../VAC6Model.h"
 #include "../Messaging.h"
-#include "CustomView.h"
+#include "pongasoft/VST/GUI/Views/CustomView.h"
 
 namespace pongasoft {
 namespace VST {
 namespace VAC6 {
 
-using namespace GUI;
-using namespace Common;
+using namespace GUI::Views;
+using namespace GUI::Params;
 
-using SoftClippingLevelParameter = VSTParameter<SoftClippingLevelParamConverter>;
-using LCDInputXParameter = VSTParameter<LCDInputXParamConverter>;
+using namespace Common;
 
 class HistoryState;
 
@@ -84,8 +83,8 @@ protected:
   CColor fLevelStateSoftClippingColor{};
   CColor fLevelStateHardClippingColor{};
 
-  std::unique_ptr<SoftClippingLevelParameter> fSoftClippingLevelParameter;
-  std::unique_ptr<LCDInputXParameter> fLCDInputXParameter{nullptr};
+  GUIParamUPtr<SoftClippingLevelParamConverter> fSoftClippingLevelParameter;
+  GUIParamUPtr<LCDInputXParamConverter> fLCDInputXParameter{nullptr};
 
 public:
   class Creator : public CustomViewCreator<HistoryView, CustomView>

@@ -3,11 +3,13 @@
 #include <public.sdk/source/vst/vsteditcontroller.h>
 #include <vstgui4/vstgui/plugin-bindings/vst3editor.h>
 #include <base/source/fstreamer.h>
+#include <pongasoft/VST/GUI/Params/GUIParameters.h>
 
-#include "CustomViewFactory.h"
+#include <pongasoft/VST/GUI/Views/CustomViewFactory.h>
 #include "VSTViewState.h"
 #include "LCDDisplayView.h"
 #include "MaxLevelView.h"
+#include "../VAC6Plugin.h"
 
 
 namespace pongasoft {
@@ -72,8 +74,10 @@ private:
   // the name of the xml file (relative) which contains the ui description
   char const *const fXmlFile;
 
-  // the vst parameters
-  std::shared_ptr<VSTParameters> fVSTParameters;
+  VAC6Parameters fPluginParameters;
+
+  // the parameters
+  GUIParameters fGUIParameters;
 
   CustomUIViewFactory *fViewFactory;
 

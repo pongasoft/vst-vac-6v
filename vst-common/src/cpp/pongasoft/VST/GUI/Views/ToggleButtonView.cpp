@@ -5,6 +5,7 @@
 namespace pongasoft {
 namespace VST {
 namespace GUI {
+namespace Views {
 
 ///////////////////////////////////////////
 // ToggleButtonView::setFrames
@@ -145,6 +146,8 @@ bool ToggleButtonView::sizeToFit()
 }
 
 ToggleButtonView::Creator __gToggleButtonCreator("pongasoft::ToggleButton", "pongasoft - Toggle Button (on/off)");
+
+}
 }
 }
 }

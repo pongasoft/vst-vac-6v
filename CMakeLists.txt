@@ -34,12 +34,6 @@ if (SMTG_CREATE_VST2_VERSION)
 endif()
 
 set(vst_sources
-		${CPP_SOURCES}/controller/CustomView.h
-		${CPP_SOURCES}/controller/CustomView.cpp
-		${CPP_SOURCES}/controller/CustomViewCreator.h
-		${CPP_SOURCES}/controller/CustomViewFactory.h
-		${CPP_SOURCES}/controller/DrawContext.h
-		${CPP_SOURCES}/controller/DrawContext.cpp
 		${CPP_SOURCES}/controller/GainView.h
 		${CPP_SOURCES}/controller/GainView.cpp
 		${CPP_SOURCES}/controller/HistoryView.h
@@ -50,16 +44,9 @@ set(vst_sources
 		${CPP_SOURCES}/controller/LCDScrollbarView.cpp
 		${CPP_SOURCES}/controller/MaxLevelView.h
 		${CPP_SOURCES}/controller/MaxLevelView.cpp
-		${CPP_SOURCES}/controller/MomentaryButton.h
-		${CPP_SOURCES}/controller/MomentaryButton.cpp
-		${CPP_SOURCES}/controller/ToggleButtonView.h
-		${CPP_SOURCES}/controller/ToggleButtonView.cpp
-		${CPP_SOURCES}/controller/Types.h
 		${CPP_SOURCES}/controller/VAC6Controller.h
 		${CPP_SOURCES}/controller/VAC6Controller.cpp
 		${CPP_SOURCES}/controller/VAC6Controller.h
-		${CPP_SOURCES}/controller/VSTParameters.h
-		${CPP_SOURCES}/controller/VSTParameters.cpp
 		${CPP_SOURCES}/controller/VSTViewState.h
 		${CPP_SOURCES}/AudioBuffer.h
 		${CPP_SOURCES}/AudioUtils.h
@@ -86,9 +73,9 @@ if(MAC OR WIN)
 endif()
 
 set(target pongasoft_VAC6V)
-smtg_add_vst3plugin(${target} ${VST3_SDK_ROOT} ${vst_sources})
+smtg_add_vst3plugin(${target} ${VST3_SDK_ROOT} ${vst_sources} ${VST_COMMON_sources_h} ${VST_COMMON_sources_cpp})
 target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
-target_link_libraries(${target} PRIVATE base sdk vstgui_support pongasoft-vst-common)
+target_link_libraries(${target} PRIVATE base sdk vstgui_support)
 
 smtg_add_vst3_resource(${target} "resource/Background.png")
 smtg_add_vst3_resource(${target} "resource/Background_2x.png")

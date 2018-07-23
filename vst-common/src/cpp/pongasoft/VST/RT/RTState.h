@@ -4,9 +4,11 @@
 #include "RTParameter.h"
 
 #include <pongasoft/Utils/Concurrent/Concurrent.h>
+#include <pongasoft/VST/Parameters.h>
 
 #include <map>
 #include <vector>
+#include <array>
 #include <string>
 #include <sstream>
 
@@ -19,24 +21,24 @@ using namespace Utils;
 /**
  * Encapsulates the state managed by the Real Time (RT).
  *
- * @tparam ParamCount Templatized so as NOT to allocate memory at runtime in RT code
+ * @tparam SavedParamCount Templatized so as NOT to allocate memory at runtime in RT code
  */
-template<int ParamCount>
+template<int SavedParamCount>
 class RTState
 {
 protected:
   // Internal structure that gets exchanged between the UI thread and the RT thread (no memory allocation)
   struct NormalizedState
   {
-    ParamID fParamIDs[ParamCount]{};
-    ParamValue fValues[ParamCount]{};
+    ParamID fParamIDs[SavedParamCount]{};
+    ParamValue fValues[SavedParamCount]{};
     int fCount{0};
 
     bool push(ParamID iParamID, ParamValue iParamValue)
     {
-      DCHECK_F(fCount < ParamCount);
+      DCHECK_F(fCount < SavedParamCount);
 
-      if(fCount < ParamCount)
+      if(fCount < SavedParamCount)
       {
         fParamIDs[fCount] = iParamID;
         fValues[fCount] = iParamValue;
@@ -63,6 +65,8 @@ protected:
 
 public:
 
+  RTState(Parameters const &iParameters);
+
   /**
    * This method is called for each parameter managed by RTState. The order in which this method is called is
    * important and reflects the order that will be used when reading/writing state to the stream
@@ -71,8 +75,8 @@ public:
   RTParam<ParamConverter> add(ParamDefSPtr<ParamConverter> iParamDef);
 
   /**
-   * Call this method is the constructor to check that ParamCount matches the number of params registered */
-  void sanityCheck() const;
+   * Call this method after adding all the parameters */
+  void init();
 
   /**
    * This method should be call at the beginning of the process(ProcessData &data) method before doing anything else.
@@ -114,8 +118,9 @@ protected:
 private:
   // contains all the registered parameters (unique ID, will be checked on add)
   std::map<ParamID, std::shared_ptr<RTRawParameter>> fParameters{};
-  // maintains the insertion order and keeps track of parameters saved by the RT
-  ParamID fRTParamIDs[ParamCount]{};
+
+  // maintains the insertion order and keeps track of parameters saved by the RT only
+  std::array<ParamID, SavedParamCount> fRTParamIDs{};
   int fRTParamIDsCount = 0;
 
   // this queue is used to propagate a Processor::setState call (made from the UI thread) to this state
@@ -128,11 +133,23 @@ private:
 };
 
 //------------------------------------------------------------------------
+// RTState::RTState
+//------------------------------------------------------------------------
+template<int SavedParamCount>
+RTState<SavedParamCount>::RTState(Parameters const &iParameters)
+{
+  auto order = iParameters.getRTSaveStateOrder();
+  DCHECK_F(order.size() <= SavedParamCount, "RTState<%d> too small. Should be RTState<%lu>", SavedParamCount, order.size());
+  std::copy(order.begin(), order.end(), fRTParamIDs.begin());
+  fRTParamIDsCount = static_cast<int>(order.size());
+}
+
+//------------------------------------------------------------------------
 // RTState::add
 //------------------------------------------------------------------------
-template<int ParamCount>
+template<int SavedParamCount>
 template<typename ParamConverter>
-RTParam<ParamConverter> RTState<ParamCount>::add(ParamDefSPtr<ParamConverter> iParamDef)
+RTParam<ParamConverter> RTState<SavedParamCount>::add(ParamDefSPtr<ParamConverter> iParamDef)
 {
   auto rtParam = std::make_shared<RTParameter<ParamConverter>>(iParamDef);
   addRawParameter(rtParam);
@@ -142,28 +159,23 @@ RTParam<ParamConverter> RTState<ParamCount>::add(ParamDefSPtr<ParamConverter> iP
 //------------------------------------------------------------------------
 // RTState::addRawParameter
 //------------------------------------------------------------------------
-template<int ParamCount>
-void RTState<ParamCount>::addRawParameter(std::shared_ptr<RTRawParameter> iParameter)
+template<int SavedParamCount>
+void RTState<SavedParamCount>::addRawParameter(std::shared_ptr<RTRawParameter> iParameter)
 {
   ParamID paramID = iParameter->getParamID();
 
   DCHECK_F(iParameter != nullptr);
   DCHECK_F(fParameters.find(paramID) == fParameters.cend(), "duplicate paramID");
   DCHECK_F(!iParameter->getRawParamDef()->fUIOnly, "only RT parameter allowed");
-  DCHECK_F(fRTParamIDsCount < ParamCount, "too many parameters... increase ParamCount");
 
   fParameters[paramID] = iParameter;
-  fRTParamIDs[fRTParamIDsCount++] = paramID;
-
-  // we need to update the latest state since a parameter was added
-  fLatestState.set(getNormalizedState());
 }
 
 //------------------------------------------------------------------------
 // RTState::getNormalizedState
 //------------------------------------------------------------------------
-template<int ParamCount>
-typename RTState<ParamCount>::NormalizedState RTState<ParamCount>::getNormalizedState() const
+template<int SavedParamCount>
+typename RTState<SavedParamCount>::NormalizedState RTState<SavedParamCount>::getNormalizedState() const
 {
   NormalizedState normalizedState{};
 
@@ -179,17 +191,15 @@ typename RTState<ParamCount>::NormalizedState RTState<ParamCount>::getNormalized
 //------------------------------------------------------------------------
 // RTState::readNewState
 //------------------------------------------------------------------------
-template<int ParamCount>
-void RTState<ParamCount>::readNewState(IBStreamer &iStreamer)
+template<int SavedParamCount>
+void RTState<SavedParamCount>::readNewState(IBStreamer &iStreamer)
 {
   NormalizedState normalizedState{};
 
   for(int i = 0; i < fRTParamIDsCount; i++)
   {
     auto paramID = fRTParamIDs[i];
-    std::shared_ptr<RawParamDef> const &param = fParameters.at(paramID)->getRawParamDef();
-    if(!param->fTransient)
-      normalizedState.push(paramID, param->readNormalizedValue(iStreamer));
+    normalizedState.push(paramID, fParameters.at(paramID)->getRawParamDef()->readNormalizedValue(iStreamer));
   }
 
 //  DLOG_F(INFO, "readNewState - %s", normalizedState.toString().c_str());
@@ -200,8 +210,8 @@ void RTState<ParamCount>::readNewState(IBStreamer &iStreamer)
 //------------------------------------------------------------------------
 // RTState::writeLatestState
 //------------------------------------------------------------------------
-template<int ParamCount>
-void RTState<ParamCount>::writeLatestState(IBStreamer &oStreamer)
+template<int SavedParamCount>
+void RTState<SavedParamCount>::writeLatestState(IBStreamer &oStreamer)
 {
   auto state = fLatestState.get();
 
@@ -217,8 +227,8 @@ void RTState<ParamCount>::writeLatestState(IBStreamer &oStreamer)
 //------------------------------------------------------------------------
 // RTState::applyNormalizedState
 //------------------------------------------------------------------------
-template<int ParamCount>
-bool RTState<ParamCount>::applyNormalizedState(RTState::NormalizedState const &iNormalizedState)
+template<int SavedParamCount>
+bool RTState<SavedParamCount>::applyNormalizedState(RTState::NormalizedState const &iNormalizedState)
 {
 //  DLOG_F(INFO, "applyNormalizedState - %s", iNormalizedState.toString().c_str());
 
@@ -235,8 +245,8 @@ bool RTState<ParamCount>::applyNormalizedState(RTState::NormalizedState const &i
 //------------------------------------------------------------------------
 // RTState::applyParameterChanges
 //------------------------------------------------------------------------
-template<int ParamCount>
-bool RTState<ParamCount>::applyParameterChanges(IParameterChanges &inputParameterChanges)
+template<int SavedParamCount>
+bool RTState<SavedParamCount>::applyParameterChanges(IParameterChanges &inputParameterChanges)
 {
   int32 numParamsChanged = inputParameterChanges.getParameterCount();
   if(numParamsChanged <= 0)
@@ -271,8 +281,8 @@ bool RTState<ParamCount>::applyParameterChanges(IParameterChanges &inputParamete
 //------------------------------------------------------------------------
 // RTState::beforeProcessing
 //------------------------------------------------------------------------
-template<int ParamCount>
-void RTState<ParamCount>::beforeProcessing()
+template<int SavedParamCount>
+void RTState<SavedParamCount>::beforeProcessing()
 {
   NormalizedState normalizedState{};
   if(fStateUpdate.pop(normalizedState))
@@ -284,13 +294,13 @@ void RTState<ParamCount>::beforeProcessing()
 //------------------------------------------------------------------------
 // RTState::afterProcessing
 //------------------------------------------------------------------------
-template<int ParamCount>
-void RTState<ParamCount>::afterProcessing()
+template<int SavedParamCount>
+void RTState<SavedParamCount>::afterProcessing()
 {
   bool stateChanged = false;
-  for(int i = 0; i < fRTParamIDsCount; i++)
+  for(auto &iter : fParameters)
   {
-    stateChanged |= fParameters.at(fRTParamIDs[i])->resetPreviousValue();
+    stateChanged |= iter.second->resetPreviousValue();
   }
 
   // when the state has changed we update it
@@ -302,16 +312,32 @@ void RTState<ParamCount>::afterProcessing()
 }
 
 //------------------------------------------------------------------------
-// RTState::sanityCheck
+// RTState::init
 //------------------------------------------------------------------------
-template<int ParamCount>
-void RTState<ParamCount>::sanityCheck() const
+template<int SavedParamCount>
+void RTState<SavedParamCount>::init()
 {
-  if(fRTParamIDsCount != ParamCount)
+  if(fRTParamIDsCount != SavedParamCount)
   {
-    DLOG_F(WARNING, "Mismatch param count: expected %d but was %d", ParamCount, fRTParamIDsCount);
+    DLOG_F(WARNING, "RTState<%d> mismatch => Should be RTState<%d>", SavedParamCount, fRTParamIDsCount);
   }
+  else
+  {
+    DLOG_F(INFO, "RTState - parameters registered count... checked");
+  }
+
+  for(int i = 0; i < fRTParamIDsCount; i++)
+  {
+    auto paramID = fRTParamIDs[i];
+    DCHECK_F(fParameters.find(paramID) != fParameters.cend(),
+             "Expected parameter [%d] used in RTSaveStateOrder not registered",
+             paramID);
+  }
+  DLOG_F(INFO, "RTState - all parameters used in RTSaveStateOrder registered... checked");
+
+  fLatestState.set(getNormalizedState());
 }
+
 
 
 }
