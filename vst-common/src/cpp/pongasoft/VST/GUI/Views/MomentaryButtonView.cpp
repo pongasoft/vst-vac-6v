@@ -1,4 +1,4 @@
-#include "MomentaryButton.h"
+#include "MomentaryButtonView.h"
 
 #include <vstgui4/vstgui/lib/cdrawcontext.h>
 
@@ -10,9 +10,9 @@ namespace Views {
 using namespace VSTGUI;
 
 ///////////////////////////////////////////
-// MomentaryButton::draw
+// MomentaryButtonView::draw
 ///////////////////////////////////////////
-void MomentaryButton::draw(CDrawContext *iContext)
+void MomentaryButtonView::draw(CDrawContext *iContext)
 {
   CustomView::draw(iContext);
 
@@ -36,9 +36,9 @@ void MomentaryButton::draw(CDrawContext *iContext)
 }
 
 ///////////////////////////////////////////
-// MomentaryButton::onMouseDown
+// MomentaryButtonView::onMouseDown
 ///////////////////////////////////////////
-CMouseEventResult MomentaryButton::onMouseDown(CPoint &where, const CButtonState &buttons)
+CMouseEventResult MomentaryButtonView::onMouseDown(CPoint &where, const CButtonState &buttons)
 {
   if(!(buttons & kLButton))
     return kMouseEventNotHandled;
@@ -49,9 +49,9 @@ CMouseEventResult MomentaryButton::onMouseDown(CPoint &where, const CButtonState
 }
 
 ///////////////////////////////////////////
-// MomentaryButton::onMouseUp
+// MomentaryButtonView::onMouseUp
 ///////////////////////////////////////////
-CMouseEventResult MomentaryButton::onMouseUp(CPoint &where, const CButtonState &buttons)
+CMouseEventResult MomentaryButtonView::onMouseUp(CPoint &where, const CButtonState &buttons)
 {
   if(!(buttons & kLButton))
     return kMouseEventNotHandled;
@@ -62,9 +62,9 @@ CMouseEventResult MomentaryButton::onMouseUp(CPoint &where, const CButtonState &
 }
 
 ///////////////////////////////////////////
-// MomentaryButton::onMouseCancel
+// MomentaryButtonView::onMouseCancel
 ///////////////////////////////////////////
-CMouseEventResult MomentaryButton::onMouseCancel()
+CMouseEventResult MomentaryButtonView::onMouseCancel()
 {
   setControlValue(false);
   setDirty(true);
@@ -72,9 +72,9 @@ CMouseEventResult MomentaryButton::onMouseCancel()
 }
 
 ///////////////////////////////////////////
-// MomentaryButton::onKeyDown
+// MomentaryButtonView::onKeyDown
 ///////////////////////////////////////////
-int32_t MomentaryButton::onKeyDown(VstKeyCode &keyCode)
+int32_t MomentaryButtonView::onKeyDown(VstKeyCode &keyCode)
 {
   if(keyCode.virt == VKEY_RETURN && keyCode.modifier == 0)
   {
@@ -86,9 +86,9 @@ int32_t MomentaryButton::onKeyDown(VstKeyCode &keyCode)
 }
 
 ///////////////////////////////////////////
-// MomentaryButton::onKeyUp
+// MomentaryButtonView::onKeyUp
 ///////////////////////////////////////////
-int32_t MomentaryButton::onKeyUp(VstKeyCode &keyCode)
+int32_t MomentaryButtonView::onKeyUp(VstKeyCode &keyCode)
 {
   if(keyCode.virt == VKEY_RETURN && keyCode.modifier == 0)
   {
@@ -100,15 +100,15 @@ int32_t MomentaryButton::onKeyUp(VstKeyCode &keyCode)
 }
 
 ///////////////////////////////////////////
-// MomentaryButton::sizeToFit
+// MomentaryButtonView::sizeToFit
 ///////////////////////////////////////////
-bool MomentaryButton::sizeToFit()
+bool MomentaryButtonView::sizeToFit()
 {
-  DLOG_F(INFO, "MomentaryButton::sizeToFit");
+  DLOG_F(INFO, "MomentaryButtonView::sizeToFit");
   return CustomView::sizeToFit(getImage(), 2);
 }
 
-MomentaryButton::Creator __gMomentaryButtonCreator("pongasoft::MomentaryButton", "pongasoft - Momentary Button (on when pressed)");
+MomentaryButtonView::Creator __gMomentaryButtonCreator("pongasoft::MomentaryButton", "pongasoft - Momentary Button (on when pressed)");
 
 }
 }

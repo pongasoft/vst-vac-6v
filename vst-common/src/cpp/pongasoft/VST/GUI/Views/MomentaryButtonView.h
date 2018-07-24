@@ -2,7 +2,7 @@
 
 #include <vstgui4/vstgui/lib/controls/ccontrol.h>
 #include <pongasoft/VST/GUI/Params/GUIParameter.h>
-#include "CustomView.h"
+#include "CustomControlView.h"
 
 namespace pongasoft {
 namespace VST {
@@ -32,11 +32,10 @@ using namespace VSTGUI;
  * CKickButton which is similar but it behaves improperly (for example, the button gets stuck in "pressed" state
  * for some reason...)
  */
- // TODO rename MomentaryButtonView!
-class MomentaryButton : public TCustomControlView<BooleanParamConverter>
+class MomentaryButtonView : public TCustomControlView<BooleanParamConverter>
 {
 public:
-  explicit MomentaryButton(const CRect &iSize) : TCustomControlView(iSize)
+  explicit MomentaryButtonView(const CRect &iSize) : TCustomControlView(iSize)
   {
     // off color is grey
     fBackColor = CColor{200,200,200};
@@ -73,21 +72,21 @@ public:
   void setImage(BitmapPtr iImage) { fImage = std::move(iImage); }
 
 public:
-  CLASS_METHODS_NOCOPY(MomentaryButton, TCustomControlView<BooleanParamConverter>)
+  CLASS_METHODS_NOCOPY(MomentaryButtonView, TCustomControlView<BooleanParamConverter>)
 
 protected:
   CColor fOnColor{kRedCColor};
   BitmapPtr fImage{nullptr};
 
 public:
-  class Creator : public CustomViewCreator<MomentaryButton, TCustomControlView<BooleanParamConverter>>
+  class Creator : public CustomViewCreator<MomentaryButtonView, TCustomControlView<BooleanParamConverter>>
   {
     public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
       CustomViewCreator(iViewName, iDisplayName)
     {
-      registerColorAttribute("on-color", &MomentaryButton::getOnColor, &MomentaryButton::setOnColor);
-      registerBitmapAttribute("button-image", &MomentaryButton::getImage, &MomentaryButton::setImage);
+      registerColorAttribute("on-color", &MomentaryButtonView::getOnColor, &MomentaryButtonView::setOnColor);
+      registerBitmapAttribute("button-image", &MomentaryButtonView::getImage, &MomentaryButtonView::setImage);
     }
   };
 };

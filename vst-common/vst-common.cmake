@@ -36,10 +36,11 @@ set(VST_COMMON_sources_h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIRawParameter.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/HostParameters.h
 
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/CustomControlView.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/CustomView.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/CustomViewCreator.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/CustomViewFactory.h
-    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/MomentaryButton.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/MomentaryButtonView.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/ToggleButtonView.h
 
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/DrawContext.h
@@ -58,7 +59,7 @@ set(VST_COMMON_sources_cpp
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIRawParameter.cpp
 
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/CustomView.cpp
-    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/MomentaryButton.cpp
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/MomentaryButtonView.cpp
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/ToggleButtonView.cpp
 
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/DrawContext.cpp

@@ -6,7 +6,7 @@ namespace GUI {
 namespace Params {
 
 //------------------------------------------------------------------------
-// GUIParamCxMgr::registerRawGUIParam
+// GUIParamCxMgr::registerGUIRawParam
 //------------------------------------------------------------------------
 std::unique_ptr<GUIRawParameter>
 GUIParamCxMgr::registerGUIRawParam(ParamID iParamID, GUIRawParameter::IChangeListener *iChangeListener)

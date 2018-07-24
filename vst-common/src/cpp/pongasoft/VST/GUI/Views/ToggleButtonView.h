@@ -1,7 +1,7 @@
 #pragma once
 
 #include <pongasoft/VST/GUI/Params/GUIParameter.h>
-#include "CustomView.h"
+#include "CustomControlView.h"
 
 #include <iostream>
 

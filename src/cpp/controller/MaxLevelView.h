@@ -3,7 +3,6 @@
 #include "HistoryView.h"
 #include "VSTViewState.h"
 #include "../Messaging.h"
-#include "../VAC6CIDs.h"
 
 namespace pongasoft {
 namespace VST {

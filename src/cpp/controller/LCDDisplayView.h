@@ -7,7 +7,6 @@
 #include "../Messaging.h"
 #include "../Utils.h"
 #include "HistoryView.h"
-#include "../VAC6CIDs.h"
 #include <memory>
 
 namespace pongasoft {

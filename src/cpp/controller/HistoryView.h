@@ -3,6 +3,7 @@
 #include "../VAC6Model.h"
 #include "../Messaging.h"
 #include "pongasoft/VST/GUI/Views/CustomView.h"
+#include "../VAC6Plugin.h"
 
 namespace pongasoft {
 namespace VST {
@@ -18,10 +19,10 @@ class HistoryState;
 /**
  * Base class to LCD and MaxLevel
  */
-class HistoryView : public CustomView
+class HistoryView : public PluginCustomView<VAC6Parameters>
 {
 public:
-  explicit HistoryView(const CRect &size) : CustomView(size)
+  explicit HistoryView(const CRect &size) : PluginCustomView(size)
   {};
 
   HistoryView(const HistoryView &c) = delete;

@@ -68,9 +68,9 @@ void CustomView::onParameterChange(ParamID iParamID, ParamValue iNormalizedValue
 }
 
 ///////////////////////////////////////////
-// CustomView::registerRawGUIParam
+// CustomView::registerGUIRawParam
 ///////////////////////////////////////////
-std::unique_ptr<GUIRawParameter> CustomView::registerRawGUIParam(ParamID iParamID, bool iSubscribeToChanges)
+std::unique_ptr<GUIRawParameter> CustomView::registerGUIRawParam(ParamID iParamID, bool iSubscribeToChanges)
 {
   if(!fParamCxMgr)
     ABORT_F("fParamCxMgr should have been registered");

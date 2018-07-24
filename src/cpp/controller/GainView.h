@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../VAC6Model.h"
 #include <pongasoft/VST/GUI/Views/CustomView.h>
+#include "../VAC6Model.h"
+#include "../VAC6Plugin.h"
 
 namespace pongasoft {
 namespace VST {
@@ -16,11 +17,11 @@ using namespace GUI::Params;
 
 /**
  * Combine the 2 gains to display the total amount of gain */
-class GainView : public CustomView
+class GainView : public PluginCustomView<VAC6Parameters>
 {
 public:
   // constructor
-  explicit GainView(const CRect &iSize) : CustomView{iSize} {};
+  explicit GainView(const CRect &iSize) : PluginCustomView{iSize} {};
 
   // get/setFontColor
   CColor const &getFontColor() const { return fFontColor; }

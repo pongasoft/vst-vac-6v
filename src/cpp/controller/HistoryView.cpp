@@ -1,5 +1,4 @@
 #include "HistoryView.h"
-#include "../VAC6CIDs.h"
 
 namespace pongasoft {
 namespace VST {
@@ -25,8 +24,8 @@ void HistoryView::registerParameters()
 {
   CustomView::registerParameters();
 
-  fSoftClippingLevelParameter = registerGUIParam<SoftClippingLevelParamConverter>(EVAC6ParamID::kSoftClippingLevel);
-  fLCDInputXParameter = registerGUIParam<LCDInputXParamConverter>(EVAC6ParamID::kLCDInputX);
+  fSoftClippingLevelParameter = registerGUIParam(fParams->fSoftClippingLevelParam);
+  fLCDInputXParameter = registerGUIParam(fParams->fLCDInputXParam);
 }
 
 ///////////////////////////////////////////

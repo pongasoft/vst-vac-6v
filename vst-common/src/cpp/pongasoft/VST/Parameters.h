@@ -66,6 +66,9 @@ public:
   // Constructor
   explicit Parameters() = default;
 
+  // Ensure the class is polymorphinc
+  virtual ~Parameters() = default;
+
   /**
    * Used from derived classes to build a parameter.
    * TODO add example + don't forget that order is important (define the order in Maschine for example)

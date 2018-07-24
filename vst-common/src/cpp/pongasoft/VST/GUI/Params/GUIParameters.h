@@ -17,16 +17,23 @@ using namespace Steinberg;
 
 class GUIParamCxMgr;
 
+/**
+ * This class is the main entry point to parameters in the GUI (controller and views) world.
+ */
 class GUIParameters
 {
   using PluginParameters = ::pongasoft::VST::Parameters;
 
 public:
+  // Constructor
   GUIParameters(HostParameters iHostParameters,
                 PluginParameters const &iPluginParameters) :
     fHostParameters(iHostParameters),
     fPluginParameters{iPluginParameters}
   {}
+
+  // getPluginParameters
+  PluginParameters const &getPluginParameters() const { return fPluginParameters; }
 
   /**
    * @return true if the param actually exists
@@ -47,6 +54,10 @@ public:
     return std::make_unique<GUIRawParameter>(iParamID, fHostParameters);
   }
 
+  /**
+   * The CustomView class automatically calls this method to get a handle of a ParamCxMgr used to register for interest
+   * and obtain GUIParam instances. See CustomView::registerXXX methods.
+   */
   std::unique_ptr<GUIParamCxMgr> createParamCxMgr() const;
 
 private:

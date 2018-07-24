@@ -35,11 +35,24 @@ public:
     return std::make_unique<T>(registerGUIRawParam(iParamID, iChangeListener));
   }
 
+  /**
+   * Convenient call to register a GUI param simply by using its description. Takes care of the type due to method API
+   */
   template<typename ParamConverter>
   GUIParamUPtr<ParamConverter> registerGUIParam(ParamDefSPtr<ParamConverter> iParamDef,
                                                 GUIRawParameter::IChangeListener *iChangeListener = nullptr)
   {
     return std::make_unique<GUIParameter<ParamConverter>>(registerGUIRawParam(iParamDef->fParamID, iChangeListener));
+  }
+
+  /**
+   * Returns the plugin parameters downcasting it to the proper subclass for direct access to the parameters by name.
+   * Note that it will return nullptr if the plugin parameters are not of the proper type.
+   */
+  template<typename TParameters>
+  TParameters const *getPluginParameters() const
+  {
+    return dynamic_cast<TParameters const *>(&fParameters.getPluginParameters());
   }
 
   friend class GUIParameters;

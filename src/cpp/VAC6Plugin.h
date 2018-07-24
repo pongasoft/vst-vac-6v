@@ -66,7 +66,7 @@ public:
 
     // the Gain2 knob
     fGain2Param{
-      build<GainParamConverter>(EVAC6ParamID::kGain2, STR16 ("Gain 1"))
+      build<GainParamConverter>(EVAC6ParamID::kGain2, STR16 ("Gain 2"))
         .defaultValue(DEFAULT_GAIN)
         .shortTitle(STR16 ("Gain2"))
         .precision(2)

@@ -8,7 +8,7 @@ namespace VAC6 {
 ///////////////////////////////////////////
 // LCDScrollbarView::LCDScrollbarView
 ///////////////////////////////////////////
-LCDScrollbarView::LCDScrollbarView(const CRect &size) : CustomView(size)
+LCDScrollbarView::LCDScrollbarView(const CRect &size) : PluginCustomView(size)
 {
 }
 
@@ -17,9 +17,9 @@ LCDScrollbarView::LCDScrollbarView(const CRect &size) : CustomView(size)
 ///////////////////////////////////////////
 void LCDScrollbarView::registerParameters()
 {
-  fLCDLiveViewParameter = registerBooleanParam(EVAC6ParamID::kLCDLiveView);
-  fLCDInputHistoryOffsetParameter = registerPercentParam(EVAC6ParamID::kLCDHistoryOffset);
-  fLCDZoomFactorXParameter = registerGUIParam<LCDZoomFactorXParamConverter>(EVAC6ParamID::kLCDZoomFactorX);
+  fLCDLiveViewParameter = registerGUIParam(fParams->fLCDLiveViewParam);
+  fLCDInputHistoryOffsetParameter = registerGUIParam(fParams->fLCDHistoryOffsetParam);
+  fLCDZoomFactorXParameter = registerGUIParam(fParams->fZoomFactorXParam);
 }
 
 ///////////////////////////////////////////

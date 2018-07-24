@@ -127,24 +127,15 @@ public:
   /**
    * Registers a raw parameter (no conversion)
    */
-  std::unique_ptr<GUIRawParameter> registerRawGUIParam(ParamID iParamID, bool iSubscribeToChanges = true);
-
-//  /**
-//   * Generic register with any kind of conversion
-//   */
-//  template<typename T>
-//  std::unique_ptr<T> registerGUIParam(ParamID iParamID, bool iSubscribeToChanges = true)
-//  {
-//    return std::make_unique<T>(registerRawGUIParam(iParamID, iSubscribeToChanges));
-//  }
+  std::unique_ptr<GUIRawParameter> registerGUIRawParam(ParamID iParamID, bool iSubscribeToChanges = true);
 
   /**
- * Generic register with any kind of conversion
- */
+   * Generic register with any kind of conversion
+   */
   template<typename ParamConverter>
   GUIParamUPtr<ParamConverter> registerGUIParam(ParamID iParamID, bool iSubscribeToChanges = true)
   {
-    return std::make_unique<GUIParameter<ParamConverter>>(registerRawGUIParam(iParamID, iSubscribeToChanges));
+    return std::make_unique<GUIParameter<ParamConverter>>(registerGUIRawParam(iParamID, iSubscribeToChanges));
   }
 
   // shortcut for BooleanParameter
@@ -152,6 +143,25 @@ public:
 
   // shortcut for PercentParameter
   GUIPercentParamUPtr registerPercentParam(ParamID iParamID, bool iSubscribeToChanges = true);
+
+  /**
+   * Generic register with any kind of conversion using an actual param def (no param id)
+   */
+  template<typename ParamConverter>
+  GUIParamUPtr<ParamConverter> registerGUIParam(ParamDefSPtr<ParamConverter> iParamDef,
+                                                bool iSubscribeToChanges = true)
+  {
+    return std::make_unique<GUIParameter<ParamConverter>>(registerGUIRawParam(iParamDef->fParamID, iSubscribeToChanges));
+  }
+
+  /**
+   * Gives access to plugin parameters
+   */
+  template<typename TParameters>
+  TParameters const *getPluginParameters() const
+  {
+    return fParamCxMgr->getPluginParameters<TParameters>();
+  }
 
   CLASS_METHODS_NOCOPY(CustomView, CControl)
 
@@ -230,144 +240,31 @@ public:
 };
 
 /**
- * Base class for custom views providing one parameter only (similar to CControl)
+ * When implementing a CustomView specific to a given plugin, you can use this class instead to get direct
+ * access to the parameters registered with the plugin via the fParams member.
+ *
+ * @tparam TPluginParameters type of the plugin parameters class (should be a subclass of Param::Parameters)
  */
-class CustomControlView : public CustomView
+template<typename TPluginParameters>
+class PluginCustomView : public CustomView
 {
 public:
-  explicit CustomControlView(const CRect &iSize) : CustomView(iSize) {}
-
-  // get/setControlTag
-  void setControlTag (int32_t iTag) { fControlTag = iTag; };
-  int32_t getControlTag () const { return fControlTag; }
-
-public:
-  CLASS_METHODS_NOCOPY(CustomControlView, CustomView)
+  // Constructor
+  explicit PluginCustomView(const CRect &iSize) : CustomView(iSize) {}
 
 protected:
-  int32_t fControlTag{-1};
-
-public:
-  class Creator : public CustomViewCreator<CustomControlView, CustomView>
+  // initParameters - overriden to extract fParams
+  void initParameters(GUIParameters const &iParameters) override
   {
-  public:
-    explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
-      CustomViewCreator(iViewName, iDisplayName)
-    {
-      registerTagAttribute("control-tag", &CustomControlView::getControlTag, &CustomControlView::setControlTag);
-    }
-  };
-};
-
-/**
- * Base class for custom views providing one parameter only (similar to CControl)
- * This base class automatically registers the custom control and also keeps a control value for the case when
- * the control does not exist (for example in editor the control tag may not be defined).
- */
-template<typename ParamConverter>
-class TCustomControlView : public CustomControlView
-{
-public:
-  // TCustomControlView
-  explicit TCustomControlView(const CRect &iSize) : CustomControlView(iSize) {}
-
-public:
-  CLASS_METHODS_NOCOPY(CustomControlView, TCustomControlView)
-
-  // set/getControlValue
-  typename ParamConverter::ParamType getControlValue() const;
-  void setControlValue(typename ParamConverter::ParamType const &iControlValue);
-
-  // registerParameters
-  void registerParameters() override;
-
-protected:
-  // the gui parameter tied to the control
-  GUIParamUPtr<ParamConverter> fControlParameter{nullptr};
-
-#if EDITOR_MODE
-  // the value (in sync with control parameter but may exist on its own in editor mode)
-  typename ParamConverter::ParamType fControlValue{};
-#endif
-
-public:
-  class Creator : public CustomViewCreator<TCustomControlView<ParamConverter>, CustomControlView>
-  {
-  private:
-    using CustomViewCreatorT = CustomViewCreator<TCustomControlView<ParamConverter>, CustomControlView>;
-  public:
-    explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
-      CustomViewCreatorT(iViewName, iDisplayName)
-    {
-    }
-  };
-};
-
-///////////////////////////////////////////
-// TCustomControlView<TGUIParameter>::getControlValue
-///////////////////////////////////////////
-template<typename TGUIParameter>
-typename TGUIParameter::ParamType TCustomControlView<TGUIParameter>::getControlValue() const
-{
-#if EDITOR_MODE
-  if(fControlParameter)
-    return fControlParameter->getValue();
-  else
-    return fControlValue;
-#else
-  return fControlParameter->getValue();
-#endif
-}
-
-///////////////////////////////////////////
-// TCustomControlView<TGUIParameter>::setControlValue
-///////////////////////////////////////////
-template<typename TGUIParameter>
-void TCustomControlView<TGUIParameter>::setControlValue(typename TGUIParameter::ParamType const &iControlValue)
-{
-#if EDITOR_MODE
-  fControlValue = iControlValue;
-  if(fControlParameter)
-    fControlParameter->setValue(fControlValue);
-#else
-  fControlParameter->setValue(iControlValue);
-#endif
-}
-
-///////////////////////////////////////////
-// TCustomControlView<TGUIParameter>::registerParameters
-///////////////////////////////////////////
-template<typename TGUIParameter>
-void TCustomControlView<TGUIParameter>::registerParameters()
-{
-  CustomControlView::registerParameters();
-  if(!fParamCxMgr)
-    ABORT_F("fParamCxMgr should have been registered");
-
-#if EDITOR_MODE
-  if(getControlTag() >= 0)
-  {
-    auto paramID = static_cast<ParamID>(getControlTag());
-    if(fParamCxMgr->exists(paramID))
-    {
-      fControlParameter = registerGUIParam<TGUIParameter>(paramID);
-      fControlValue = fControlParameter->getValue();
-    }
-    else
-    {
-      DLOG_F(WARNING, "Parameter[%d] does not exist", paramID);
-      fControlParameter = nullptr;
-    }
+    CustomView::initParameters(iParameters);
+    if(fParamCxMgr)
+      fParams = fParamCxMgr->getPluginParameters<TPluginParameters>();
   }
-#else
-  auto paramID = static_cast<ParamID>(getControlTag());
-  if(fParamCxMgr->exists(paramID))
-    fControlParameter = registerGUIParam<TGUIParameter>(paramID);
-  else
-    ABORT_F("Could not find parameter for control tag [%d]", paramID);
-#endif
-}
 
+public:
+  // direct access to parameters (ex: fParams->fBypassParam)
+  TPluginParameters const *fParams;
+};
 }
 }
 }

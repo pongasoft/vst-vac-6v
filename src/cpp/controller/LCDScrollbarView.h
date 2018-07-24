@@ -4,6 +4,7 @@
 #include <pongasoft/VST/GUI/DrawContext.h>
 #include "../VAC6Model.h"
 #include "../Utils.h"
+#include "../VAC6Plugin.h"
 
 namespace pongasoft {
 namespace VST {
@@ -14,7 +15,7 @@ using namespace Common;
 using namespace GUI;
 using namespace GUI::Views;
 
-class LCDScrollbarView : public CustomView
+class LCDScrollbarView : public PluginCustomView<VAC6Parameters>
 {
 public:
   // Constructor
