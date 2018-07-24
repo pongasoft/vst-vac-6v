@@ -145,7 +145,8 @@ public:
     }
 
   {
-    setRTSaveStateOrder(fZoomFactorXParam,
+    setRTSaveStateOrder(PROCESSOR_STATE_VERSION,
+                        fZoomFactorXParam,
                         fLeftChannelOnParam,
                         fRightChannelOnParam,
                         fGain1Param,
@@ -153,7 +154,8 @@ public:
                         fGainFilterParam,
                         fBypassParam);
 
-    setGUISaveStateOrder(fSinceResetMarkerParam,
+    setGUISaveStateOrder(CONTROLLER_STATE_VERSION,
+                         fSinceResetMarkerParam,
                          fInWindowMarkerParam,
                          fSoftClippingLevelParam);
   }

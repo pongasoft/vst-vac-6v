@@ -408,19 +408,6 @@ tresult VAC6Processor::canProcessSampleSize(int32 symbolicSampleSize)
 }
 
 ///////////////////////////////////
-// ::readParam
-///////////////////////////////////
-template<typename ParamConverter>
-void readParam(IBStreamer &iStreamer, const typename ParamConverter::ParamType &iDefaultValue, typename ParamConverter::ParamType &oValue)
-{
-  double value;
-  if(iStreamer.readDouble(value))
-    oValue = ParamConverter::denormalize(value);
-  else
-    oValue = iDefaultValue;
-}
-
-///////////////////////////////////
 // VAC6Processor::setState
 ///////////////////////////////////
 tresult VAC6Processor::setState(IBStream *state)
@@ -428,46 +415,8 @@ tresult VAC6Processor::setState(IBStream *state)
   if(state == nullptr)
     return kResultFalse;
 
-
   IBStreamer streamer(state, kLittleEndian);
-
-  uint16 stateVersion;
-  if(!streamer.readInt16u(stateVersion))
-    stateVersion = PROCESSOR_STATE_VERSION;
-
-  if(stateVersion != PROCESSOR_STATE_VERSION)
-  {
-    DLOG_F(WARNING, "unexpected processor state version %d", stateVersion);
-  }
-
-  fState.readNewState(streamer);
-
-//  State newState{};
-//  readParam<LCDZoomFactorXParamConverter>(streamer, DEFAULT_ZOOM_FACTOR_X, newState.fZoomFactorX);
-//  readParam<BooleanParamConverter>(streamer, true, newState.fLeftChannelOn);
-//  readParam<BooleanParamConverter>(streamer, true, newState.fRightChannelOn);
-//  readParam<GainParamConverter>(streamer, DEFAULT_GAIN, newState.fGain1);
-//  readParam<GainParamConverter>(streamer, DEFAULT_GAIN, newState.fGain2);
-//  readParam<BooleanParamConverter>(streamer, true, newState.fGainFilter);
-//  readParam<BooleanParamConverter>(streamer, false, newState.fBypass);
-////  fPlugin.fBypassParam.read(streamer);
-//
-//  // lcd live view IGNORED! (does not make sense to not be in live view when loading)
-//
-//  fStateUpdate.push(newState);
-
-  //fRTStateUpdate.push(fRTState.readNewState(streamer));
-
-  return kResultOk;
-}
-
-///////////////////////////////////
-// ::readParam
-///////////////////////////////////
-template<typename ParamConverter>
-void writeParam(IBStreamer &iStreamer, typename ParamConverter::ParamType const &iValue)
-{
-  iStreamer.writeDouble(ParamConverter::normalize(iValue));
+  return fState.readNewState(streamer);
 }
 
 ///////////////////////////////////
@@ -478,24 +427,8 @@ tresult VAC6Processor::getState(IBStream *state)
   if(state == nullptr)
     return kResultFalse;
 
-
   IBStreamer streamer(state, kLittleEndian);
-
-  // write version for later upgrade
-  streamer.writeInt16u(PROCESSOR_STATE_VERSION);
-
-  fState.writeLatestState(streamer);
-
-//  auto latestState = fLatestState.get();
-//  writeParam<LCDZoomFactorXParamConverter>(streamer, latestState.fZoomFactorX);
-//  writeParam<BooleanParamConverter>(streamer, latestState.fLeftChannelOn);
-//  writeParam<BooleanParamConverter>(streamer, latestState.fRightChannelOn);
-//  writeParam<GainParamConverter>(streamer, latestState.fGain1);
-//  writeParam<GainParamConverter>(streamer, latestState.fGain2);
-//  writeParam<BooleanParamConverter>(streamer, latestState.fGainFilter);
-//  writeParam<BooleanParamConverter>(streamer, latestState.fBypass);
-
-  return kResultOk;
+  return fState.writeLatestState(streamer);
 }
 
 ///////////////////////////////////////////
@@ -525,25 +458,6 @@ void VAC6Processor::onTimer(Timer * /* timer */)
       sendMessage(message);
     }
   }
-}
-
-/*
- * Simple function to add a single parameter change at position 0 (which is the vast majority of cases) */
-inline tresult addOutputParameterChange(ProcessData &data, ParamID iParamID, ParamValue iNormalizedValue)
-{
-  IParameterChanges* outParamChanges = data.outputParameterChanges;
-  if(outParamChanges != nullptr)
-  {
-    int32 index = 0;
-    auto paramQueue = outParamChanges->addParameterData(iParamID, index);
-    if(paramQueue != nullptr)
-    {
-      int32 index2 = 0;
-      return paramQueue->addPoint(0, iNormalizedValue, index2);
-    }
-  }
-
-  return kResultFalse;
 }
 
 }

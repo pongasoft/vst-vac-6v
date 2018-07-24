@@ -3,6 +3,7 @@
 
 #include <pongasoft/logging/loguru.hpp>
 
+#include <base/source/fstreamer.h>
 #include <public.sdk/source/vst/vsteditcontroller.h>
 
 namespace pongasoft {
@@ -34,6 +35,15 @@ public:
 
   // exists
   inline bool exists(ParamID iParamID) const { return getParameterObject(iParamID) != nullptr; }
+
+  // setParamNormalized
+  void setParamNormalized(ParamID iParamID, IBStreamer &iStreamer, ParamValue iDefaultNormalizedValue)
+  {
+    double value;
+    if(!iStreamer.readDouble(value))
+      value = iDefaultNormalizedValue;
+    setParamNormalized(iParamID, value);
+  }
 
 private:
   EditController *const fParametersOwner;

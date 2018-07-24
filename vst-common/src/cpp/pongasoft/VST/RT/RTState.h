@@ -30,6 +30,7 @@ protected:
   // Internal structure that gets exchanged between the UI thread and the RT thread (no memory allocation)
   struct NormalizedState
   {
+    uint16 fVersion{0};
     ParamID fParamIDs[SavedParamCount]{};
     ParamValue fValues[SavedParamCount]{};
     int fCount{0};
@@ -62,6 +63,14 @@ protected:
     }
   };
 #endif
+
+  // Internal structure which maintains the order for storing/reading the state
+  struct SaveStateOrder
+  {
+    uint16 fVersion{0};
+    ParamID fOrder[SavedParamCount]{};
+    int fCount{0};
+  };
 
 public:
 
@@ -99,13 +108,13 @@ public:
    * This method should be called from Processor::setState to update this state to the state stored in the stream.
    * Note that this method is called from the UI thread so the update is queued until the next frame.
    */
-  void readNewState(IBStreamer &iStreamer);
+  tresult readNewState(IBStreamer &iStreamer);
 
   /**
    * This method should be called from Processor::getState to store the latest state to the stream. Note that this
    * method is called from the UI thread and gets the "latest" state as of the end of the last frame.
    */
-  void writeLatestState(IBStreamer &oStreamer);
+  tresult writeLatestState(IBStreamer &oStreamer);
 
 protected:
   NormalizedState getNormalizedState() const;
@@ -119,9 +128,8 @@ private:
   // contains all the registered parameters (unique ID, will be checked on add)
   std::map<ParamID, std::shared_ptr<RTRawParameter>> fParameters{};
 
-  // maintains the insertion order and keeps track of parameters saved by the RT only
-  std::array<ParamID, SavedParamCount> fRTParamIDs{};
-  int fRTParamIDsCount = 0;
+  // maintains the order for storing/reading the state
+  SaveStateOrder fSaveStateOrder{};
 
   // this queue is used to propagate a Processor::setState call (made from the UI thread) to this state
   // the check happens in beforeProcessing
@@ -138,10 +146,12 @@ private:
 template<int SavedParamCount>
 RTState<SavedParamCount>::RTState(Parameters const &iParameters)
 {
-  auto order = iParameters.getRTSaveStateOrder();
-  DCHECK_F(order.size() <= SavedParamCount, "RTState<%d> too small. Should be RTState<%lu>", SavedParamCount, order.size());
-  std::copy(order.begin(), order.end(), fRTParamIDs.begin());
-  fRTParamIDsCount = static_cast<int>(order.size());
+  auto sso = iParameters.getRTSaveStateOrder();
+  DCHECK_F(sso.fOrder.size() <= SavedParamCount,
+           "RTState<%d> too small. Should be RTState<%lu>", SavedParamCount, sso.fOrder.size());
+  std::copy(sso.fOrder.cbegin(), sso.fOrder.cend(), fSaveStateOrder.fOrder);
+  fSaveStateOrder.fCount = static_cast<int>(sso.fOrder.size());
+  fSaveStateOrder.fVersion = sso.fVersion;
 }
 
 //------------------------------------------------------------------------
@@ -179,9 +189,11 @@ typename RTState<SavedParamCount>::NormalizedState RTState<SavedParamCount>::get
 {
   NormalizedState normalizedState{};
 
-  for(int i = 0; i < fRTParamIDsCount; i++)
+  normalizedState.fVersion = fSaveStateOrder.fVersion;
+
+  for(int i = 0; i < fSaveStateOrder.fCount; i++)
   {
-    auto paramID = fRTParamIDs[i];
+    auto paramID = fSaveStateOrder.fOrder[i];
     normalizedState.push(paramID, fParameters.at(paramID)->getNormalizedValue());
   }
 
@@ -192,28 +204,45 @@ typename RTState<SavedParamCount>::NormalizedState RTState<SavedParamCount>::get
 // RTState::readNewState
 //------------------------------------------------------------------------
 template<int SavedParamCount>
-void RTState<SavedParamCount>::readNewState(IBStreamer &iStreamer)
+tresult RTState<SavedParamCount>::readNewState(IBStreamer &iStreamer)
 {
   NormalizedState normalizedState{};
 
-  for(int i = 0; i < fRTParamIDsCount; i++)
+  uint16 stateVersion;
+  if(!iStreamer.readInt16u(stateVersion))
+    stateVersion = fSaveStateOrder.fVersion;
+
+  // TODO handle multiple versions
+  if(stateVersion != fSaveStateOrder.fVersion)
   {
-    auto paramID = fRTParamIDs[i];
+    DLOG_F(WARNING, "unexpected state version %d", stateVersion);
+  }
+
+  normalizedState.fVersion = stateVersion;
+
+  for(int i = 0; i < fSaveStateOrder.fCount; i++)
+  {
+    auto paramID = fSaveStateOrder.fOrder[i];
     normalizedState.push(paramID, fParameters.at(paramID)->getRawParamDef()->readNormalizedValue(iStreamer));
   }
 
 //  DLOG_F(INFO, "readNewState - %s", normalizedState.toString().c_str());
 
   fStateUpdate.push(normalizedState);
+
+  return kResultOk;
 }
 
 //------------------------------------------------------------------------
 // RTState::writeLatestState
 //------------------------------------------------------------------------
 template<int SavedParamCount>
-void RTState<SavedParamCount>::writeLatestState(IBStreamer &oStreamer)
+tresult RTState<SavedParamCount>::writeLatestState(IBStreamer &oStreamer)
 {
   auto state = fLatestState.get();
+
+  // write version for later upgrade
+  oStreamer.writeInt16u(state.fVersion);
 
   for(int i = 0; i < state.fCount; i ++)
   {
@@ -222,6 +251,8 @@ void RTState<SavedParamCount>::writeLatestState(IBStreamer &oStreamer)
   }
 
 //  DLOG_F(INFO, "writeLatestState - %s", state.toString().c_str());
+
+  return kResultOk;
 }
 
 //------------------------------------------------------------------------
@@ -317,18 +348,18 @@ void RTState<SavedParamCount>::afterProcessing()
 template<int SavedParamCount>
 void RTState<SavedParamCount>::init()
 {
-  if(fRTParamIDsCount != SavedParamCount)
+  if(fSaveStateOrder.fCount != SavedParamCount)
   {
-    DLOG_F(WARNING, "RTState<%d> mismatch => Should be RTState<%d>", SavedParamCount, fRTParamIDsCount);
+    DLOG_F(WARNING, "RTState<%d> mismatch => Should be RTState<%d>", SavedParamCount, fSaveStateOrder.fCount);
   }
   else
   {
     DLOG_F(INFO, "RTState - parameters registered count... checked");
   }
 
-  for(int i = 0; i < fRTParamIDsCount; i++)
+  for(int i = 0; i < fSaveStateOrder.fCount; i++)
   {
-    auto paramID = fRTParamIDs[i];
+    auto paramID = fSaveStateOrder.fOrder[i];
     DCHECK_F(fParameters.find(paramID) != fParameters.cend(),
              "Expected parameter [%d] used in RTSaveStateOrder not registered",
              paramID);

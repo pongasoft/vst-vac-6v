@@ -63,6 +63,16 @@ public:
   };
 
 public:
+  /**
+   * Maintains the order used to save/restore the RT and GUI state
+   */
+  struct SaveStateOrder
+  {
+    uint16 fVersion{0};
+    std::vector<ParamID> fOrder{};
+  };
+
+public:
   // Constructor
   explicit Parameters() = default;
 
@@ -83,12 +93,12 @@ public:
    * @tparam Args can be any combination of ParamID, RawParamDef or ParamDef<ParamConverter>
    */
   template<typename... Args>
-  void setRTSaveStateOrder(Args... args);
+  void setRTSaveStateOrder(uint16 iVersion, Args... args);
 
   /**
    * @return the order used when saving the GUI state (getState/setState in the controller)
    */
-  std::vector<ParamID> getGUISaveStateOrder() const { return fGUISaveStateOrder; }
+  SaveStateOrder getGUISaveStateOrder() const { return fGUISaveStateOrder; }
 
   /**
    * Used to change the default order (registration order) used when saving the GUI state (getState/setState in
@@ -97,19 +107,22 @@ public:
    * @tparam Args can be any combination of ParamID, RawParamDef or ParamDef<ParamConverter>
    */
   template<typename... Args>
-  void setGUISaveStateOrder(Args... args);
+  void setGUISaveStateOrder(uint16 iVersion, Args... args);
 
   /**
    * @return the order used when saving the RT state (getState/setState in the processor, setComponentState in
    *         the controller)
    */
-  std::vector<ParamID> getRTSaveStateOrder() const { return fRTSaveStateOrder; }
+  SaveStateOrder getRTSaveStateOrder() const { return fRTSaveStateOrder; }
 
   /**
    * This method is called from the GUI controller to register all the parameters to the ParameterContainer class
    * which is the class managing the parameters in the vst sdk
    */
   void registerVstParameters(Vst::ParameterContainer &iParameterContainer) const;
+
+  // getRawParamDef - nullptr when not found
+  std::shared_ptr<RawParamDef> getRawParamDef(ParamID iParamID) const;
 
 protected:
   // internally called by the builder
@@ -123,8 +136,9 @@ private:
   std::map<ParamID, std::shared_ptr<RawParamDef>> fParameters{};
 
   std::vector<ParamID> fRegistrationOrder{};
-  std::vector<ParamID> fRTSaveStateOrder{};
-  std::vector<ParamID> fGUISaveStateOrder{};
+  // TODO: Handle multiple versions with upgrade
+  SaveStateOrder fRTSaveStateOrder{};
+  SaveStateOrder fGUISaveStateOrder{};
 
   // leaf of templated calls to build a list of ParamIDs from ParamID or ParamDefs
   void buildParamIDs(std::vector<ParamID> &iParamIDs) {}
@@ -212,7 +226,7 @@ void Parameters::buildParamIDs(std::vector<ParamID> &iParamIDs, ParamID iParamID
 // Parameters::setRTSaveStateOrder
 //------------------------------------------------------------------------
 template<typename... Args>
-void Parameters::setRTSaveStateOrder(Args... args)
+void Parameters::setRTSaveStateOrder(uint16 iVersion, Args... args)
 {
   std::vector<ParamID> ids{};
   buildParamIDs(ids, args...);
@@ -239,14 +253,14 @@ void Parameters::setRTSaveStateOrder(Args... args)
     }
   }
 
-  fRTSaveStateOrder = ids;
+  fRTSaveStateOrder = {iVersion, ids};
 }
 
 //------------------------------------------------------------------------
 // Parameters::setRTSaveStateOrder
 //------------------------------------------------------------------------
 template<typename... Args>
-void Parameters::setGUISaveStateOrder(Args... args)
+void Parameters::setGUISaveStateOrder(uint16 iVersion, Args... args)
 {
   std::vector<ParamID> ids{};
   buildParamIDs(ids, args...);
@@ -272,7 +286,7 @@ void Parameters::setGUISaveStateOrder(Args... args)
     }
   }
 
-  fGUISaveStateOrder = ids;
+  fGUISaveStateOrder = {iVersion, ids};
 }
 
 //------------------------------------------------------------------------

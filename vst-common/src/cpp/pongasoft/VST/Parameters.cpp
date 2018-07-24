@@ -45,6 +45,18 @@ void Parameters::registerVstParameters(Vst::ParameterContainer &iParameterContai
 }
 
 //------------------------------------------------------------------------
+// Parameters::getRawParamDef
+//------------------------------------------------------------------------
+std::shared_ptr<RawParamDef> Parameters::getRawParamDef(ParamID iParamID) const
+{
+  auto iter = fParameters.find(iParamID);
+  if(iter == fParameters.cend())
+    return nullptr;
+
+  return iter->second;
+}
+
+//------------------------------------------------------------------------
 // Parameters::addRawParamDef
 //------------------------------------------------------------------------
 void Parameters::addRawParamDef(std::shared_ptr<RawParamDef> iParamDef)
@@ -56,9 +68,9 @@ void Parameters::addRawParamDef(std::shared_ptr<RawParamDef> iParamDef)
   if(!iParamDef->fTransient)
   {
     if(iParamDef->fUIOnly)
-      fGUISaveStateOrder.emplace_back(iParamDef->fParamID);
+      fGUISaveStateOrder.fOrder.emplace_back(iParamDef->fParamID);
     else
-      fRTSaveStateOrder.emplace_back(iParamDef->fParamID);
+      fRTSaveStateOrder.fOrder.emplace_back(iParamDef->fParamID);
   }
 }
 

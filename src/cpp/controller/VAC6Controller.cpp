@@ -129,25 +129,7 @@ tresult VAC6Controller::setComponentState(IBStream *state)
 
   // using helper to read the stream
   IBStreamer streamer(state, kLittleEndian);
-
-  uint16 stateVersion;
-  if(!streamer.readInt16u(stateVersion))
-    stateVersion = PROCESSOR_STATE_VERSION;
-
-  if(stateVersion != PROCESSOR_STATE_VERSION)
-  {
-    DLOG_F(WARNING, "unexpected processor state version %d", stateVersion);
-  }
-
-  setParamNormalized<LCDZoomFactorXParamConverter>(EVAC6ParamID::kLCDZoomFactorX, streamer, DEFAULT_ZOOM_FACTOR_X);
-  setParamNormalized<BooleanParamConverter>(EVAC6ParamID::kLCDLeftChannel, streamer, true);
-  setParamNormalized<BooleanParamConverter>(EVAC6ParamID::kLCDRightChannel, streamer, true);
-  setParamNormalized<GainParamConverter>(EVAC6ParamID::kGain1, streamer, DEFAULT_GAIN);
-  setParamNormalized<GainParamConverter>(EVAC6ParamID::kGain2, streamer, DEFAULT_GAIN);
-  setParamNormalized<BooleanParamConverter>(EVAC6ParamID::kGainFilter, streamer, DEFAULT_GAIN_FILTER);
-  setParamNormalized<BooleanParamConverter>(EVAC6ParamID::kBypass, streamer, false);
-
-  return kResultOk;
+  return fGUIParameters.readRTState(streamer);
 }
 
 ///////////////////////////////////
@@ -161,21 +143,7 @@ tresult VAC6Controller::setState(IBStream *state)
   // DLOG_F(INFO, "VAC6Controller::setState()");
 
   IBStreamer streamer(state, kLittleEndian);
-
-  uint16 stateVersion;
-  if(!streamer.readInt16u(stateVersion))
-    stateVersion = CONTROLLER_STATE_VERSION;
-
-  if(stateVersion != CONTROLLER_STATE_VERSION)
-  {
-    DLOG_F(WARNING, "unexpected controller state version %d", stateVersion);
-  }
-
-  setParamNormalized<BooleanParamConverter>(EVAC6ParamID::kMaxLevelSinceResetMarker, streamer, true);
-  setParamNormalized<BooleanParamConverter>(EVAC6ParamID::kMaxLevelInWindowMarker, streamer, true);
-  setParamNormalized<SoftClippingLevelParamConverter>(EVAC6ParamID::kSoftClippingLevel, streamer, SoftClippingLevel{DEFAULT_SOFT_CLIPPING_LEVEL});
-
-  return kResultOk;
+  return fGUIParameters.readGUIState(streamer);
 }
 
 ///////////////////////////////////
@@ -189,15 +157,7 @@ tresult VAC6Controller::getState(IBStream *state)
   // DLOG_F(INFO, "VAC6Controller::getState()");
 
   IBStreamer streamer(state, kLittleEndian);
-
-  // write version for later upgrade
-  streamer.writeInt16u(CONTROLLER_STATE_VERSION);
-
-  streamer.writeDouble(getParamNormalized(EVAC6ParamID::kMaxLevelSinceResetMarker));
-  streamer.writeDouble(getParamNormalized(EVAC6ParamID::kMaxLevelInWindowMarker));
-  streamer.writeDouble(getParamNormalized(EVAC6ParamID::kSoftClippingLevel));
-
-  return kResultOk;
+  return fGUIParameters.writeGUIState(streamer);
 }
 
 ///////////////////////////////////

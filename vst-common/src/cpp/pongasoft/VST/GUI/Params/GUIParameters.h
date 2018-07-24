@@ -47,6 +47,24 @@ public:
   void registerVstParameters(Vst::ParameterContainer &iParameterContainer) const;
 
   /**
+   * This method is called from the GUI controller setComponentState method and reads the state coming from RT
+   * and initializes the vst host parameters accordingly
+   */
+  tresult readRTState(IBStreamer &iStreamer);
+
+  /**
+   * This method is called from the GUI controller setState method and reads the state previously saved by the
+   * GUI only (parameters that are ui only) and initializes the vst host parameters accordingly
+   */
+  tresult readGUIState(IBStreamer &iStreamer);
+
+  /**
+   * This method is called from the GUI controller getState method and writes the state specific to the
+   * GUI only (parameters that are ui only), reading the values from the vst host parameters
+   */
+  tresult writeGUIState(IBStreamer &oStreamer) const;
+
+  /**
    * @return the raw parameter given its id
    */
   std::unique_ptr<GUIRawParameter> getRawParameter(ParamID iParamID) const
@@ -59,6 +77,10 @@ public:
    * and obtain GUIParam instances. See CustomView::registerXXX methods.
    */
   std::unique_ptr<GUIParamCxMgr> createParamCxMgr() const;
+
+protected:
+  // readState according to iSaveStateOrder
+  tresult readState(PluginParameters::SaveStateOrder const &iSaveStateOrder, IBStreamer &iStreamer);
 
 private:
   HostParameters fHostParameters;
