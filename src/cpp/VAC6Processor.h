@@ -64,13 +64,6 @@ public:
 
 protected:
   /**
-   * Processes the parameters that have changed since the last call to process
-   *
-   * @param inputParameterChanges
-   */
-  bool processParameters(IParameterChanges &inputParameterChanges);
-
-  /**
    * Processes inputs (step 2 always called after processing the parameters)
    */
   tresult processInputs(ProcessData &data);
@@ -83,15 +76,6 @@ protected:
 
   // from ITimerCallback
   void onTimer(Timer *timer) override;
-
-protected:
-  /**
-   * @return the duration of the window in milliseconds
-   */
-  long getWindowSizeInMillis()
-  {
-    return fClock.getTimeForSampleCount(fZoomWindow->getVisibleWindowSizeInSamples() * fMaxAccumulatorBatchSize);
-  }
 
 private:
   VAC6Parameters fParameters;

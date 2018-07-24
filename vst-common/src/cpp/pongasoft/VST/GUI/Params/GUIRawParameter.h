@@ -3,6 +3,8 @@
 
 #include "HostParameters.h"
 
+#include <string>
+
 namespace pongasoft {
 namespace VST {
 namespace GUI {
@@ -156,6 +158,26 @@ public:
   inline ParamValue getValue() const
   {
     return fHostParameters.getParamNormalized(fParamID);
+  }
+
+  /**
+   * Populates the oString with a string representation of this parameter
+   */
+  void toString(String128 oString)
+  {
+    auto parameter = fHostParameters.getParameterObject(fParamID);
+    if(parameter)
+      parameter->toString(getValue(), oString);
+  }
+
+  /**
+   * Returns a string representation of this parameter
+   */
+  String toString()
+  {
+    String128 s;
+    toString(s);
+    return String(s);
   }
 
   /**

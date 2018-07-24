@@ -364,8 +364,6 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
     }
     lcdData.fRightChannel.fOn = fState.fRightChannelOn;
 
-    lcdData.fWindowSizeInMillis = getWindowSizeInMillis();
-
     fLCDDataUpdate.push(lcdData);
   }
 
@@ -452,8 +450,6 @@ void VAC6Processor::onTimer(Timer * /* timer */)
       if(lcdData.fRightChannel.fOn)
         m.setBinary(LCDDATA_RIGHT_SAMPLES_ATTR, lcdData.fRightChannel.fSamples, MAX_ARRAY_SIZE);
       m.setFloat(LCDDATA_RIGHT_MAX_LEVEL_SINCE_RESET_ATTR, lcdData.fRightChannel.fMaxLevelSinceReset);
-
-      m.setInt(LCDDATA_WINDOW_SIZE_MS_ATTR, lcdData.fWindowSizeInMillis);
 
       sendMessage(message);
     }

@@ -316,7 +316,6 @@ struct MaxLevel
 ///////////////////////////////////
 // LCDData
 ///////////////////////////////////
-constexpr IAttributeList::AttrID LCDDATA_WINDOW_SIZE_MS_ATTR = "WSM";
 constexpr IAttributeList::AttrID LCDDATA_LEFT_SAMPLES_ATTR = "LSA";
 constexpr IAttributeList::AttrID LCDDATA_LEFT_MAX_LEVEL_SINCE_RESET_ATTR = "LML";
 constexpr IAttributeList::AttrID LCDDATA_RIGHT_SAMPLES_ATTR = "RSA";
@@ -333,8 +332,6 @@ struct LCDData
     MaxLevel computeInWindowMaxLevel() const;
     MaxLevel computeSinceResetMaxLevel() const;
   };
-
-  long fWindowSizeInMillis{0};
 
   Channel fLeftChannel;
   Channel fRightChannel;

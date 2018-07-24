@@ -19,15 +19,6 @@ void LCDDisplayState::onMessage(Message const &message)
 {
   long now = Clock::getCurrentTimeMillis();
 
-  if(fWindowSizeInMillis != fHistoryState->fLCDData.fWindowSizeInMillis)
-  {
-    // TODO use LCDZoomFactorXParamConverter::toString (need parameter)
-    char text[256];
-    sprintf(text, "Zoom: %.1fs", fHistoryState->fLCDData.fWindowSizeInMillis / 1000.0);
-    fLCDZoomFactorXMessage = std::make_unique<LCDMessage>(UTF8String(text), now);
-    fWindowSizeInMillis = fHistoryState->fLCDData.fWindowSizeInMillis;
-  }
-
   if(fLCDSoftClippingLevelMessage)
   {
     if(fLCDSoftClippingLevelMessage->update(now))
@@ -50,22 +41,46 @@ void LCDDisplayState::onMessage(Message const &message)
 ///////////////////////////////////////////
 // LCDDisplayState::onSoftClippingLevelChange
 ///////////////////////////////////////////
-void LCDDisplayState::onSoftClippingLevelChange(SoftClippingLevel const &iNewValue)
+void LCDDisplayState::onSoftClippingLevelChange()
 {
   long now = Clock::getCurrentTimeMillis();
 
   fLCDSoftClippingLevelMessage =
-    std::make_unique<LCDMessage>(toDbString(iNewValue.getValueInSample()), now);
+    std::make_unique<LCDMessage>(UTF8String(fSoftClippingLevelParam->toString()), now);
+
+  updateView();
 }
 
 ///////////////////////////////////////////
-// LCDDisplayState::onMessage
+// LCDDisplayState::onZoomFactorXChange
 ///////////////////////////////////////////
-void LCDDisplayState::updateView() const
+void LCDDisplayState::onZoomFactorXChange()
 {
-  if(fView != nullptr)
+  long now = Clock::getCurrentTimeMillis();
+
+  String text = "Zoom: ";
+  text += fLCDZoomFactorXParam->toString();
+
+//  char text[256];
+//  sprintf(text, "Zoom: %.1fs", fHistoryState->fLCDData.fWindowSizeInMillis / 1000.0);
+  fLCDZoomFactorXMessage = std::make_unique<LCDMessage>(UTF8String(text), now);
+
+  updateView();
+}
+
+///////////////////////////////////////////
+// LCDDisplayState::onParameterChange
+///////////////////////////////////////////
+void LCDDisplayState::onParameterChange(ParamID iParamID, ParamValue /* iNormalizedValue */)
+{
+  if(iParamID == fLCDZoomFactorXParam->getParamID())
   {
-    fView->setDirty(true);
+    onZoomFactorXChange();
+  }
+
+  if(iParamID == fSoftClippingLevelParam->getParamID())
+  {
+    onSoftClippingLevelChange();
   }
 }
 
@@ -79,11 +94,12 @@ void LCDDisplayState::afterAssign()
 }
 
 ///////////////////////////////////////////
-// LCDDisplayState::beforeUnassign
+// LCDDisplayState::registerParameters
 ///////////////////////////////////////////
-void LCDDisplayState::beforeUnassign()
+void LCDDisplayState::registerParameters()
 {
-  fView->setState(nullptr);
+  fLCDZoomFactorXParam = registerGUIParam(fParams->fZoomFactorXParam);
+  fSoftClippingLevelParam = registerGUIParam(fParams->fSoftClippingLevelParam);
 }
 
 ///////////////////////////////////////////
@@ -344,24 +360,6 @@ void LCDDisplayView::registerParameters()
   fMaxLevelSinceResetMarker = registerGUIParam(fParams->fSinceResetMarkerParam);
   fMaxLevelInWindowMarker = registerGUIParam(fParams->fInWindowMarkerParam);
   fLCDLiveViewParameter = registerGUIParam(fParams->fLCDLiveViewParam);
-}
-
-///////////////////////////////////////////
-// LCDDisplayView::onParameterChange
-///////////////////////////////////////////
-void LCDDisplayView::onParameterChange(ParamID iParamID, ParamValue iNormalizedValue)
-{
-  CustomView::onParameterChange(iParamID, iNormalizedValue);
-
-  switch(iParamID)
-  {
-    case EVAC6ParamID::kSoftClippingLevel:
-      fState->onSoftClippingLevelChange(fSoftClippingLevelParameter->getValue());
-      break;
-
-    default:
-      break;
-  }
 }
 
 ///////////////////////////////////////////

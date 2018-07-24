@@ -125,6 +125,22 @@ public:
   }
 
   /**
+   * Populates the oString with a string representation of this parameter
+   */
+  void toString(String128 oString)
+  {
+    fRawParameter->toString(oString);
+  }
+
+  /**
+   * Returns a string representation of this parameter
+   */
+  String toString()
+  {
+    return fRawParameter->toString();
+  }
+
+  /**
    * @return an editor to modify the parameter (see Editor)
    */
   std::unique_ptr<Editor> edit()

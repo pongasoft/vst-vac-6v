@@ -49,6 +49,9 @@ tresult VAC6Controller::initialize(FUnknown *context)
 
   fGUIParameters.registerVstParameters(parameters);
 
+  fLCDDisplayState.initParameters(fGUIParameters);
+  fLCDDisplayState.registerParameters();
+
   fViewFactory = new CustomUIViewFactory(fGUIParameters);
 
   return result;

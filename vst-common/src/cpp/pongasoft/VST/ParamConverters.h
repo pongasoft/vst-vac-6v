@@ -49,11 +49,11 @@ public:
     return Utils::clamp(iNormalizedValue, 0.0, 1.0);;
   }
 
-  inline static void toString(ParamValue const &iValue, String128 iString, int32 iPrecision)
+  inline static void toString(ParamValue const &iValue, String128 oString, int32 iPrecision)
   {
-    Steinberg::UString wrapper(iString, str16BufferSize (String128));
+    Steinberg::UString wrapper(oString, str16BufferSize (String128));
     if(!wrapper.printFloat(iValue, iPrecision))
-      iString[0] = 0;
+      oString[0] = 0;
   }
 };
 
@@ -77,9 +77,9 @@ public:
     return iNormalizedValue >= 0.5;
   }
 
-  inline static void toString(bool const &iValue, String128 iString, int32 /* iPrecision */)
+  inline static void toString(bool const &iValue, String128 oString, int32 /* iPrecision */)
   {
-    Steinberg::UString wrapper(iString, str16BufferSize(String128));
+    Steinberg::UString wrapper(oString, str16BufferSize(String128));
     if(iValue)
       wrapper.assign(STR16("On"));
     else
@@ -106,9 +106,9 @@ public:
     return Utils::clamp(iNormalizedValue, 0.0, 1.0);
   }
 
-  inline static void toString(ParamType const &iValue, String128 iString, int32 iPrecision)
+  inline static void toString(ParamType const &iValue, String128 oString, int32 iPrecision)
   {
-    Steinberg::UString wrapper(iString, str16BufferSize (String128));
+    Steinberg::UString wrapper(oString, str16BufferSize (String128));
     wrapper.printFloat(iValue * 100, iPrecision);
     wrapper.append(STR16("%"));
   }
@@ -140,11 +140,11 @@ public:
                                                 value * (StepCount + 1))));
   }
 
-  inline static void toString(ParamType const &iValue, String128 iString, int32 /* iPrecision */)
+  inline static void toString(ParamType const &iValue, String128 oString, int32 /* iPrecision */)
   {
-    Steinberg::UString wrapper(iString, str16BufferSize (String128));
+    Steinberg::UString wrapper(oString, str16BufferSize (String128));
     if(!wrapper.printInt(iValue))
-      iString[0] = 0;
+      oString[0] = 0;
   }
 };
 

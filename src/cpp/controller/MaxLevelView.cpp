@@ -6,17 +6,6 @@ namespace VST {
 namespace VAC6 {
 
 ///////////////////////////////////////////
-// MaxLevelState::updateView
-///////////////////////////////////////////
-void MaxLevelState::updateView() const
-{
-  if(fView != nullptr)
-  {
-    fView->setDirty(true);
-  }
-}
-
-///////////////////////////////////////////
 // MaxLevelState::onMessage
 ///////////////////////////////////////////
 void MaxLevelState::onMessage(Message const &message)

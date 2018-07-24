@@ -49,9 +49,6 @@ public:
   // registerParameters
   void registerParameters() override;
 
-  // onParameterChange => overriding to propagate the change to fState
-  void onParameterChange(ParamID iParamID, ParamValue iNormalizedValue) override;
-
   // onMouseDown
   CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override;
 
@@ -113,12 +110,13 @@ public:
 
 };
 
+
 constexpr long MESSAGE_VISIBLE_DURATION_MS = 2000;
 constexpr long MESSAGE_FADE_DURATION_MS = 250;
 
 /**
  * Keeps track of the lcd display sate whether the view is created or not */
-class LCDDisplayState : public GUIViewState<LCDDisplayView>
+class LCDDisplayState : public PluginGUIViewState<LCDDisplayView, VAC6Parameters>
 {
   /**
    * A message to display on the LCD Screen (with auto fade)
@@ -188,22 +186,26 @@ public:
   // afterAssign
   void afterAssign() override;
 
-  // beforeUnassign
-  void beforeUnassign() override;
+  void registerParameters() override;
 
+  void onParameterChange(ParamID iParamID, ParamValue iNormalizedValue) override;
+
+protected:
   // onSoftClippingLevelChange
-  void onSoftClippingLevelChange(SoftClippingLevel const &iNewValue);
+  void onSoftClippingLevelChange();
+
+  // onZoomFactorXChange
+  void onZoomFactorXChange();
 
 private:
   friend class LCDDisplayView;
 
-  // updateView
-  void updateView() const;
-
-  long fWindowSizeInMillis{0};
   std::shared_ptr<HistoryState> fHistoryState;
   std::unique_ptr<LCDMessage> fLCDSoftClippingLevelMessage;
   std::unique_ptr<LCDMessage> fLCDZoomFactorXMessage;
+
+  GUIParamUPtr<SoftClippingLevelParamConverter> fSoftClippingLevelParam{nullptr};
+  GUIParamUPtr<LCDZoomFactorXParamConverter> fLCDZoomFactorXParam{nullptr};
 };
 
 }

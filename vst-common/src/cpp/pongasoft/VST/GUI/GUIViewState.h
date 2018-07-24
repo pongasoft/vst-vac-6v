@@ -2,12 +2,15 @@
 
 #include <vstgui4/vstgui/lib/iviewlistener.h>
 #include <pongasoft/logging/loguru.hpp>
+#include <pongasoft/VST/GUI/Params/GUIParameters.h>
+#include <pongasoft/VST/GUI/Params/GUIParamCxMgr.h>
 
 namespace pongasoft {
 namespace VST {
 namespace GUI {
 
 using namespace VSTGUI;
+using namespace Params;
 
 /**
  * Encapsulates a view while managing its lifecyle: the idea is that an instance of this class is being owned by the
@@ -15,7 +18,7 @@ using namespace VSTGUI;
  * (as the user opens/closes the UI of the plugin)
  */
 template<typename V>
-class GUIViewState : public IViewListenerAdapter
+class GUIViewState : public IViewListenerAdapter, public GUIRawParameter::IChangeListener
 {
 public:
   // Constructor
@@ -25,7 +28,7 @@ public:
   void assign(V *view) {
     DCHECK_NOTNULL_F(view, "assign should not receive null pointer");
 
-    if(fView != nullptr)
+    if(fView)
     {
       fView->unregisterViewListener(this);
     }
@@ -40,11 +43,81 @@ public:
    * An implementation will typically override this method to initialize the view depending on the state. It is called
    * after assigned as been done (thus fView != nullptr)
    */
-  virtual void afterAssign() { }
+  virtual void afterAssign() = 0;
 
   /**
    * Called prior to the view being deleted/unassigned in case some cleanup needs to happen */
-  virtual void beforeUnassign() { }
+  virtual void beforeUnassign()
+  {
+    fView->setState(nullptr);
+  }
+
+  /**
+   * By default sets the view dirty
+   */
+  virtual void updateView()
+  {
+    if(fView)
+      fView->setDirty(true);
+  }
+
+  /**
+ * Called during initialization
+ */
+  virtual void initParameters(GUIParameters const &iParameters)
+  {
+    fParamCxMgr = iParameters.createParamCxMgr();
+  }
+
+  /**
+   * Subclasses should override this method to register each parameter
+   */
+  virtual void registerParameters()
+  {
+    // subclasses implements this method
+  }
+
+  /**
+   * Nothing to do by default... implements in derived classes */
+  void onParameterChange(ParamID iParamID, ParamValue iNormalizedValue) override
+  {
+  }
+
+  /**
+ * Registers a raw parameter (no conversion)
+ */
+  std::unique_ptr<GUIRawParameter> registerGUIRawParam(ParamID iParamID, bool iSubscribeToChanges = true)
+  {
+    return fParamCxMgr->registerGUIRawParam(iParamID, iSubscribeToChanges ? this : nullptr);
+  }
+
+  /**
+   * Generic register with any kind of conversion
+   */
+  template<typename ParamConverter>
+  GUIParamUPtr<ParamConverter> registerGUIParam(ParamID iParamID, bool iSubscribeToChanges = true)
+  {
+    return std::make_unique<GUIParameter<ParamConverter>>(registerGUIRawParam(iParamID, iSubscribeToChanges));
+  }
+
+  /**
+   * Generic register with any kind of conversion using an actual param def (no param id)
+   */
+  template<typename ParamConverter>
+  GUIParamUPtr<ParamConverter> registerGUIParam(ParamDefSPtr<ParamConverter> iParamDef,
+                                                bool iSubscribeToChanges = true)
+  {
+    return std::make_unique<GUIParameter<ParamConverter>>(registerGUIRawParam(iParamDef->fParamID, iSubscribeToChanges));
+  }
+
+  /**
+   * Gives access to plugin parameters
+   */
+  template<typename TParameters>
+  TParameters const *getPluginParameters() const
+  {
+    return fParamCxMgr->getPluginParameters<TParameters>();
+  }
 
 protected:
   /**
@@ -62,8 +135,29 @@ protected:
   };
 
   V* fView;
+
+  // Access to parameters
+  std::unique_ptr<GUIParamCxMgr> fParamCxMgr;
 };
 
+/**
+ * This subclass gives access to plugin parameters with the fParams variable (similar to PluginCustomView)
+ */
+template<typename V, typename TPluginParameters>
+class PluginGUIViewState : public GUIViewState<V>
+{
+public:
+  void initParameters(GUIParameters const &iParameters) override
+  {
+    GUIViewState<V>::initParameters(iParameters);
+    if(GUIViewState<V>::fParamCxMgr)
+      fParams = GUIViewState<V>::template getPluginParameters<TPluginParameters>();
+  }
+
+public:
+  // direct access to parameters (ex: fParams->fBypassParam)
+  TPluginParameters const *fParams{nullptr};
+};
 
 }
 }

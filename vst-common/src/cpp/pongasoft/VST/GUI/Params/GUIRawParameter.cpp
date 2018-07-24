@@ -116,7 +116,7 @@ GUIRawParameter::GUIRawParameter(ParamID iParamID, HostParameters const &iHostPa
   fHostParameters{iHostParameters}
 {
   // DLOG_F(INFO, "GUIRawParameter::GUIRawParameter(%d)", fParamID);
-  DCHECK_F(fHostParameters.exists(fParamID));
+  DCHECK_F(fHostParameters.exists(fParamID), "Missing parameter [%d]", iParamID);
 }
 
 }

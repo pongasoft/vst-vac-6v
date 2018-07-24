@@ -91,19 +91,12 @@ public:
     updateView();
   };
 
-  void beforeUnassign() override
-  {
-    fView->setState(nullptr);
-  }
-
   void onMessage(Message const &message);
 
   MaxLevel getMaxLevel(int iLCDInputX) const;
 
 private:
   friend class MaxLevelView;
-
-  void updateView() const;
 
   Type fType;
   std::shared_ptr<HistoryState> fHistoryState;
