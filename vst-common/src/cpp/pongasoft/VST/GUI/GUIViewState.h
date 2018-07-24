@@ -3,7 +3,7 @@
 #include <vstgui4/vstgui/lib/iviewlistener.h>
 #include <pongasoft/logging/loguru.hpp>
 #include <pongasoft/VST/GUI/Params/GUIParameters.h>
-#include <pongasoft/VST/GUI/Params/GUIParamCxMgr.h>
+#include <pongasoft/VST/GUI/Params/GUIParamCxAware.h>
 
 namespace pongasoft {
 namespace VST {
@@ -18,11 +18,11 @@ using namespace Params;
  * (as the user opens/closes the UI of the plugin)
  */
 template<typename V>
-class GUIViewState : public IViewListenerAdapter, public GUIRawParameter::IChangeListener
+class GUIViewState : public IViewListenerAdapter, public GUIParamCxAware
 {
 public:
   // Constructor
-  GUIViewState() : fView{nullptr} {};
+  GUIViewState() : GUIParamCxAware(), fView{nullptr} {};
 
   // Called when the view was created and needs to be assigned to this instance
   void assign(V *view) {
@@ -61,64 +61,6 @@ public:
       fView->setDirty(true);
   }
 
-  /**
- * Called during initialization
- */
-  virtual void initParameters(GUIParameters const &iParameters)
-  {
-    fParamCxMgr = iParameters.createParamCxMgr();
-  }
-
-  /**
-   * Subclasses should override this method to register each parameter
-   */
-  virtual void registerParameters()
-  {
-    // subclasses implements this method
-  }
-
-  /**
-   * Nothing to do by default... implements in derived classes */
-  void onParameterChange(ParamID iParamID, ParamValue iNormalizedValue) override
-  {
-  }
-
-  /**
- * Registers a raw parameter (no conversion)
- */
-  std::unique_ptr<GUIRawParameter> registerGUIRawParam(ParamID iParamID, bool iSubscribeToChanges = true)
-  {
-    return fParamCxMgr->registerGUIRawParam(iParamID, iSubscribeToChanges ? this : nullptr);
-  }
-
-  /**
-   * Generic register with any kind of conversion
-   */
-  template<typename ParamConverter>
-  GUIParamUPtr<ParamConverter> registerGUIParam(ParamID iParamID, bool iSubscribeToChanges = true)
-  {
-    return std::make_unique<GUIParameter<ParamConverter>>(registerGUIRawParam(iParamID, iSubscribeToChanges));
-  }
-
-  /**
-   * Generic register with any kind of conversion using an actual param def (no param id)
-   */
-  template<typename ParamConverter>
-  GUIParamUPtr<ParamConverter> registerGUIParam(ParamDefSPtr<ParamConverter> iParamDef,
-                                                bool iSubscribeToChanges = true)
-  {
-    return std::make_unique<GUIParameter<ParamConverter>>(registerGUIRawParam(iParamDef->fParamID, iSubscribeToChanges));
-  }
-
-  /**
-   * Gives access to plugin parameters
-   */
-  template<typename TParameters>
-  TParameters const *getPluginParameters() const
-  {
-    return fParamCxMgr->getPluginParameters<TParameters>();
-  }
-
 protected:
   /**
    * Callback that is called when the host is about to delete the view and as a result it needs to be unassigned from
@@ -135,9 +77,6 @@ protected:
   };
 
   V* fView;
-
-  // Access to parameters
-  std::unique_ptr<GUIParamCxMgr> fParamCxMgr;
 };
 
 /**

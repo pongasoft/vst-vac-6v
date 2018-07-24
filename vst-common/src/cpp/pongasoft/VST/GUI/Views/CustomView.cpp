@@ -15,10 +15,10 @@ using namespace VSTGUI;
 ///////////////////////////////////////////
 CustomView::CustomView(const CRect &iSize)
   : CView(iSize),
+    GUIParamCxAware(),
     fTag{-1},
     fBackColor{0, 0, 0},
-    fEditorMode{false},
-    fParamCxMgr{nullptr}
+    fEditorMode{false}
 {
   setWantsFocus(true);
 }
@@ -63,35 +63,7 @@ void CustomView::drawStyleChanged()
 ///////////////////////////////////////////
 void CustomView::onParameterChange(ParamID iParamID, ParamValue iNormalizedValue)
 {
-  // DLOG_F(INFO, "CustomView::onParameterChange(%d, %d, %f)", fTag, iParamID, iNormalizedValue);
   setDirty(true);
-}
-
-///////////////////////////////////////////
-// CustomView::registerGUIRawParam
-///////////////////////////////////////////
-std::unique_ptr<GUIRawParameter> CustomView::registerGUIRawParam(ParamID iParamID, bool iSubscribeToChanges)
-{
-  if(!fParamCxMgr)
-    ABORT_F("fParamCxMgr should have been registered");
-
-  return fParamCxMgr->registerGUIRawParam(iParamID, iSubscribeToChanges ? this : nullptr);
-}
-
-///////////////////////////////////////////
-// CustomView::registerBooleanParam
-///////////////////////////////////////////
-GUIParamUPtr<BooleanParamConverter> CustomView::registerBooleanParam(ParamID iParamID, bool iSubscribeToChanges)
-{
-  return registerGUIParam<BooleanParamConverter>(iParamID, iSubscribeToChanges);
-}
-
-///////////////////////////////////////////
-// CustomView::registerPercentParam
-///////////////////////////////////////////
-GUIParamUPtr<PercentParamConverter> CustomView::registerPercentParam(ParamID iParamID, bool iSubscribeToChanges)
-{
-  return registerGUIParam<PercentParamConverter>(iParamID, iSubscribeToChanges);
 }
 
 ///////////////////////////////////////////

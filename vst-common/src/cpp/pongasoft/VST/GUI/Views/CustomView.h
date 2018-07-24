@@ -3,7 +3,7 @@
 #include <vstgui4/vstgui/lib/cview.h>
 #include <map>
 #include <pongasoft/VST/GUI/Params/GUIParameters.h>
-#include <pongasoft/VST/GUI/Params/GUIParamCxMgr.h>
+#include <pongasoft/VST/GUI/Params/GUIParamCxAware.h>
 #include "CustomViewCreator.h"
 
 namespace pongasoft {
@@ -78,7 +78,7 @@ using namespace Params;
  *   }
  * }
  */
-class CustomView : public CView, public GUIRawParameter::IChangeListener, public CustomViewInitializer
+class CustomView : public CView, public GUIParamCxAware, public CustomViewInitializer
 {
 public:
   // Constructor
@@ -124,45 +124,6 @@ public:
 
 public:
 
-  /**
-   * Registers a raw parameter (no conversion)
-   */
-  std::unique_ptr<GUIRawParameter> registerGUIRawParam(ParamID iParamID, bool iSubscribeToChanges = true);
-
-  /**
-   * Generic register with any kind of conversion
-   */
-  template<typename ParamConverter>
-  GUIParamUPtr<ParamConverter> registerGUIParam(ParamID iParamID, bool iSubscribeToChanges = true)
-  {
-    return std::make_unique<GUIParameter<ParamConverter>>(registerGUIRawParam(iParamID, iSubscribeToChanges));
-  }
-
-  // shortcut for BooleanParameter
-  GUIBooleanParamUPtr registerBooleanParam(ParamID iParamID, bool iSubscribeToChanges = true);
-
-  // shortcut for PercentParameter
-  GUIPercentParamUPtr registerPercentParam(ParamID iParamID, bool iSubscribeToChanges = true);
-
-  /**
-   * Generic register with any kind of conversion using an actual param def (no param id)
-   */
-  template<typename ParamConverter>
-  GUIParamUPtr<ParamConverter> registerGUIParam(ParamDefSPtr<ParamConverter> iParamDef,
-                                                bool iSubscribeToChanges = true)
-  {
-    return std::make_unique<GUIParameter<ParamConverter>>(registerGUIRawParam(iParamDef->fParamID, iSubscribeToChanges));
-  }
-
-  /**
-   * Gives access to plugin parameters
-   */
-  template<typename TParameters>
-  TParameters const *getPluginParameters() const
-  {
-    return fParamCxMgr->getPluginParameters<TParameters>();
-  }
-
   CLASS_METHODS_NOCOPY(CustomView, CControl)
 
   void afterCreate(UIAttributes const &iAttributes, IUIDescription const *iDescription) override;
@@ -174,22 +135,6 @@ public:
   void afterApply(UIAttributes const &iAttributes, IUIDescription const *iDescription) override;
 
 protected:
-  /**
-   * Called during initialization
-   */
-  virtual void initParameters(GUIParameters const &iParameters)
-  {
-    fParamCxMgr = iParameters.createParamCxMgr();
-  }
-
-  /**
-   * Subclasses should override this method to register each parameter
-   */
-  virtual void registerParameters()
-  {
-    // subclasses implements this method
-  }
-
   /**
    * Convenient call to size to fit this view according to the and height provided
    */
@@ -219,9 +164,6 @@ protected:
   int32_t fTag;
   bool fEditorMode;
   CColor fBackColor;
-
-  // Access to parameters
-  std::unique_ptr<GUIParamCxMgr> fParamCxMgr;
 
 public:
   class Creator : public TCustomViewCreator<CustomView>

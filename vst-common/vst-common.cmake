@@ -38,6 +38,7 @@ set(VST_COMMON_sources_h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIParamCxMgr.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIParameter.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIParameters.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIParamCxAware.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIRawParameter.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/HostParameters.h
 
@@ -62,6 +63,7 @@ set(VST_COMMON_sources_cpp
 
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIParamCxMgr.cpp
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIParameters.cpp
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIParamCxAware.cpp
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIRawParameter.cpp
 
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/CustomView.cpp
