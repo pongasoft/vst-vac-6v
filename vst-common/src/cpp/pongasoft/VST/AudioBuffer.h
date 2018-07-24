@@ -1,12 +1,13 @@
 #pragma once
 
 #include <pluginterfaces/vst/ivstaudioprocessor.h>
-#include "AudioUtils.h"
 #include <pongasoft/logging/loguru.hpp>
+#include <algorithm>
+
+#include "AudioUtils.h"
 
 namespace pongasoft {
 namespace VST {
-namespace Common {
 
 using namespace Steinberg;
 using namespace Steinberg::Vst;
@@ -93,7 +94,7 @@ public:
       {
         auto sample = *ptr;
 
-        if(silent && !pongasoft::VST::Common::isSilent(sample))
+        if(silent && !pongasoft::VST::isSilent(sample))
           silent = false;
       }
 
@@ -234,6 +235,5 @@ inline Sample64 **AudioBuffers<Sample64>::getBuffer() const
 typedef AudioBuffers<Sample32> AudioBuffers32;
 typedef AudioBuffers<Sample64> AudioBuffers64;
 
-}
 }
 }

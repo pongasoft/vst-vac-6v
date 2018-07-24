@@ -47,12 +47,6 @@ set(vst_sources
 		${CPP_SOURCES}/controller/VAC6Controller.h
 		${CPP_SOURCES}/controller/VAC6Controller.cpp
 		${CPP_SOURCES}/controller/VAC6Controller.h
-		${CPP_SOURCES}/controller/VSTViewState.h
-		${CPP_SOURCES}/AudioBuffer.h
-		${CPP_SOURCES}/AudioUtils.h
-		${CPP_SOURCES}/Clock.h
-		${CPP_SOURCES}/Messaging.h
-		${CPP_SOURCES}/Utils.h
 		${CPP_SOURCES}/VAC6CIDs.h
 		${CPP_SOURCES}/VAC6Constants.h
 		${CPP_SOURCES}/VAC6Model.h

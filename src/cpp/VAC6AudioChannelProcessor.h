@@ -1,12 +1,12 @@
 #pragma once
 
 #include <pluginterfaces/vst/vsttypes.h>
-#include <algorithm>
 #include <pongasoft/Utils/Collection/CircularBuffer.h>
+#include <pongasoft/VST/AudioBuffer.h>
+#include <pongasoft/VST/Clock.h>
+#include <algorithm>
 #include "VAC6Constants.h"
 #include "VAC6Model.h"
-#include "Clock.h"
-#include "AudioBuffer.h"
 #include "ZoomWindow.h"
 
 namespace pongasoft {

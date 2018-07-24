@@ -21,8 +21,13 @@ set(VST_COMMON_sources_h
 
     ${VST_COMMON_CPP_SOURCES}/pongasoft/Utils/Collection/CircularBuffer.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/Utils/Concurrent/Concurrent.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/Utils/Lerp.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/Utils/Misc.h
 
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/AudioBuffer.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/AudioUtils.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Clock.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Messaging.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/ParamConverters.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/ParamDef.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Parameters.h
@@ -44,6 +49,7 @@ set(VST_COMMON_sources_h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/ToggleButtonView.h
 
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/DrawContext.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/GUIViewState.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Types.h
     )
 

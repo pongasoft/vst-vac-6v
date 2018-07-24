@@ -1,13 +1,13 @@
 #pragma once
 
-#include "pongasoft/VST/GUI/Views/CustomView.h"
-#include "VSTViewState.h"
-#include "pongasoft/VST/GUI/DrawContext.h"
-#include "../VAC6Model.h"
-#include "../Messaging.h"
-#include "../Utils.h"
-#include "HistoryView.h"
+#include <pongasoft/VST/Messaging.h>
+#include <pongasoft/Utils/Lerp.h>
+#include <pongasoft/VST/GUI/Views/CustomView.h>
+#include <pongasoft/VST/GUI/DrawContext.h>
+#include <pongasoft/VST/GUI/GUIViewState.h>
 #include <memory>
+#include "../VAC6Model.h"
+#include "HistoryView.h"
 
 namespace pongasoft {
 namespace VST {
@@ -118,7 +118,7 @@ constexpr long MESSAGE_FADE_DURATION_MS = 250;
 
 /**
  * Keeps track of the lcd display sate whether the view is created or not */
-class LCDDisplayState : public VSTViewState<LCDDisplayView>
+class LCDDisplayState : public GUIViewState<LCDDisplayView>
 {
   /**
    * A message to display on the LCD Screen (with auto fade)

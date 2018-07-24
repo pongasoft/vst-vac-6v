@@ -1,8 +1,8 @@
 #pragma once
 
+#include <pongasoft/VST/Messaging.h>
+#include <pongasoft/VST/GUI/Views/CustomView.h>
 #include "../VAC6Model.h"
-#include "../Messaging.h"
-#include "pongasoft/VST/GUI/Views/CustomView.h"
 #include "../VAC6Plugin.h"
 
 namespace pongasoft {

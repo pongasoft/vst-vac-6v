@@ -2,10 +2,10 @@
 
 #include <pluginterfaces/base/ftypes.h>
 #include <pluginterfaces/vst/ivstmessage.h>
+#include <algorithm>
 
 namespace pongasoft {
 namespace VST {
-namespace Common {
 
 using namespace Steinberg;
 using namespace Steinberg::Vst;
@@ -93,6 +93,5 @@ private:
   IMessage *fMessage;
 };
 
-}
 }
 }

@@ -4,12 +4,12 @@
 #include <public.sdk/source/vst/vstaudioeffect.h>
 #include <pongasoft/Utils/Concurrent/Concurrent.h>
 #include <pongasoft/Utils/Collection/CircularBuffer.h>
+#include <pongasoft/VST/Clock.h>
+#include <pongasoft/VST/AudioBuffer.h>
 #include <pongasoft/logging/loguru.hpp>
 #include "VAC6Constants.h"
 #include "VAC6Model.h"
-#include "AudioBuffer.h"
 #include "ZoomWindow.h"
-#include "Clock.h"
 #include "VAC6AudioChannelProcessor.h"
 #include "VAC6Plugin.h"
 

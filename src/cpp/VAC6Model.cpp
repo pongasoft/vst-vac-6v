@@ -1,5 +1,5 @@
+#include <pongasoft/VST/AudioUtils.h>
 #include "VAC6Model.h"
-#include "AudioUtils.h"
 
 namespace pongasoft {
 namespace VST {
@@ -106,7 +106,7 @@ std::string toDbString(TSample iSample, int iPrecision)
 
   std::ostringstream s;
 
-  if(iSample >= Common::Sample64SilentThreshold)
+  if(iSample >= VST::Sample64SilentThreshold)
   {
     s.precision(iPrecision);
     s.setf(std::ios::fixed);

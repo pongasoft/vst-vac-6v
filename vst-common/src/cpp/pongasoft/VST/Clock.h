@@ -1,12 +1,12 @@
 #pragma once
 
 #include <pluginterfaces/base/ftypes.h>
+#include <pluginterfaces/vst/vsttypes.h>
 #include <cmath>
 #include <chrono>
 
 namespace pongasoft {
 namespace VST {
-namespace Common {
 
 using namespace Steinberg;
 
@@ -87,6 +87,5 @@ private:
   SampleRate fSampleRate;
 };
 
-}
 }
 }

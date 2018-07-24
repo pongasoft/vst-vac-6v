@@ -5,7 +5,7 @@
 
 namespace pongasoft {
 namespace VST {
-namespace Common {
+namespace GUI {
 
 using namespace VSTGUI;
 
@@ -15,11 +15,11 @@ using namespace VSTGUI;
  * (as the user opens/closes the UI of the plugin)
  */
 template<typename V>
-class VSTViewState : public IViewListenerAdapter
+class GUIViewState : public IViewListenerAdapter
 {
 public:
   // Constructor
-  VSTViewState() : fView{nullptr} {};
+  GUIViewState() : fView{nullptr} {};
 
   // Called when the view was created and needs to be assigned to this instance
   void assign(V *view) {

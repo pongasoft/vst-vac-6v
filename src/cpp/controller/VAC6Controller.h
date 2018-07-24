@@ -1,16 +1,14 @@
 #pragma once
 
+#include <base/source/fstreamer.h>
 #include <public.sdk/source/vst/vsteditcontroller.h>
 #include <vstgui4/vstgui/plugin-bindings/vst3editor.h>
-#include <base/source/fstreamer.h>
 #include <pongasoft/VST/GUI/Params/GUIParameters.h>
-
 #include <pongasoft/VST/GUI/Views/CustomViewFactory.h>
-#include "VSTViewState.h"
+#include <pongasoft/VST/GUI/GUIViewState.h>
 #include "LCDDisplayView.h"
 #include "MaxLevelView.h"
 #include "../VAC6Plugin.h"
-
 
 namespace pongasoft {
 namespace VST {
@@ -28,7 +26,6 @@ public:
   VAC6Controller();
 
   ~VAC6Controller() override;
-
 
   /** Called at first after constructor */
   tresult PLUGIN_API initialize(FUnknown *context) override;

@@ -1,11 +1,11 @@
 #pragma once
 
 #include <pluginterfaces/vst/vsttypes.h>
-#include <algorithm>
-#include <cmath>
 #include <pongasoft/logging/loguru.hpp>
 #include <pongasoft/Utils/Collection/CircularBuffer.h>
-#include "Utils.h"
+#include <pongasoft/Utils/Lerp.h>
+#include <algorithm>
+#include <cmath>
 
 namespace pongasoft {
 namespace VST {

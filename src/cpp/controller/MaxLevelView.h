@@ -1,8 +1,8 @@
 #pragma once
 
+#include <pongasoft/VST/GUI/GUIViewState.h>
+#include <pongasoft/VST/Messaging.h>
 #include "HistoryView.h"
-#include "VSTViewState.h"
-#include "../Messaging.h"
 
 namespace pongasoft {
 namespace VST {
@@ -69,7 +69,7 @@ public:
 
 /**
  * Handles the max level text label */
-class MaxLevelState : public VSTViewState<MaxLevelView>
+class MaxLevelState : public GUIViewState<MaxLevelView>
 {
 public:
   enum class Type

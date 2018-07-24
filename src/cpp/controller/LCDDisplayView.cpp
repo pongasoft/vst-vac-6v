@@ -1,7 +1,7 @@
-#include "LCDDisplayView.h"
-#include "../Clock.h"
-#include "../AudioUtils.h"
 #include <vstgui4/vstgui/lib/controls/ccontrol.h>
+#include <pongasoft/VST/AudioUtils.h>
+#include <pongasoft/VST/Clock.h>
+#include "LCDDisplayView.h"
 
 namespace pongasoft {
 namespace VST {
@@ -170,7 +170,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
       TSample sample = std::max(leftSample, rightSample);
       RelativeCoord top = height;
 
-      if(sample >= Common::Sample64SilentThreshold)
+      if(sample >= VST::Sample64SilentThreshold)
       {
         if(sample < MIN_AUDIO_SAMPLE) // a single pixel for -60dB to silent
           displayValue = 1;

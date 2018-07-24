@@ -3,7 +3,7 @@
 #include <random>
 #include <vector>
 #include <chrono>
-#include <src/cpp/Utils.h>
+#include <pongasoft/Utils/Lerp.h>
 
 namespace pongasoft {
 namespace VST {

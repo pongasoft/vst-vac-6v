@@ -1,7 +1,7 @@
 #include <base/source/fstreamer.h>
 #include <public.sdk/source/vst/vstaudioprocessoralgo.h>
 
-#include "Messaging.h"
+#include <pongasoft/VST/Messaging.h>
 
 #include "VAC6Processor.h"
 #include "VAC6CIDs.h"
@@ -62,7 +62,7 @@ bool VAC6AudioChannelProcessor::genericProcessChannel(ZoomWindow const *iZoomWin
       }
     }
 
-    if(silent && !pongasoft::VST::Common::isSilent(sample))
+    if(silent && !pongasoft::VST::isSilent(sample))
       silent = false;
 
     *outPtr = sample;

@@ -1,8 +1,8 @@
 
 #include <pongasoft/Utils/Misc.h>
+#include <pongasoft/VST/AudioUtils.h>
+#include <pongasoft/Utils/Lerp.h>
 #include "ZoomWindow.h"
-#include "AudioUtils.h"
-#include "Utils.h"
 
 namespace pongasoft {
 namespace VST {

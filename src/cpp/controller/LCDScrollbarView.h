@@ -2,8 +2,8 @@
 
 #include <pongasoft/VST/GUI/Views/CustomView.h>
 #include <pongasoft/VST/GUI/DrawContext.h>
+#include <pongasoft/Utils/Lerp.h>
 #include "../VAC6Model.h"
-#include "../Utils.h"
 #include "../VAC6Plugin.h"
 
 namespace pongasoft {
