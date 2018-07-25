@@ -3,7 +3,7 @@
 #include <pluginterfaces/vst/vsttypes.h>
 #include <pongasoft/Utils/Collection/CircularBuffer.h>
 #include <pongasoft/VST/AudioBuffer.h>
-#include <pongasoft/VST/Clock.h>
+#include <pongasoft/VST/SampleRateBasedClock.h>
 #include <algorithm>
 #include "VAC6Constants.h"
 #include "VAC6Model.h"

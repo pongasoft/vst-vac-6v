@@ -77,7 +77,7 @@ bool VAC6AudioChannelProcessor::genericProcessChannel(ZoomWindow const *iZoomWin
 // VAC6Processor::VAC6Processor
 ///////////////////////////////////////////
 VAC6Processor::VAC6Processor() :
-  AudioEffect(),
+  RTProcessor(VAC6ControllerUID),
   fParameters{},
   fState{fParameters},
   fGain{fState.fGain1->getValue() * fState.fGain2->getValue(), DEFAULT_GAIN_FILTER},
@@ -86,11 +86,9 @@ VAC6Processor::VAC6Processor() :
   fZoomWindow{nullptr},
   fLeftChannelProcessor{nullptr},
   fRightChannelProcessor{nullptr},
-  fTimer{nullptr},
   fRateLimiter{},
   fLCDDataUpdate{}
 {
-  setControllerClass(VAC6ControllerUID);
   DLOG_F(INFO, "VAC6Processor::VAC6Processor()");
 }
 
@@ -146,6 +144,8 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
   if(result != kResultOk)
     return result;
 
+  enableGUITimer(UI_FRAME_RATE_MS);
+
   fClock.setSampleRate(setup.sampleRate);
 
   fRateLimiter = fClock.getRateLimiter(UI_FRAME_RATE_MS);
@@ -172,56 +172,18 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
   return result;
 }
 
-///////////////////////////////////////////
-// VAC6Processor::setActive
-///////////////////////////////////////////
-tresult PLUGIN_API VAC6Processor::setActive(TBool state)
-{
-  DLOG_F(INFO, "VAC6Processor::setActive(%s)", state ? "true" : "false");
-
-  if(fTimer != nullptr)
-  {
-    fTimer->release();
-    fTimer = nullptr;
-  }
-
-  if(state != 0)
-  {
-    fTimer = Timer::create(this, UI_FRAME_RATE_MS);
-  }
-
-  return AudioEffect::setActive(state);
-}
-
-///////////////////////////////////////////
-// VAC6Processor::process
-///////////////////////////////////////////
-tresult PLUGIN_API VAC6Processor::process(ProcessData &data)
-{
-  // 1. we check if there was any state update (UI calls setState)
-  fState.beforeProcessing();
-
-  // 2. process parameter changes (this will override any update in step 1.)
-  if(data.inputParameterChanges != nullptr)
-  {
-    fState.applyParameterChanges(*data.inputParameterChanges);
-  }
-
-  // 3. process inputs
-  tresult res = processInputs(data);
-
-  // 4. update the previous state
-  fState.afterProcessing();
-
-  return res;
-}
-
 /////////////////////////////////////////
 // VAC6Processor::genericProcessInputs
 /////////////////////////////////////////
 template<typename SampleType>
 tresult VAC6Processor::genericProcessInputs(ProcessData &data)
 {
+  if(data.numInputs == 0 || data.numOutputs == 0)
+  {
+    // nothing to do
+    return kResultOk;
+  }
+
   AudioBuffers<SampleType> in(data.inputs[0], data.numSamples);
   AudioBuffers<SampleType> out(data.outputs[0], data.numSamples);
 
@@ -371,68 +333,9 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
 }
 
 ///////////////////////////////////////////
-// VAC6Processor::processInputs
+// VAC6Processor::onGUITimer
 ///////////////////////////////////////////
-tresult VAC6Processor::processInputs(ProcessData &data)
-{
-  // 2. process inputs
-  if(data.numInputs == 0 || data.numOutputs == 0)
-  {
-    // nothing to do
-    return kResultOk;
-  }
-
-  if(data.symbolicSampleSize == kSample32)
-    return genericProcessInputs<Sample32>(data);
-  else
-    return genericProcessInputs<Sample64>(data);
-}
-
-///////////////////////////////////////////
-// VAC6Processor::canProcessSampleSize
-//
-// * Overridden so that we can declare we support 64bits
-///////////////////////////////////////////
-tresult VAC6Processor::canProcessSampleSize(int32 symbolicSampleSize)
-{
-  if(symbolicSampleSize == kSample32)
-    return kResultTrue;
-
-  // we support double processing
-  if(symbolicSampleSize == kSample64)
-    return kResultTrue;
-
-  return kResultFalse;
-}
-
-///////////////////////////////////
-// VAC6Processor::setState
-///////////////////////////////////
-tresult VAC6Processor::setState(IBStream *state)
-{
-  if(state == nullptr)
-    return kResultFalse;
-
-  IBStreamer streamer(state, kLittleEndian);
-  return fState.readNewState(streamer);
-}
-
-///////////////////////////////////
-// VAC6Processor::getState
-///////////////////////////////////
-tresult VAC6Processor::getState(IBStream *state)
-{
-  if(state == nullptr)
-    return kResultFalse;
-
-  IBStreamer streamer(state, kLittleEndian);
-  return fState.writeLatestState(streamer);
-}
-
-///////////////////////////////////////////
-// VAC6Processor::onTimer
-///////////////////////////////////////////
-void VAC6Processor::onTimer(Timer * /* timer */)
+void VAC6Processor::onGUITimer()
 {
   LCDData lcdData{};
   if(fLCDDataUpdate.pop(lcdData))

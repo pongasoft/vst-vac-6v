@@ -9,16 +9,6 @@ namespace pongasoft {
 namespace VST {
 
 using namespace Steinberg;
-
-namespace Clock {
-
-inline long getCurrentTimeMillis()
-{
-  using namespace std::chrono;
-  return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-}
-
-}
 using namespace Steinberg::Vst;
 
 class SampleRateBasedClock

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <pluginterfaces/vst/ivstaudioprocessor.h>
-#include <pongasoft/logging/loguru.hpp>
+#include <pongasoft/logging/logging.h>
 #include <algorithm>
 
 #include "AudioUtils.h"

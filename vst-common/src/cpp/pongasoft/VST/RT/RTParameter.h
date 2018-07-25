@@ -6,7 +6,7 @@
 #define __PONGASOFT_VST_RT_PARAMETER_H__
 
 #include <pongasoft/VST/ParamDef.h>
-#include <pongasoft/logging/loguru.hpp>
+#include <pongasoft/logging/logging.h>
 
 namespace pongasoft {
 namespace VST {

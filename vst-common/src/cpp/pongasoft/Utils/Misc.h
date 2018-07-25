@@ -1,7 +1,7 @@
 #ifndef __PONGASOFT_UTILS_MISC_H__
 #define __PONGASOFT_UTILS_MISC_H__
 
-#include <pongasoft/logging/loguru.hpp>
+#include <pongasoft/logging/logging.h>
 
 namespace pongasoft {
 namespace Utils {

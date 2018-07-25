@@ -1,7 +1,7 @@
 #ifndef __PONGASOFT_VST_GUI_HOST_PARAMETERS_H__
 #define __PONGASOFT_VST_GUI_HOST_PARAMETERS_H__
 
-#include <pongasoft/logging/loguru.hpp>
+#include <pongasoft/logging/logging.h>
 
 #include <base/source/fstreamer.h>
 #include <public.sdk/source/vst/vsteditcontroller.h>

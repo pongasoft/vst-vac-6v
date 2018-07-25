@@ -4,9 +4,10 @@
 #include <public.sdk/source/vst/vstaudioeffect.h>
 #include <pongasoft/Utils/Concurrent/Concurrent.h>
 #include <pongasoft/Utils/Collection/CircularBuffer.h>
-#include <pongasoft/VST/Clock.h>
+#include <pongasoft/VST/SampleRateBasedClock.h>
 #include <pongasoft/VST/AudioBuffer.h>
 #include <pongasoft/logging/loguru.hpp>
+#include <pongasoft/VST/RT/RTProcessor.h>
 #include "VAC6Constants.h"
 #include "VAC6Model.h"
 #include "ZoomWindow.h"
@@ -25,57 +26,49 @@ using namespace pongasoft::Utils;
 /**
  * class VAC6Processor, main processor for VAC6 VST
  */
-class VAC6Processor : public AudioEffect, ITimerCallback
+class VAC6Processor : public RT::RTProcessor
 {
 public:
+  //--- ---------------------------------------------------------------------
+  // create function required for Plug-in factory,
+  // it will be called to create new instances of this Plug-in
+  //--- ---------------------------------------------------------------------
+  static FUnknown *createInstance(void * /*context*/) { return (IAudioProcessor *) new VAC6Processor(); }
+
+public:
+  // Constructor
   VAC6Processor();
 
+  // Destructor
   ~VAC6Processor() override;
 
-  /** Called at first after constructor */
+  // getRTState
+  IRTState *getRTState() override { return &fState; }
+
+  /** Called at first after constructor (setup input/output) */
   tresult PLUGIN_API initialize(FUnknown *context) override;
 
   /** Called at the end before destructor */
   tresult PLUGIN_API terminate() override;
 
-  /** Switch the Plug-in on/off */
-  tresult PLUGIN_API setActive(TBool state) override;
-
-  /** Here we go...the process call */
-  tresult PLUGIN_API process(ProcessData &data) override;
-
-  /** Asks if a given sample size is supported see \ref SymbolicSampleSizes. */
-  tresult PLUGIN_API canProcessSampleSize(int32 symbolicSampleSize) override;
-
-  /** Restore the state (ex: after loading preset or project) */
-  tresult PLUGIN_API setState(IBStream *state) override;
-
-  /** Called to save the state (before saving a preset or project) */
-  tresult PLUGIN_API getState(IBStream *state) override;
-
-  //--- ---------------------------------------------------------------------
-  // create function required for Plug-in factory,
-  // it will be called to create new instances of this Plug-in
-  //--- ---------------------------------------------------------------------
-  static FUnknown *createInstance(void * /*context*/)
-  { return (IAudioProcessor *) new VAC6Processor(); }
-
+  // This is where the setup happens which depends on sample rate, etc..
   tresult PLUGIN_API setupProcessing(ProcessSetup &setup) override;
 
 protected:
   /**
    * Processes inputs (step 2 always called after processing the parameters)
    */
-  tresult processInputs(ProcessData &data);
-
-  /**
-   * Processes inputs (step 2 always called after processing the parameters)
-   */
   template<typename SampleType>
   tresult genericProcessInputs(ProcessData &data);
 
-  // from ITimerCallback
-  void onTimer(Timer *timer) override;
+  // processInputs32Bits
+  tresult processInputs32Bits(ProcessData &data) override { return genericProcessInputs<Sample32>(data); }
+
+  // processInputs64Bits
+  tresult processInputs64Bits(ProcessData &data) override { return genericProcessInputs<Sample64>(data); }
+
+  // onGUITimer
+  void onGUITimer() override;
 
 private:
   VAC6Parameters fParameters;
@@ -91,7 +84,6 @@ private:
   VAC6AudioChannelProcessor *fLeftChannelProcessor;
   VAC6AudioChannelProcessor *fRightChannelProcessor;
 
-  Timer *fTimer;
   SampleRateBasedClock::RateLimiter fRateLimiter;
   Concurrent::WithSpinLock::SingleElementQueue<LCDData> fLCDDataUpdate;
 };

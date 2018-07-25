@@ -1,6 +1,6 @@
 #include <vstgui4/vstgui/lib/controls/ccontrol.h>
+#include <pongasoft/Utils/Clock/Clock.h>
 #include <pongasoft/VST/AudioUtils.h>
-#include <pongasoft/VST/Clock.h>
 #include "LCDDisplayView.h"
 
 namespace pongasoft {

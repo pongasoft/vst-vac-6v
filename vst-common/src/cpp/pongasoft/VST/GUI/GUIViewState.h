@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vstgui4/vstgui/lib/iviewlistener.h>
-#include <pongasoft/logging/loguru.hpp>
+#include <pongasoft/logging/logging.h>
 #include <pongasoft/VST/GUI/Params/GUIParameters.h>
 #include <pongasoft/VST/GUI/Params/GUIParamCxAware.h>
 

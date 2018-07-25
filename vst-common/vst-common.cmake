@@ -17,8 +17,10 @@ set(VST_COMMON_SRC_GUI_DIR ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI)
 set(VST_COMMON_SRC_RT_DIR ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/RT)
 
 set(VST_COMMON_sources_h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/logging/logging.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/logging/loguru.hpp
 
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/Utils/Clock/Clock.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/Utils/Collection/CircularBuffer.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/Utils/Concurrent/Concurrent.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/Utils/Lerp.h
@@ -26,13 +28,15 @@ set(VST_COMMON_sources_h
 
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/AudioBuffer.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/AudioUtils.h
-    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Clock.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Messaging.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/ParamConverters.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/ParamDef.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Parameters.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/SampleRateBasedClock.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Timer.h
 
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/RT/RTParameter.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/RT/RTProcessor.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/RT/RTState.h
 
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIParamCxMgr.h
@@ -60,6 +64,8 @@ set(VST_COMMON_sources_cpp
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Parameters.cpp
 
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/RT/RTParameter.cpp
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/RT/RTProcessor.cpp
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/RT/RTState.cpp
 
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIParamCxMgr.cpp
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Params/GUIParameters.cpp
