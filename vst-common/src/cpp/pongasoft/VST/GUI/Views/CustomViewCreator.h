@@ -658,7 +658,9 @@ public:
    */
   CView *create(const UIAttributes &attributes, const IUIDescription *description) const override
   {
+#ifdef VST_COMMON_DEBUG_LOGGING
     DLOG_F(INFO, "CustomViewCreator<%s>::create()", getViewName());
+#endif
 
     auto tv = new TView(CRect(0, 0, 0, 0));
 

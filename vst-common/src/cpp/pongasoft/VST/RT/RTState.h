@@ -103,7 +103,9 @@ protected:
       s << "NormalizedState{";
       for(int i = 0; i < fCount; i++)
       {
-        s << fParamIDs[i] << "=" << fValues[i] << ",";
+        if(i > 0)
+          s << ", ";
+        s << fParamIDs[i] << "=" << fValues[i];
       }
       s << "}";
       return s.str();

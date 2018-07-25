@@ -1,3 +1,4 @@
+#include <base/source/fstring.h>
 #include "Parameters.h"
 
 namespace pongasoft {
@@ -61,6 +62,26 @@ std::shared_ptr<RawParamDef> Parameters::getRawParamDef(ParamID iParamID) const
 //------------------------------------------------------------------------
 void Parameters::addRawParamDef(std::shared_ptr<RawParamDef> iParamDef)
 {
+  if(fParameters.find(iParamDef->fParamID) != fParameters.cend())
+  {
+    ABORT_F("Parameter [%d] already registered", iParamDef->fParamID);
+  }
+
+#ifdef VST_COMMON_DEBUG_LOGGING
+  DLOG_F(INFO, "Parameters::addRawParamDef{%d, \"%s\", \"%s\", %f, %d, %d, %d, \"%s\", %d%s%s}",
+         iParamDef->fParamID,
+         String(iParamDef->fTitle).text8(),
+         String(iParamDef->fUnits).text8(),
+         iParamDef->fDefaultNormalizedValue,
+         iParamDef->fStepCount,
+         iParamDef->fFlags,
+         iParamDef->fUnitID,
+         String(iParamDef->fShortTitle).text8(),
+         iParamDef->fPrecision,
+         iParamDef->fUIOnly ? ", uiOnly" : "",
+         iParamDef->fTransient ? ", transient" : "");
+#endif
+
   fParameters[iParamDef->fParamID] = iParamDef;
 
   fRegistrationOrder.emplace_back(iParamDef->fParamID);
