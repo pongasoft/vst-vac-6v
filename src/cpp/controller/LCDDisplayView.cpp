@@ -13,9 +13,32 @@ const CColor MAX_LEVEL_IN_WINDOW_COLOR = CColor{0,0,255,220};
 const CColor MAX_LEVEL_FOR_SELECTION_COLOR = CColor{0,0,0,40};
 
 ///////////////////////////////////////////
-// LCDDisplayState::onMessage
+// LCDDisplayState::LCDMessage::update
 ///////////////////////////////////////////
-void LCDDisplayState::onMessage(Message const &message)
+bool LCDDisplayState::LCDMessage::update(long iTime)
+{
+  if(isExpired(iTime))
+    return true;
+
+  // we bring now to "0" compare to fTime
+  iTime -= fTime;
+  auto startOfFade = fVisibleDuration;
+  if(startOfFade <= iTime)
+  {
+    // we bring now to "0" compare to startOfFade
+    iTime -= startOfFade;
+    auto lerp = Utils::Lerp<float>(0, 255, fFadeDuration, 0);
+    float alpha = lerp.computeY(iTime);
+    fColor.alpha = static_cast<uint8_t>(alpha);
+  }
+
+  return false;
+}
+
+///////////////////////////////////////////
+// LCDDisplayState::onTimer
+///////////////////////////////////////////
+void LCDDisplayState::onTimer(Timer * /* timer */)
 {
   long now = Clock::getCurrentTimeMillis();
 
@@ -35,71 +58,53 @@ void LCDDisplayState::onMessage(Message const &message)
     }
   }
 
-  updateView();
+  if(fLCDSoftClippingLevelMessage == nullptr && fLCDZoomFactorXMessage == nullptr)
+  {
+    fTimer = nullptr;
+  }
 }
 
 ///////////////////////////////////////////
-// LCDDisplayState::onSoftClippingLevelChange
+// LCDDisplayView::onTimer
 ///////////////////////////////////////////
-void LCDDisplayState::onSoftClippingLevelChange()
+void LCDDisplayView::onTimer(Timer *timer)
 {
-  long now = Clock::getCurrentTimeMillis();
-
-  fLCDSoftClippingLevelMessage =
-    std::make_unique<LCDMessage>(UTF8String(fSoftClippingLevelParam->toString()), now);
-
-  updateView();
+  LCDDisplayState::onTimer(timer);
+  markDirty();
 }
 
 ///////////////////////////////////////////
-// LCDDisplayState::onZoomFactorXChange
+// LCDDisplayState::startTimer
 ///////////////////////////////////////////
-void LCDDisplayState::onZoomFactorXChange()
+void LCDDisplayState::startTimer()
 {
-  long now = Clock::getCurrentTimeMillis();
-
-  String text = "Zoom: ";
-  text += fLCDZoomFactorXParam->toString();
-
-//  char text[256];
-//  sprintf(text, "Zoom: %.1fs", fHistoryState->fLCDData.fWindowSizeInMillis / 1000.0);
-  fLCDZoomFactorXMessage = std::make_unique<LCDMessage>(UTF8String(text), now);
-
-  updateView();
+  if(!fTimer)
+  {
+    fTimer = AutoReleaseTimer::create(this, UI_FRAME_RATE_MS);
+  }
 }
 
 ///////////////////////////////////////////
-// LCDDisplayState::onParameterChange
+// LCDDisplayView::onParameterChange
 ///////////////////////////////////////////
-void LCDDisplayState::onParameterChange(ParamID iParamID, ParamValue /* iNormalizedValue */)
+void LCDDisplayView::onParameterChange(ParamID iParamID, ParamValue iNormalizedValue)
 {
   if(iParamID == fLCDZoomFactorXParam->getParamID())
   {
-    onZoomFactorXChange();
+    String text = "Zoom: ";
+    text += fLCDZoomFactorXParam->toString();
+    fLCDZoomFactorXMessage = std::make_unique<LCDMessage>(UTF8String(text), Clock::getCurrentTimeMillis());
+    startTimer();
   }
 
   if(iParamID == fSoftClippingLevelParam->getParamID())
   {
-    onSoftClippingLevelChange();
+    fLCDSoftClippingLevelMessage =
+      std::make_unique<LCDMessage>(UTF8String(fSoftClippingLevelParam->toString()), Clock::getCurrentTimeMillis());
+    startTimer();
   }
-}
 
-///////////////////////////////////////////
-// LCDDisplayState::afterAssign
-///////////////////////////////////////////
-void LCDDisplayState::afterAssign()
-{
-  fView->setState(this);
-  updateView();
-}
-
-///////////////////////////////////////////
-// LCDDisplayState::registerParameters
-///////////////////////////////////////////
-void LCDDisplayState::registerParameters()
-{
-  fLCDZoomFactorXParam = registerGUIParam(fParams->fZoomFactorXParam);
-  fSoftClippingLevelParam = registerGUIParam(fParams->fSoftClippingLevelParam);
+  CustomView::onParameterChange(iParamID, iNormalizedValue);
 }
 
 ///////////////////////////////////////////
@@ -149,7 +154,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
 {
   HistoryView::draw(iContext);
 
-  if(fState == nullptr)
+  if(!fHistoryState)
     return;
 
   auto rdc = GUI::RelativeDrawContext{this, iContext};
@@ -158,7 +163,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
   auto width = getViewSize().getWidth();
   RelativeCoord left = 0;
 
-  LCDData &lcdData = fState->fHistoryState->fLCDData;
+  LCDData &lcdData = fHistoryState->fLCDData;
 
   bool leftChannelOn = lcdData.fLeftChannel.fOn;
   bool rightChannelOn = lcdData.fRightChannel.fOn;
@@ -254,31 +259,31 @@ void LCDDisplayView::draw(CDrawContext *iContext)
 
 
   // print the level
-  if(fState->fLCDSoftClippingLevelMessage)
+  if(fLCDSoftClippingLevelMessage)
   {
     StringDrawContext sdc{};
     sdc.fStyle |= kShadowText;
     sdc.fHoriTxtAlign = kLeftText;
     sdc.fTextInset = {2, 2};
-    sdc.fFontColor = fState->fLCDSoftClippingLevelMessage->fColor;
+    sdc.fFontColor = fLCDSoftClippingLevelMessage->fColor;
     sdc.fFont = fFont;
     sdc.fShadowColor = kBlackCColor;
-    sdc.fShadowColor.alpha = fState->fLCDSoftClippingLevelMessage->fColor.alpha;
+    sdc.fShadowColor.alpha = fLCDSoftClippingLevelMessage->fColor.alpha;
 
     auto textTop = top + 3;
-    rdc.drawString(fState->fLCDSoftClippingLevelMessage->fText,
+    rdc.drawString(fLCDSoftClippingLevelMessage->fText,
                    RelativeRect{0, textTop, static_cast<RelativeCoord>(MAX_ARRAY_SIZE), textTop + 20}, sdc);
   }
 
-  if(fState->fLCDZoomFactorXMessage)
+  if(fLCDZoomFactorXMessage)
   {
     StringDrawContext sdc{};
     sdc.fHoriTxtAlign = kCenterText;
     sdc.fTextInset = {2, 2};
-    sdc.fFontColor = fState->fLCDZoomFactorXMessage->fColor;
+    sdc.fFontColor = fLCDZoomFactorXMessage->fColor;
     sdc.fFont = fFont;
 
-    rdc.drawString(fState->fLCDZoomFactorXMessage->fText,
+    rdc.drawString(fLCDZoomFactorXMessage->fText,
                    RelativeRect{0, 0, static_cast<RelativeCoord>(MAX_ARRAY_SIZE), 20}, sdc);
   }
 }
@@ -360,35 +365,29 @@ void LCDDisplayView::registerParameters()
   fMaxLevelSinceResetMarker = registerGUIParam(fParams->fSinceResetMarkerParam);
   fMaxLevelInWindowMarker = registerGUIParam(fParams->fInWindowMarkerParam);
   fLCDLiveViewParameter = registerGUIParam(fParams->fLCDLiveViewParam);
+  fLCDZoomFactorXParam = registerGUIParam(fParams->fZoomFactorXParam);
+  fSoftClippingLevelParam = registerGUIParam(fParams->fSoftClippingLevelParam);
 }
 
+#if EDITOR_MODE
+
 ///////////////////////////////////////////
-// LCDDisplayView::setState
+// LCDDisplayView::setHistoryState
 ///////////////////////////////////////////
-void LCDDisplayView::setState(LCDDisplayState *iState)
+void LCDDisplayView::setHistoryState(std::shared_ptr<HistoryState> iHistoryState)
 {
-  fState = iState;
-  if(iState)
-  {
-    fHistoryState = iState->fHistoryState;
-  }
-  else
-    fHistoryState = nullptr;
-
-#if EDITOR_MODE
+  HistoryView::setHistoryState(iHistoryState);
   onEditorModeChanged();
-#endif
 }
 
-#if EDITOR_MODE
 ///////////////////////////////////////////
 // LCDDisplayView::onEditorModeChanged
 ///////////////////////////////////////////
 void LCDDisplayView::onEditorModeChanged()
 {
-  if(fState && getEditorMode())
+  if(fHistoryState && getEditorMode())
   {
-    LCDData &lcdData = fState->fHistoryState->fLCDData;
+    LCDData &lcdData = fHistoryState->fLCDData;
     lcdData.fLeftChannel.fOn = true;
     lcdData.fRightChannel.fOn = true;
 
@@ -410,15 +409,16 @@ void LCDDisplayView::onEditorModeChanged()
     lcdData.fLeftChannel.fMaxLevelSinceReset = lcdData.fLeftChannel.fSamples[10];
     lcdData.fRightChannel.fMaxLevelSinceReset = lcdData.fRightChannel.fSamples[10];
 
-    fState->fHistoryState->fMaxLevelInWindow =
+    fHistoryState->fMaxLevelInWindow =
       MaxLevel::computeMaxLevel(lcdData.fLeftChannel.computeInWindowMaxLevel(),
                                 lcdData.fRightChannel.computeInWindowMaxLevel());
-    fState->fHistoryState->fMaxLevelSinceReset =
+    fHistoryState->fMaxLevelSinceReset =
       MaxLevel::computeMaxLevel(lcdData.fLeftChannel.computeSinceResetMaxLevel(),
                                 lcdData.fRightChannel.computeSinceResetMaxLevel());
 
   }
 }
+
 #endif
 
 LCDDisplayView::Creator __gLCDDisplayViewCreator("pongasoft::LCDDisplay", "pongasoft - LCD Display");

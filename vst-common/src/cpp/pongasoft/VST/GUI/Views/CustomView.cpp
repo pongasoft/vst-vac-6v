@@ -55,7 +55,7 @@ void CustomView::setBackColor(CColor const &iColor)
 ///////////////////////////////////////////
 void CustomView::drawStyleChanged()
 {
-  setDirty(true);
+  markDirty();
 }
 
 ///////////////////////////////////////////
@@ -63,7 +63,7 @@ void CustomView::drawStyleChanged()
 ///////////////////////////////////////////
 void CustomView::onParameterChange(ParamID iParamID, ParamValue iNormalizedValue)
 {
-  setDirty(true);
+  markDirty();
 }
 
 ///////////////////////////////////////////

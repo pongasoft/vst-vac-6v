@@ -20,13 +20,17 @@ class MaxLevelState;
 class MaxLevelView : public HistoryView
 {
 public:
+  enum Type
+  {
+    kForSelection,
+    kSinceReset,
+    kInWindow
+  };
+
   // Constructor
   explicit MaxLevelView(const CRect &size);
 
   MaxLevelView(const MaxLevelView &c) = delete;
-
-  // setState
-  void setState(MaxLevelState *iState);
 
   // get/setNoDataColor
   const CColor &getNoDataColor() const { return fNoDataColor;  }
@@ -35,6 +39,10 @@ public:
   // get/setFont
   FontPtr getFont() const { return fFont; }
   void setFont(FontPtr iFont) { fFont = std::move(iFont); }
+
+  // get/setType
+  MaxLevelView::Type getType() const { return fType; }
+  void setType(MaxLevelView::Type iType) { fType = iType; }
 
   // getMaxLevel
   MaxLevel getMaxLevel() const;
@@ -45,10 +53,9 @@ public:
   CLASS_METHODS_NOCOPY(MaxLevelView, HistoryView)
 
 protected:
-  MaxLevelState *fState{nullptr};
-
   CColor fNoDataColor{};
   FontPtr fFont{nullptr};
+  MaxLevelView::Type fType{MaxLevelView::Type::kForSelection};
 
 public:
   class Creator : public CustomViewCreator<MaxLevelView, HistoryView>
@@ -63,43 +70,11 @@ public:
       registerFontAttribute("font",
                             &MaxLevelView::getFont,
                             &MaxLevelView::setFont);
+      registerIntegerAttribute<Type>("type",
+                                     &MaxLevelView::getType,
+                                     &MaxLevelView::setType);
     }
   };
-};
-
-/**
- * Handles the max level text label */
-class MaxLevelState : public GUIViewState<MaxLevelView>
-{
-public:
-  enum class Type
-  {
-    kForSelection,
-    kSinceReset,
-    kInWindow
-  };
-
-public:
-  MaxLevelState(Type iType, std::shared_ptr<HistoryState> iHistoryState) :
-    fType{iType},
-    fHistoryState{std::move(iHistoryState)}
-  {}
-
-  void afterAssign() override
-  {
-    fView->setState(this);
-    updateView();
-  };
-
-  void onMessage(Message const &message);
-
-  MaxLevel getMaxLevel(int iLCDInputX) const;
-
-private:
-  friend class MaxLevelView;
-
-  Type fType;
-  std::shared_ptr<HistoryState> fHistoryState;
 };
 
 }

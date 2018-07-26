@@ -63,10 +63,6 @@ public:
     return (IEditController *) new VAC6Controller();
   }
 
-protected:
-  template<typename ParamConverter>
-  void setParamNormalized(ParamID iParamID, IBStreamer &iStreamer, typename ParamConverter::ParamType const &iDefaultValue);
-
 private:
   // the name of the xml file (relative) which contains the ui description
   char const *const fXmlFile;
@@ -80,14 +76,6 @@ private:
 
   // the history state (shared by fMaxLevelState & fLCDDisplayState)
   std::shared_ptr<HistoryState> fHistoryState;
-
-  // state for max level
-  MaxLevelState fMaxLevelSinceResetState;
-  MaxLevelState fMaxLevelInWindowState;
-  MaxLevelState fMaxLevelForSelectionState;
-
-  // state for LCD Display
-  LCDDisplayState fLCDDisplayState;
 };
 
 }

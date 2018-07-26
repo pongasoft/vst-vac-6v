@@ -13,11 +13,7 @@ VAC6Controller::VAC6Controller() : EditController(),
                                    fXmlFile("VAC6.uidesc"),
                                    fPluginParameters{},
                                    fGUIParameters{HostParameters(this), fPluginParameters},
-                                   fHistoryState{std::make_shared<HistoryState>()},
-                                   fMaxLevelSinceResetState{MaxLevelState::Type::kSinceReset, fHistoryState},
-                                   fMaxLevelInWindowState{MaxLevelState::Type::kInWindow, fHistoryState},
-                                   fMaxLevelForSelectionState{MaxLevelState::Type::kForSelection, fHistoryState},
-                                   fLCDDisplayState{fHistoryState}
+                                   fHistoryState{std::make_shared<HistoryState>()}
 {
   DLOG_F(INFO, "VAC6Controller::VAC6Controller()");
 }
@@ -48,9 +44,6 @@ tresult VAC6Controller::initialize(FUnknown *context)
   setKnobMode(CKnobMode::kLinearMode);
 
   fGUIParameters.registerVstParameters(parameters);
-
-  fLCDDisplayState.initParameters(fGUIParameters);
-  fLCDDisplayState.registerParameters();
 
   fViewFactory = new CustomUIViewFactory(fGUIParameters);
 
@@ -88,32 +81,10 @@ CView *VAC6Controller::verifyView(CView *view,
                                   const IUIDescription * /*description*/,
                                   VST3Editor * /*editor*/)
 {
-  auto customView = dynamic_cast<CustomView *>(view);
-  if(customView != nullptr)
+  auto historyView = dynamic_cast<HistoryView *>(view);
+  if(historyView)
   {
-    switch(customView->getCustomViewTag())
-    {
-      case EVAC6CustomViewTag::kMaxLevelSinceReset:
-        fMaxLevelSinceResetState.assign(dynamic_cast<MaxLevelView *>(customView));
-        break;
-
-      case EVAC6CustomViewTag::kMaxLevelInWindow:
-        fMaxLevelInWindowState.assign(dynamic_cast<MaxLevelView *>(customView));
-        break;
-
-      case EVAC6CustomViewTag::kMaxLevelForSelection:
-        fMaxLevelForSelectionState.assign(dynamic_cast<MaxLevelView *>(customView));
-        break;
-
-      case EVAC6CustomViewTag::kLCD:
-        fLCDDisplayState.assign(dynamic_cast<LCDDisplayView *>(customView));
-        break;
-
-      default:
-        // ignoring other
-        break;
-
-    }
+    historyView->setHistoryState(fHistoryState);
   }
 
   return view;
@@ -178,10 +149,6 @@ tresult VAC6Controller::notify(IMessage *message)
     case kLCDData_MID:
     {
       fHistoryState->onMessage(m);
-      fMaxLevelSinceResetState.onMessage(m);
-      fMaxLevelInWindowState.onMessage(m);
-      fMaxLevelForSelectionState.onMessage(m);
-      fLCDDisplayState.onMessage(m);
       break;
     }
 
@@ -191,18 +158,6 @@ tresult VAC6Controller::notify(IMessage *message)
   }
 
   return kResultOk;
-}
-
-///////////////////////////////////
-// VAC6Controller::setParamNormalized
-///////////////////////////////////
-template<typename ParamConverter>
-void VAC6Controller::setParamNormalized(ParamID iParamID, IBStreamer &iStreamer, typename ParamConverter::ParamType const &iDefaultValue)
-{
-  double value;
-  if(!iStreamer.readDouble(value))
-    value = ParamConverter::normalize(iDefaultValue);
-  EditController::setParamNormalized(iParamID, value);
 }
 
 }

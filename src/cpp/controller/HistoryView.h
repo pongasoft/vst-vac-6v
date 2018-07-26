@@ -2,6 +2,7 @@
 
 #include <pongasoft/VST/Messaging.h>
 #include <pongasoft/VST/GUI/Views/CustomView.h>
+#include <pongasoft/VST/GUI/GUIViewState.h>
 #include "../VAC6Model.h"
 #include "../VAC6Plugin.h"
 
@@ -71,6 +72,9 @@ public:
   MaxLevel getMaxLevelSinceReset() const;
   MaxLevel getMaxLevelInWindow() const;
 
+  // setHistoryState
+  virtual void setHistoryState(std::shared_ptr<HistoryState> iHistoryState);
+
 protected:
 
   std::shared_ptr<HistoryState> fHistoryState;
@@ -110,7 +114,7 @@ public:
 /**
  * Base class for HistoryState
  */
-class HistoryState
+class HistoryState : public GUI::GUIViewState
 {
 public:
   HistoryState() : fLCDData{}
@@ -118,7 +122,7 @@ public:
     DLOG_F(INFO, "HistoryState()");
   }
 
-  ~HistoryState()
+  ~HistoryState() override
   {
     DLOG_F(INFO, "~HistoryState()");
   }

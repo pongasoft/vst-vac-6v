@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "HistoryView.h"
 
 namespace pongasoft {
@@ -45,6 +47,17 @@ MaxLevel HistoryView::getMaxLevelInWindow() const
 }
 
 ///////////////////////////////////////////
+// HistoryView::setHistoryState
+///////////////////////////////////////////
+void HistoryView::setHistoryState(std::shared_ptr<HistoryState> iHistoryState)
+{
+  fHistoryState = std::move(iHistoryState);
+
+  if(fHistoryState)
+    fHistoryState->registerForUpdate(this);
+}
+
+///////////////////////////////////////////
 // HistoryState::onMessage
 ///////////////////////////////////////////
 void HistoryState::onMessage(Message const &message)
@@ -59,6 +72,8 @@ void HistoryState::onMessage(Message const &message)
                                                 fLCDData.fRightChannel.computeInWindowMaxLevel());
   fMaxLevelSinceReset = MaxLevel::computeMaxLevel(fLCDData.fLeftChannel.computeSinceResetMaxLevel(),
                                                   fLCDData.fRightChannel.computeSinceResetMaxLevel());
+
+  updateViews();
 }
 
 ///////////////////////////////////////////

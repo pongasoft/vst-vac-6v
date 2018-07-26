@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vstgui4/vstgui/lib/iviewlistener.h>
+#include <vstgui4/vstgui/lib/cview.h>
 #include <pongasoft/logging/logging.h>
 #include <pongasoft/VST/GUI/Params/GUIParameters.h>
 #include <pongasoft/VST/GUI/Params/GUIParamCxAware.h>
@@ -13,52 +14,39 @@ using namespace VSTGUI;
 using namespace Params;
 
 /**
- * Encapsulates a view while managing its lifecyle: the idea is that an instance of this class is being owned by the
- * main controller (thus its lifespan is the entire life of the controller) but the view assigned to it can come and go
- * (as the user opens/closes the UI of the plugin)
+ * The idea is that an instance of this class is being owned by the main controller (thus its lifespan is the entire
+ * life of the controller) but the views assigned to it can come and go (as the user opens/closes the UI of the plugin)
  */
-template<typename V>
 class GUIViewState : public IViewListenerAdapter, public GUIParamCxAware
 {
 public:
-  // Constructor
-  GUIViewState() : GUIParamCxAware(), fView{nullptr} {};
-
-  // Called when the view was created and needs to be assigned to this instance
-  void assign(V *view) {
-    DCHECK_NOTNULL_F(view, "assign should not receive null pointer");
-
-    if(fView)
-    {
-      fView->unregisterViewListener(this);
-    }
-
-    fView = view;
-    fView->registerViewListener(this);
-
-    afterAssign();
-  }
-
   /**
-   * An implementation will typically override this method to initialize the view depending on the state. It is called
-   * after assigned as been done (thus fView != nullptr)
+   * Called by the view when it is interested in updates from this state
+   *
+   * @param iView
    */
-  virtual void afterAssign() = 0;
-
-  /**
-   * Called prior to the view being deleted/unassigned in case some cleanup needs to happen */
-  virtual void beforeUnassign()
+  void registerForUpdate(CView *iView)
   {
-    fView->setState(nullptr);
+    DCHECK_NOTNULL_F(iView, "assign should not receive null pointer");
+
+    if(std::find(fViews.cbegin(), fViews.cend(), iView) != fViews.cend())
+    {
+      DLOG_F(WARNING, "view already registered.. ignoring...");
+    }
+    else
+    {
+      fViews.emplace_back(iView);
+      iView->registerViewListener(this);
+    }
   }
 
   /**
    * By default sets the view dirty
    */
-  virtual void updateView()
+  virtual void updateViews()
   {
-    if(fView)
-      fView->setDirty(true);
+    for(auto view : fViews)
+      view->setDirty(true);
   }
 
 protected:
@@ -66,31 +54,30 @@ protected:
    * Callback that is called when the host is about to delete the view and as a result it needs to be unassigned from
    * this instance
    */
-  void viewWillDelete(CView *view) override {
-    DCHECK_EQ_F(view, fView, "should be called with the same object!");
-
-    beforeUnassign();
-
-    fView->unregisterViewListener(this);
-    fView = nullptr;
-
+  void viewWillDelete(CView *iView) override
+  {
+    auto iter = std::find(fViews.cbegin(), fViews.cend(), iView);
+    DCHECK_F(iter != fViews.cend(), "views should have been registered before!");
+    fViews.erase(iter);
+    iView->unregisterViewListener(this);
   };
 
-  V* fView;
+protected:
+  std::vector<CView *> fViews{};
 };
 
 /**
  * This subclass gives access to plugin parameters with the fParams variable (similar to PluginCustomView)
  */
-template<typename V, typename TPluginParameters>
-class PluginGUIViewState : public GUIViewState<V>
+template<typename TPluginParameters>
+class PluginGUIViewState : public GUIViewState
 {
 public:
   void initParameters(GUIParameters const &iParameters) override
   {
-    GUIViewState<V>::initParameters(iParameters);
-    if(GUIViewState<V>::fParamCxMgr)
-      fParams = GUIViewState<V>::template getPluginParameters<TPluginParameters>();
+    GUIViewState::initParameters(iParameters);
+    if(fParamCxMgr)
+      fParams = getPluginParameters<TPluginParameters>();
   }
 
 public:

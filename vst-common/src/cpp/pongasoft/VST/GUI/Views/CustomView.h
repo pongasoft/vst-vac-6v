@@ -122,6 +122,9 @@ public:
    */
   void onParameterChange(ParamID iParamID, ParamValue iNormalizedValue) override;
 
+  // markDirty
+  inline void markDirty() { setDirty(true); }
+
 public:
 
   CLASS_METHODS_NOCOPY(CustomView, CControl)
