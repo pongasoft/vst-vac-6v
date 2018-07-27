@@ -85,54 +85,13 @@ elseif(WIN)
 	target_sources(${target} PRIVATE resource/VAC6V.rc)
 endif()
 
-###################################################
-# Create archive (.tgz)
-###################################################
-if(MAC)
-	set(ARCHITECTURE "macOS_64bits")
-elseif(WIN)
-	set(ARCHITECTURE "win_64bits")
-endif()
-
-set(ARCHIVE_NAME ${target}-${ARCHITECTURE}-${PLUGIN_VERSION})
-set(ARCHIVE_PATH ${CMAKE_BINARY_DIR}/archive/${ARCHIVE_NAME})
-
-add_custom_command(OUTPUT ${ARCHIVE_PATH}
-		COMMAND ${CMAKE_COMMAND} -E make_directory ${ARCHIVE_PATH}
-		COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_LIST_DIR}/LICENSE.txt ${ARCHIVE_PATH}
-		COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_LIST_DIR}/archive/README-${ARCHITECTURE}.txt ${ARCHIVE_PATH}/README.txt
-		)
-
-if(MAC)
-	add_custom_command(OUTPUT ${ARCHIVE_PATH}.zip
-			COMMAND ${CMAKE_COMMAND} -E copy_directory ${VST3_OUTPUT_DIR}/${target}.${VST3_EXTENSION} ${ARCHIVE_PATH}/VAC-6V.vst3
-			DEPENDS ${target}
-			DEPENDS ${ARCHIVE_PATH}
-			WORKING_DIRECTORY archive
-			)
-elseif(WIN)
-	add_custom_command(OUTPUT ${ARCHIVE_PATH}.zip
-			COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${target}> ${ARCHIVE_PATH}/VAC-6V.vst3
-			DEPENDS ${target}
-			DEPENDS ${ARCHIVE_PATH}
-			WORKING_DIRECTORY archive
-			)
-endif()
-
 # fix for vst2
 vst_fix_vst2(${target})
 
-if(MAC OR WIN)
-	add_custom_command(OUTPUT ${ARCHIVE_PATH}.zip
-			COMMAND ${CMAKE_COMMAND} -E tar cvf ${ARCHIVE_NAME}.zip --format=zip ${ARCHIVE_PATH}
-			COMMAND ${CMAKE_COMMAND} -E remove_directory ${ARCHIVE_PATH}
-			APPEND
-			)
-
-add_custom_target(archive
-		DEPENDS ${ARCHIVE_PATH}.zip
-		)
-endif()
+###################################################
+# Create archive (.tgz)
+###################################################
+vst_create_archive(${target} VAC-6V)
 
 ####################################################
 ## Testing
