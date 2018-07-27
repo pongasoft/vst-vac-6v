@@ -1,49 +1,28 @@
 #pragma once
 
-#include <base/source/fstreamer.h>
-#include <public.sdk/source/vst/vsteditcontroller.h>
 #include <vstgui4/vstgui/plugin-bindings/vst3editor.h>
-#include <pongasoft/VST/GUI/Params/GUIParameters.h>
-#include <pongasoft/VST/GUI/Views/CustomViewFactory.h>
-#include <pongasoft/VST/GUI/GUIViewState.h>
-#include "LCDDisplayView.h"
-#include "MaxLevelView.h"
+#include <pongasoft/VST/GUI/GUIController.h>
+#include "HistoryView.h"
 #include "../VAC6Plugin.h"
 
 namespace pongasoft {
 namespace VST {
 namespace VAC6 {
 
-using namespace Steinberg;
-using namespace Common;
-
 /**
  * Represents the controller part of the plugin. Manages the UI.
  */
-class VAC6Controller : public EditController, public VSTGUI::VST3EditorDelegate
+class VAC6Controller : public GUI::GUIController, public VSTGUI::VST3EditorDelegate
 {
 public:
+  // Constructor
   VAC6Controller();
 
+  // Destructor
   ~VAC6Controller() override;
 
-  /** Called at first after constructor */
-  tresult PLUGIN_API initialize(FUnknown *context) override;
-
-  /** Called at the end before destructor */
-  tresult PLUGIN_API terminate() override;
-
-  /** Create the view */
-  IPlugView *PLUGIN_API createView(const char *name) override;
-
-  /** Sets the component state (after setting the processor) or after restore */
-  tresult PLUGIN_API setComponentState(IBStream *state) override;
-
-  /** Restore the state (UI only!) (ex: after loading preset or project) */
-  tresult PLUGIN_API setState(IBStream *state) override;
-
-  /** Called to save the state (UI only!) (before saving a preset or project) */
-  tresult PLUGIN_API getState(IBStream *state) override;
+  // getPluginParameters
+  Parameters const *getPluginParameters() const override { return &fPluginParameters; };
 
   /** From VST3EditorDelegate to be able to get a handle to some of the views */
   CView *verifyView(CView *view,
@@ -64,15 +43,7 @@ public:
   }
 
 private:
-  // the name of the xml file (relative) which contains the ui description
-  char const *const fXmlFile;
-
   VAC6Parameters fPluginParameters;
-
-  // the parameters
-  GUIParameters fGUIParameters;
-
-  CustomUIViewFactory *fViewFactory;
 
   // the history state (shared by fMaxLevelState & fLCDDisplayState)
   std::shared_ptr<HistoryState> fHistoryState;

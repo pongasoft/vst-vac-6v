@@ -162,13 +162,13 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
   fRightChannelProcessor = new VAC6AudioChannelProcessor(fClock, fZoomWindow, SAMPLE_BUFFER_SIZE);
 
   DLOG_F(INFO,
-         "VAC6Processor::setupProcessing(%s, %s, maxSamples/1frame=%d, sampleRate=%f, %d samples/%dms)",
+         "VAC6Processor::setupProcessing(%s, %s, maxSamples=%d, sampleRate=%f, %dms=%d samples)",
          setup.processMode == kRealtime ? "Realtime" : (setup.processMode == kPrefetch ? "Prefetch" : "Offline"),
          setup.symbolicSampleSize == kSample32 ? "32bits" : "64bits",
          setup.maxSamplesPerBlock,
          setup.sampleRate,
-         fMaxAccumulatorBatchSize,
-         ACCUMULATOR_BATCH_SIZE_IN_MS);
+         ACCUMULATOR_BATCH_SIZE_IN_MS,
+         fMaxAccumulatorBatchSize);
 
   return result;
 }

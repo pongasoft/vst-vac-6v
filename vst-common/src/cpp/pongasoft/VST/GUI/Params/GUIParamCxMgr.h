@@ -16,7 +16,7 @@ public:
    */
   bool exists(ParamID iParamID) const
   {
-    return fParameters.exists(iParamID);
+    return fParameters->exists(iParamID);
   }
 
   /**
@@ -52,19 +52,19 @@ public:
   template<typename TParameters>
   TParameters const *getPluginParameters() const
   {
-    return dynamic_cast<TParameters const *>(&fParameters.getPluginParameters());
+    return dynamic_cast<TParameters const *>(&fParameters->getPluginParameters());
   }
 
   friend class GUIParameters;
 
 protected:
-  explicit GUIParamCxMgr(GUIParameters const &iParameters) :
-    fParameters{iParameters}
+  explicit GUIParamCxMgr(std::shared_ptr<const GUIParameters> iParameters) :
+    fParameters{std::move(iParameters)}
   {}
 
 private:
-
-  GUIParameters const &fParameters;
+  // the parameters
+  std::shared_ptr<const GUIParameters> fParameters;
 
   // Maintains the connections for the listeners... will be automatically discarded in the destructor
   std::map<ParamID, std::unique_ptr<GUIRawParameter::Connection>> fParameterConnections;

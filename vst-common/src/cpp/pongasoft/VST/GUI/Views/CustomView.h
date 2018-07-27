@@ -199,7 +199,7 @@ public:
 
 protected:
   // initParameters - overriden to extract fParams
-  void initParameters(GUIParameters const &iParameters) override
+  void initParameters(std::shared_ptr<GUIParameters> iParameters) override
   {
     CustomView::initParameters(iParameters);
     if(fParamCxMgr)

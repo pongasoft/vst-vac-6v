@@ -29,6 +29,7 @@ set(VST_COMMON_sources_h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/AudioBuffer.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/AudioUtils.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Messaging.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/NormalizedState.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/ParamConverters.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/ParamDef.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Parameters.h
@@ -54,6 +55,7 @@ set(VST_COMMON_sources_h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/ToggleButtonView.h
 
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/DrawContext.h
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/GUIController.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/GUIViewState.h
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Types.h
     )
@@ -62,6 +64,7 @@ set(VST_COMMON_sources_cpp
     ${LOGURU_IMPL}
 
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/Parameters.cpp
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/NormalizedState.cpp
 
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/RT/RTParameter.cpp
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/RT/RTProcessor.cpp
@@ -77,6 +80,7 @@ set(VST_COMMON_sources_cpp
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/Views/ToggleButtonView.cpp
 
     ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/DrawContext.cpp
+    ${VST_COMMON_CPP_SOURCES}/pongasoft/VST/GUI/GUIController.cpp
 
     )
 

@@ -1,7 +1,5 @@
 #include "RTState.h"
 
-#include <sstream>
-
 namespace pongasoft {
 namespace VST {
 namespace RT {
@@ -106,7 +104,7 @@ tresult RTState::readNewState(IBStreamer &iStreamer)
   }
 
 #ifdef VST_COMMON_DEBUG_LOGGING
-  DLOG_F(INFO, "readNewState - %s", normalizedState.toString(fSaveStateOrder.fOrder.data()).c_str());
+  DLOG_F(INFO, "RTState::readNewState - v=%d, %s", fSaveStateOrder.fVersion, normalizedState.toString(fSaveStateOrder.fOrder.data()).c_str());
 #endif
 
   fStateUpdate.push(normalizedState);
@@ -133,7 +131,7 @@ tresult RTState::writeLatestState(IBStreamer &oStreamer)
   }
 
 #ifdef VST_COMMON_DEBUG_LOGGING
-  DLOG_F(INFO, "writeLatestState - %s", normalizedState.toString(fSaveStateOrder.fOrder.data()).c_str());
+  DLOG_F(INFO, "RTState::writeLatestState - v=%d, %s", fSaveStateOrder.fVersion, normalizedState.toString(fSaveStateOrder.fOrder.data()).c_str());
 #endif
 
   return kResultOk;
@@ -214,79 +212,6 @@ tresult RTState::init()
   return result;
 }
 
-//------------------------------------------------------------------------
-// RTState::NormalizedState::NormalizedState
-//------------------------------------------------------------------------
-RTState::NormalizedState::NormalizedState(int iCount)
-{
-  DCHECK_F(iCount >= 0);
-  if(iCount > 0)
-  {
-    fCount = iCount;
-    fValues = new ParamValue[fCount];
-
-    for(int i = 0; i < fCount; i++)
-    {
-      fValues[i] = 0.0;
-    }
-  }
-}
-
-//------------------------------------------------------------------------
-// RTState::NormalizedState::~NormalizedState
-//------------------------------------------------------------------------
-RTState::NormalizedState::~NormalizedState()
-{
-  delete[] fValues; // ok to delete nullptr
-}
-
-//------------------------------------------------------------------------
-// RTState::NormalizedState::NormalizedState(&&) - Move constructor
-//------------------------------------------------------------------------
-RTState::NormalizedState::NormalizedState(RTState::NormalizedState &&other) noexcept
-{
-  fCount = other.fCount;
-  fValues = other.fValues;
-
-  other.fCount = 0;
-  other.fValues = nullptr;
-}
-
-//------------------------------------------------------------------------
-// RTState::NormalizedState::operator=
-//------------------------------------------------------------------------
-RTState::NormalizedState &RTState::NormalizedState::operator=(const RTState::NormalizedState &other)
-{
-  if(&other == this)
-    return *this;
-
-  // should not happen but sanity check!
-  if(fCount != other.fCount)
-    ABORT_F("no memory allocation allowed => aborting");
-  else
-  {
-    std::copy(other.fValues, other.fValues + fCount, fValues);
-  }
-
-  return *this;
-}
-
-//------------------------------------------------------------------------
-// RTState::NormalizedState::toString -- only for debug
-//------------------------------------------------------------------------
-std::string RTState::NormalizedState::toString(ParamID *iParamIDs) const
-{
-  std::ostringstream s;
-  s << "NormalizedState{";
-  for(int i = 0; i < fCount; i++)
-  {
-    if(i > 0)
-      s << ", ";
-    s << iParamIDs[i] << "=" << fValues[i];
-  }
-  s << "}";
-  return s.str();
-}
 
 }
 }

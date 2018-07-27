@@ -54,11 +54,11 @@ public:
   }
 
   /**
- * Called during initialization
- */
-  virtual void initParameters(GUIParameters const &iParameters)
+   * Called during initialization
+   */
+  virtual void initParameters(std::shared_ptr<GUIParameters> iParameters)
   {
-    fParamCxMgr = iParameters.createParamCxMgr();
+    fParamCxMgr = iParameters->createParamCxMgr();
   }
 
   /**

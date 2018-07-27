@@ -1,3 +1,5 @@
+#include <utility>
+
 #pragma once
 
 #include <vstgui4/vstgui/uidescription/uiviewfactory.h>
@@ -16,7 +18,7 @@ using namespace Params;
 class GUIParametersProvider
 {
 public:
-  virtual GUIParameters const &getGUIParameters() const = 0;
+  virtual std::shared_ptr<GUIParameters> getGUIParameters() const = 0;
 };
 
 /**
@@ -25,23 +27,20 @@ public:
 class CustomUIViewFactory : public VSTGUI::UIViewFactory, public GUIParametersProvider
 {
 public:
-  explicit CustomUIViewFactory(GUIParameters const &iGUIParameters) : fGUIParameters{iGUIParameters}
+  explicit CustomUIViewFactory(std::shared_ptr<GUIParameters> iGUIParameters) :
+    fGUIParameters{std::move(iGUIParameters)}
   {
-    DLOG_F(INFO, "CustomUIViewFactory()");
   }
 
-  ~CustomUIViewFactory() override
-  {
-    DLOG_F(INFO, "~CustomUIViewFactory()");
-  }
+  ~CustomUIViewFactory() override = default;
 
-  GUIParameters const &getGUIParameters() const override
+  std::shared_ptr<GUIParameters> getGUIParameters() const override
   {
     return fGUIParameters;
   }
 
 private:
-  GUIParameters const &fGUIParameters;
+  std::shared_ptr<GUIParameters> fGUIParameters{nullptr};
 };
 
 

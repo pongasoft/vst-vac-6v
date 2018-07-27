@@ -1,7 +1,5 @@
 #include <pluginterfaces/vst/ivstaudioprocessor.h>
 
-#include <utility>
-
 #ifndef __PONGASOFT_VST_RT_PARAMETER_H__
 #define __PONGASOFT_VST_RT_PARAMETER_H__
 
@@ -68,7 +66,6 @@ protected:
   ParamValue fNormalizedValue;
   ParamValue fPreviousNormalizedValue;
 };
-
 
 /**
  * The typed version. Maintains the denormalized (aka "typed") version of the value and previous value.

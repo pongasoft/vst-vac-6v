@@ -12,6 +12,11 @@ namespace RT {
 using namespace Steinberg;
 using namespace Steinberg::Vst;
 
+/**
+ * Base class from which the actual processor inherits from. Handles most of the "framework" logic,
+ * (state loading/saving in a thread safe manner, setting up GUI thread if messaging to the GUI is required, etc...) so
+ * that the actual processor code deals mostly with business logic.
+ */
 class RTProcessor : public AudioEffect
 {
 public:
@@ -71,8 +76,8 @@ protected:
   /**
    * Subclass will implement this method to respond to the GUI timer firing
    * /////// WARNING !!!!! WARNING !!!!! WARNING !!!!! WARNING !!!!! WARNING !!!!! WARNING !!!!! //////
-   * /////// this method WILL be called from the UI thread so do not modify the processor thread //////
-   * /////// WARNING !!!!! WARNING !!!!! WARNING !!!!! WARNING !!!!! WARNING !!!!! WARNING !!!!!  //////
+   * /////// this method WILL be called from the UI thread so do not modify the processor state  //////
+   * /////// WARNING !!!!! WARNING !!!!! WARNING !!!!! WARNING !!!!! WARNING !!!!! WARNING !!!!! //////
    * */
   virtual void onGUITimer() {}
 
@@ -83,6 +88,7 @@ protected:
   void enableGUITimer(uint32 iUIFrameRateMs);
 
 private:
+  // Simple wrapper to hide ITimerCallback
   template<typename T>
   class GUITimerCallback : public ITimerCallback
   {

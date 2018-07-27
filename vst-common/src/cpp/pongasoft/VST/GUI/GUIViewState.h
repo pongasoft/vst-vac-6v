@@ -73,7 +73,7 @@ template<typename TPluginParameters>
 class PluginGUIViewState : public GUIViewState
 {
 public:
-  void initParameters(GUIParameters const &iParameters) override
+  void initParameters(std::shared_ptr<GUIParameters> iParameters) override
   {
     GUIViewState::initParameters(iParameters);
     if(fParamCxMgr)

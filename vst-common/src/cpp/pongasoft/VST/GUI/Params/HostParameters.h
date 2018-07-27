@@ -37,12 +37,13 @@ public:
   inline bool exists(ParamID iParamID) const { return getParameterObject(iParamID) != nullptr; }
 
   // setParamNormalized
-  void setParamNormalized(ParamID iParamID, IBStreamer &iStreamer, ParamValue iDefaultNormalizedValue)
+  ParamValue setParamNormalized(ParamID iParamID, IBStreamer &iStreamer, ParamValue iDefaultNormalizedValue)
   {
     double value;
     if(!iStreamer.readDouble(value))
       value = iDefaultNormalizedValue;
     setParamNormalized(iParamID, value);
+    return value;
   }
 
 private:

@@ -4,9 +4,9 @@
 
 #include <pongasoft/Utils/Concurrent/Concurrent.h>
 #include <pongasoft/VST/Parameters.h>
+#include <pongasoft/VST/NormalizedState.h>
 
 #include <map>
-#include <string>
 
 namespace pongasoft {
 namespace VST {
@@ -76,39 +76,6 @@ protected:
 
   // add raw parameter to the structures
   void addRawParameter(std::shared_ptr<RTRawParameter> const &iParameter);
-
-private:
-  // Internal structure used to transfer the state between the GUI thread and the RT processing
-  // (readNewState/writeLatestState)
-  struct NormalizedState
-  {
-    explicit NormalizedState(int iCount);
-
-    // Destructor
-    ~NormalizedState();
-
-    // No copy constructor allowed (use move constructor instead)
-    NormalizedState(NormalizedState const &other) = delete;
-
-    // Move constructor => transfer the memory to this object and cleans the other (no memory allocation!)
-    NormalizedState(NormalizedState &&other) noexcept;
-
-    // Copies the content of the array ONLY when size match (which is the case internally)
-    NormalizedState& operator=(NormalizedState const &other);
-
-    // set the param value (check for index bounds)
-    inline void set(int iIdx, ParamValue iParamValue)
-    {
-      DCHECK_F(iIdx >= 0 && iIdx < fCount);
-      fValues[iIdx] = iParamValue;
-    }
-
-    // toString
-    std::string toString(ParamID *iParamIDs) const;
-
-    ParamValue *fValues{nullptr};
-    int fCount{0};
-  };
 
 private:
   // need to allocate memory only at creation time for RT!

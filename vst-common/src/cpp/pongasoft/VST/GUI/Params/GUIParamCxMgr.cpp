@@ -11,7 +11,7 @@ namespace Params {
 std::unique_ptr<GUIRawParameter>
 GUIParamCxMgr::registerGUIRawParam(ParamID iParamID, GUIRawParameter::IChangeListener *iChangeListener)
 {
-  auto parameter = fParameters.getRawParameter(iParamID);
+  auto parameter = fParameters->getRawParameter(iParamID);
 
   if(iChangeListener)
   {

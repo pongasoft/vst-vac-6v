@@ -9,13 +9,13 @@ namespace VAC6 {
 ///////////////////////////////////////////
 // VAC6Controller::VAC6Controller
 ///////////////////////////////////////////
-VAC6Controller::VAC6Controller() : EditController(),
-                                   fXmlFile("VAC6.uidesc"),
+VAC6Controller::VAC6Controller() : GUIController("VAC6.uidesc"),
                                    fPluginParameters{},
-                                   fGUIParameters{HostParameters(this), fPluginParameters},
                                    fHistoryState{std::make_shared<HistoryState>()}
 {
   DLOG_F(INFO, "VAC6Controller::VAC6Controller()");
+
+  registerViewState(fHistoryState);
 }
 
 ///////////////////////////////////////////
@@ -24,53 +24,6 @@ VAC6Controller::VAC6Controller() : EditController(),
 VAC6Controller::~VAC6Controller()
 {
   DLOG_F(INFO, "VAC6Controller::~VAC6Controller()");
-}
-
-///////////////////////////////////////////
-// VAC6Controller::initialize
-///////////////////////////////////////////
-tresult VAC6Controller::initialize(FUnknown *context)
-{
-  DLOG_F(INFO, "VAC6Controller::initialize()");
-
-  tresult result = EditController::initialize(context);
-  if(result != kResultOk)
-  {
-    return result;
-  }
-
-  // making sure that the knob mode is linear
-  CFrame::kDefaultKnobMode = CKnobMode::kLinearMode;
-  setKnobMode(CKnobMode::kLinearMode);
-
-  fGUIParameters.registerVstParameters(parameters);
-
-  fViewFactory = new CustomUIViewFactory(fGUIParameters);
-
-  return result;
-}
-
-///////////////////////////////////////////
-// VAC6Controller::terminate
-///////////////////////////////////////////
-tresult VAC6Controller::terminate()
-{
-  delete fViewFactory;
-
-  return EditController::terminate();
-}
-
-///////////////////////////////////////////
-// VAC6Controller::createView
-///////////////////////////////////////////
-IPlugView *VAC6Controller::createView(const char *name)
-{
-  if(name && strcmp(name, ViewType::kEditor) == 0)
-  {
-    UIDescription *uiDescription = new UIDescription(fXmlFile,fViewFactory);
-    return new VSTGUI::VST3Editor(uiDescription, this, "view", fXmlFile);
-  }
-  return nullptr;
 }
 
 ///////////////////////////////////////////
@@ -88,50 +41,6 @@ CView *VAC6Controller::verifyView(CView *view,
   }
 
   return view;
-}
-
-///////////////////////////////////////////
-// VAC6Controller::setComponentState
-///////////////////////////////////////////
-tresult VAC6Controller::setComponentState(IBStream *state)
-{
-  // DLOG_F(INFO, "VAC6Controller::setComponentState");
-
-  // we receive the current state of the component (processor part)
-  if(state == nullptr)
-    return kResultFalse;
-
-  // using helper to read the stream
-  IBStreamer streamer(state, kLittleEndian);
-  return fGUIParameters.readRTState(streamer);
-}
-
-///////////////////////////////////
-// VAC6Controller::setState
-///////////////////////////////////
-tresult VAC6Controller::setState(IBStream *state)
-{
-  if(state == nullptr)
-    return kResultFalse;
-
-  // DLOG_F(INFO, "VAC6Controller::setState()");
-
-  IBStreamer streamer(state, kLittleEndian);
-  return fGUIParameters.readGUIState(streamer);
-}
-
-///////////////////////////////////
-// VAC6Controller::getState
-///////////////////////////////////
-tresult VAC6Controller::getState(IBStream *state)
-{
-  if(state == nullptr)
-    return kResultFalse;
-
-  // DLOG_F(INFO, "VAC6Controller::getState()");
-
-  IBStreamer streamer(state, kLittleEndian);
-  return fGUIParameters.writeGUIState(streamer);
 }
 
 ///////////////////////////////////
