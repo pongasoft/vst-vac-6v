@@ -142,11 +142,11 @@ tresult RTProcessor::getState(IBStream *state)
 }
 
 //------------------------------------------------------------------------
-// RTProcessor::setupProcessing
+// RTProcessor::initialize
 //------------------------------------------------------------------------
-tresult RTProcessor::setupProcessing(ProcessSetup &setup)
+tresult RTProcessor::initialize(FUnknown *context)
 {
-  tresult result = AudioEffect::setupProcessing(setup);
+  tresult result = AudioEffect::initialize(context);
 
   if(result != kResultOk)
     return result;

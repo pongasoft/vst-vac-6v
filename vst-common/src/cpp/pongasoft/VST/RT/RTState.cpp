@@ -179,9 +179,6 @@ void RTState::afterProcessing()
 //------------------------------------------------------------------------
 tresult RTState::init()
 {
-#ifdef VST_COMMON_DEBUG_LOGGING
-  DLOG_F(INFO, "RTState - Initialization");
-#endif
   tresult result = kResultOk;
   for(int i = 0; i < fSaveStateOrder.getParamCount(); i++)
   {
@@ -207,6 +204,9 @@ tresult RTState::init()
   if(result == kResultOk)
   {
     computeLatestState();
+#ifdef VST_COMMON_DEBUG_LOGGING
+    DLOG_F(INFO, "RT Init State - %s", fNormalizedStateRT.toString(fSaveStateOrder.fOrder.data()).c_str());
+#endif
   }
 
   return result;

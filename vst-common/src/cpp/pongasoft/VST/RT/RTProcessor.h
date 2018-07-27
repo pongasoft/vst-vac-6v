@@ -29,6 +29,9 @@ public:
    */
   virtual RTState *getRTState() = 0;
 
+  /** Called at first after constructor (setup input/output) */
+  tresult PLUGIN_API initialize(FUnknown *context) override;
+
   /** Switch the Plug-in on/off */
   tresult PLUGIN_API setActive(TBool state) override;
 
@@ -43,9 +46,6 @@ public:
 
   /** Called to save the state (before saving a preset or project) */
   tresult PLUGIN_API getState(IBStream *state) override;
-
-  // This is where the setup happens which depends on sample rate, etc..
-  tresult PLUGIN_API setupProcessing(ProcessSetup &setup) override;
 
 protected:
 

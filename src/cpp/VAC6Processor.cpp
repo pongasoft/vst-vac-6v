@@ -112,7 +112,7 @@ tresult PLUGIN_API VAC6Processor::initialize(FUnknown *context)
 {
   DLOG_F(INFO, "VAC6Processor::initialize()");
 
-  tresult result = AudioEffect::initialize(context);
+  tresult result = RTProcessor::initialize(context);
   if(result != kResultOk)
   {
     return result;

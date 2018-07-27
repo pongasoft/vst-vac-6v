@@ -20,15 +20,7 @@ include_directories(${CMAKE_BINARY_DIR}/generated/)
 
 if (SMTG_CREATE_VST2_VERSION)
 	set(vst2_sources
-			${VST3_SDK_ROOT}/public.sdk/source/common/memorystream.cpp
-			${VST3_SDK_ROOT}/public.sdk/source/vst/hosting/eventlist.cpp
-			${VST3_SDK_ROOT}/public.sdk/source/vst/hosting/hostclasses.cpp
-			${VST3_SDK_ROOT}/public.sdk/source/vst/hosting/parameterchanges.cpp
-			${VST3_SDK_ROOT}/public.sdk/source/vst/hosting/processdata.cpp
-			${VST3_SDK_ROOT}/public.sdk/source/vst/vst2wrapper/vst2wrapper.cpp
-			${VST3_SDK_ROOT}/public.sdk/source/vst/vst2wrapper/vst2wrapper.h
-			${VST3_SDK_ROOT}/public.sdk/source/vst2.x/audioeffect.cpp
-			${VST3_SDK_ROOT}/public.sdk/source/vst2.x/audioeffectx.cpp
+			${VST_COMMON_vst2_sources}
 			${CPP_SOURCES}/VAC6VST2.cpp
 			)
 endif()
@@ -127,16 +119,8 @@ elseif(WIN)
 			)
 endif()
 
-if (SMTG_CREATE_VST2_VERSION)
-	message(STATUS "SMTG_CREATE_VST2_VERSION is set for ${target}. A VST 2 version of the plug-in will be created (just rename the generated file from .vst3 to .vst).")
-	if(MAC)
-		# fix missing VSTPluginMain symbol when also building VST 2 version
-		smtg_set_exported_symbols(${target} "${CMAKE_CURRENT_LIST_DIR}/mac/macexport_vst2.exp")
-	endif()
-	if (WIN)
-		add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-	endif()
-endif()
+# fix for vst2
+vst_fix_vst2(${target})
 
 if(MAC OR WIN)
 	add_custom_command(OUTPUT ${ARCHIVE_PATH}.zip

@@ -8,6 +8,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/VST3_SDK.cmake)
 # Defining files to include to generate the library
 #-------------------------------------------------------------------------------
 
+set(VST_COMMON_ROOT ${CMAKE_CURRENT_LIST_DIR})
 set(VST_COMMON_CPP_SOURCES ${CMAKE_CURRENT_LIST_DIR}/src/cpp)
 set(LOGURU_IMPL ${VST_COMMON_CPP_SOURCES}/pongasoft/logging/logging.cpp)
 include_directories(${VST_COMMON_CPP_SOURCES})
@@ -84,8 +85,38 @@ set(VST_COMMON_sources_cpp
 
     )
 
+if (SMTG_CREATE_VST2_VERSION)
+  set(VST_COMMON_vst2_sources
+      ${VST3_SDK_ROOT}/public.sdk/source/common/memorystream.cpp
+      ${VST3_SDK_ROOT}/public.sdk/source/vst/hosting/eventlist.cpp
+      ${VST3_SDK_ROOT}/public.sdk/source/vst/hosting/hostclasses.cpp
+      ${VST3_SDK_ROOT}/public.sdk/source/vst/hosting/parameterchanges.cpp
+      ${VST3_SDK_ROOT}/public.sdk/source/vst/hosting/processdata.cpp
+      ${VST3_SDK_ROOT}/public.sdk/source/vst/vst2wrapper/vst2wrapper.cpp
+      ${VST3_SDK_ROOT}/public.sdk/source/vst/vst2wrapper/vst2wrapper.h
+      ${VST3_SDK_ROOT}/public.sdk/source/vst2.x/audioeffect.cpp
+      ${VST3_SDK_ROOT}/public.sdk/source/vst2.x/audioeffectx.cpp
+      )
+endif()
+
 ###################################################
-# Testing
+# vst_fix_vst2
+###################################################
+function(vst_fix_vst2 target)
+  if (SMTG_CREATE_VST2_VERSION)
+    message(STATUS "${target} will be VST2 compatible")
+    if(MAC)
+      # fix missing VSTPluginMain symbol when also building VST 2 version
+      smtg_set_exported_symbols(${target} "${VST_COMMON_ROOT}/mac/macexport_vst2.exp")
+    endif()
+    if (WIN)
+      add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    endif()
+  endif()
+endfunction()
+
+###################################################
+# Testing - vst_add_test
 ###################################################
 # Download and unpack googletest at configure time
 include(${CMAKE_CURRENT_LIST_DIR}/gtest.cmake)
@@ -107,7 +138,7 @@ function(vst_add_test PROJECT_TEST_NAME TEST_CASES_FILES TEST_SOURCES TEST_LIBS)
 endfunction()
 
 ###################################################
-# Testing
+# Testing - for this framework
 ###################################################
 file(GLOB_RECURSE TEST_SRC_FILES RELATIVE ${PROJECT_SOURCE_DIR} vst-common/test/cpp/*cpp)
 set(test_sources ""
