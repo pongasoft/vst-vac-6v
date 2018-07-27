@@ -1,4 +1,9 @@
 #-------------------------------------------------------------------------------
+# Options
+#-------------------------------------------------------------------------------
+option(VST_COMMON_DEBUG_LOGGING "Enable debug logging for vst_common framework" OFF)
+
+#-------------------------------------------------------------------------------
 # Including VST3 SDK
 #-------------------------------------------------------------------------------
 
@@ -97,6 +102,11 @@ if (SMTG_CREATE_VST2_VERSION)
       ${VST3_SDK_ROOT}/public.sdk/source/vst2.x/audioeffect.cpp
       ${VST3_SDK_ROOT}/public.sdk/source/vst2.x/audioeffectx.cpp
       )
+endif()
+
+if(VST_COMMON_DEBUG_LOGGING)
+  message(STATUS "Enabling debug logging for vst_common framework")
+  add_definitions(-DVST_COMMON_DEBUG_LOGGING)
 endif()
 
 ###################################################
