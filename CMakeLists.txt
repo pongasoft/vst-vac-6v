@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.9)
 
 # build VST 2 by default
 option(SMTG_CREATE_VST2_VERSION "Use VST2" ON)
-set(SMTG_CREATE_VST3_LINK OFF)
+option(SMTG_CREATE_VST3_LINK "" OFF)
 
 set(PLUGIN_MAJOR_VERSION 1)
 set(PLUGIN_MINOR_VERSION 0)
