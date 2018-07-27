@@ -129,7 +129,26 @@ public:
   SingleElementQueue() : fSingleElement{T{}}, fIsEmpty{true}, fSpinLock{}
   {}
 
-  explicit SingleElementQueue(T const &iFirstElement) : fSingleElement{iFirstElement}, fIsEmpty{false}, fSpinLock{}
+  /**
+   * This constructor can be used to add one element to the queue right away or when there is no empty constructor
+   * (required by the no argument constructor).
+   */
+  explicit SingleElementQueue(T const &iFirstElement,
+                              bool iIsEmpty = false) :
+    fSingleElement{iFirstElement},
+    fIsEmpty{iIsEmpty},
+    fSpinLock{}
+  {}
+
+  /**
+   * This constructor can be used to add one element to the queue right away or when there is no empty constructor
+   * (required by the no argument constructor).
+   */
+  explicit SingleElementQueue(T &&iFirstElement,
+                              bool iIsEmpty = false) :
+    fSingleElement{std::move(iFirstElement)},
+    fIsEmpty{iIsEmpty},
+    fSpinLock{}
   {}
 
   /**
@@ -177,19 +196,30 @@ template<typename T>
 class AtomicValue
 {
 public:
-  explicit AtomicValue(T const &iValue) : fValue{iValue}, fSpinLock{}
-  {}
+  explicit AtomicValue(T const &iValue) : fValue{iValue}, fSpinLock{} {}
+
+  explicit AtomicValue(T &&iValue) : fValue{std::move(iValue)}, fSpinLock{} {}
 
   /**
    * Returns the "current" value. Note that this method should be called by one thread at a time (it is ok to call
    * "set" at the same time with another thread).
    *
-   * @return the value. Since it is returning the address of the value, you should copy it if you wish to store it.
+   * @return the value (a copy which uses copy constructor)
    */
   T get()
   {
     auto lock = fSpinLock.acquire();
     return fValue;
+  };
+
+  /**
+   * Returns the "current" value. Note that this method should be called by one thread at a time (it is ok to call
+   * "set" at the same time with another thread). The return value is copied in the oElement (copy vs creation).
+   */
+  void get(T &oElement)
+  {
+    auto lock = fSpinLock.acquire();
+    oElement = fValue;
   };
 
   /**

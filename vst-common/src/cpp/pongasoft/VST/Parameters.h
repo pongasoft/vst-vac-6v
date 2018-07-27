@@ -70,6 +70,7 @@ public:
   {
     uint16 fVersion{0};
     std::vector<ParamID> fOrder{};
+    int getParamCount() const { return fOrder.size(); }
   };
 
 public:

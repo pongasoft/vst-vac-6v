@@ -15,11 +15,14 @@ using namespace Steinberg::Vst;
 class RTProcessor : public AudioEffect
 {
 public:
-  RTProcessor(Steinberg::FUID const &iControllerUID);
+  explicit RTProcessor(Steinberg::FUID const &iControllerUID);
 
   ~RTProcessor() override = default;
 
-  virtual IRTState *getRTState() = 0;
+  /**
+   * Subclasses must implement this method to return the state
+   */
+  virtual RTState *getRTState() = 0;
 
   /** Switch the Plug-in on/off */
   tresult PLUGIN_API setActive(TBool state) override;
@@ -35,6 +38,9 @@ public:
 
   /** Called to save the state (before saving a preset or project) */
   tresult PLUGIN_API getState(IBStream *state) override;
+
+  // This is where the setup happens which depends on sample rate, etc..
+  tresult PLUGIN_API setupProcessing(ProcessSetup &setup) override;
 
 protected:
 

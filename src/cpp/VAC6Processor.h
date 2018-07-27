@@ -43,7 +43,7 @@ public:
   ~VAC6Processor() override;
 
   // getRTState
-  IRTState *getRTState() override { return &fState; }
+  RTState *getRTState() override { return &fState; }
 
   /** Called at first after constructor (setup input/output) */
   tresult PLUGIN_API initialize(FUnknown *context) override;

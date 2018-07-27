@@ -141,6 +141,19 @@ tresult RTProcessor::getState(IBStream *state)
   return getRTState()->writeLatestState(streamer);
 }
 
+//------------------------------------------------------------------------
+// RTProcessor::setupProcessing
+//------------------------------------------------------------------------
+tresult RTProcessor::setupProcessing(ProcessSetup &setup)
+{
+  tresult result = AudioEffect::setupProcessing(setup);
+
+  if(result != kResultOk)
+    return result;
+
+  return getRTState()->init();
+}
+
 
 }
 }

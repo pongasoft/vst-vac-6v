@@ -184,7 +184,7 @@ public:
 
 using namespace RT;
 
-class VAC6RTState : public RTState<7>
+class VAC6RTState : public RTState
 {
 public:
   explicit VAC6RTState(VAC6Parameters &iParams) :
@@ -202,7 +202,6 @@ public:
     fLCDInputX{add(iParams.fLCDInputXParam)},
     fLCDHistoryOffset{add(iParams.fLCDHistoryOffsetParam)}
   {
-    init();
   }
 
 public:

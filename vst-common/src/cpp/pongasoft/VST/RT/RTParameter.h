@@ -108,7 +108,7 @@ public:
   inline ParamType const &getValue() const { return fValue; }
 
   // getPreviousValue
-  inline ParamType const &pv() const { return fPreviousValue; }
+  inline ParamType const &getPreviousValue() const { return fPreviousValue; }
 
 protected:
   // Override the base class to update the denormalized value as well
