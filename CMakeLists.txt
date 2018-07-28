@@ -11,7 +11,7 @@ set(PLUGIN_VERSION "${PLUGIN_MAJOR_VERSION}.${PLUGIN_MINOR_VERSION}.${PLUGIN_PAT
 
 project(VST_VAC6)
 
-include(vst-common/vst-common.cmake)
+include(jamba/jamba.cmake)
 
 set(CPP_SOURCES src/cpp)
 
@@ -20,7 +20,7 @@ include_directories(${CMAKE_BINARY_DIR}/generated/)
 
 if (SMTG_CREATE_VST2_VERSION)
 	set(vst2_sources
-			${VST_COMMON_vst2_sources}
+			${JAMBA_vst2_sources}
 			${CPP_SOURCES}/VAC6VST2.cpp
 			)
 endif()
@@ -60,7 +60,7 @@ if(MAC OR WIN)
 endif()
 
 set(target pongasoft_VAC6V)
-smtg_add_vst3plugin(${target} ${VST3_SDK_ROOT} ${vst_sources} ${VST_COMMON_sources_h} ${VST_COMMON_sources_cpp})
+smtg_add_vst3plugin(${target} ${VST3_SDK_ROOT} ${vst_sources} ${JAMBA_sources_h} ${JAMBA_sources_cpp})
 target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
 target_link_libraries(${target} PRIVATE base sdk vstgui_support)
 
@@ -87,12 +87,12 @@ elseif(WIN)
 endif()
 
 # fix for vst2
-vst_fix_vst2(${target})
+jamba_fix_vst2(${target})
 
 ###################################################
 # Create archive (.tgz)
 ###################################################
-vst_create_archive(${target} VAC-6V)
+jamba_create_archive(${target} VAC-6V)
 
 ####################################################
 ## Testing
@@ -103,7 +103,7 @@ set(test_sources ${test_sources}
 		${CPP_SOURCES}/ZoomWindow.cpp
 		)
 
-vst_add_test(${PROJECT_NAME}_test "${TEST_SRC_FILES}" "${test_sources}" "")
+jamba_add_test(${PROJECT_NAME}_test "${TEST_SRC_FILES}" "${test_sources}" "")
 
 ###################################################
 # Dev help

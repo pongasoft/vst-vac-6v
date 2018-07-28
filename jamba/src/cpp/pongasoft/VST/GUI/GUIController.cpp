@@ -31,7 +31,7 @@ GUIController::~GUIController()
 //------------------------------------------------------------------------
 tresult GUIController::initialize(FUnknown *context)
 {
-#ifdef VST_COMMON_DEBUG_LOGGING
+#ifdef JAMBA_DEBUG_LOGGING
   DLOG_F(INFO, "GUIController::initialize()");
 #endif
 
@@ -64,7 +64,7 @@ tresult GUIController::initialize(FUnknown *context)
 //------------------------------------------------------------------------
 tresult GUIController::terminate()
 {
-#ifdef VST_COMMON_DEBUG_LOGGING
+#ifdef JAMBA_DEBUG_LOGGING
   DLOG_F(INFO, "GUIController::terminate()");
 #endif
 
@@ -100,7 +100,7 @@ tresult GUIController::setComponentState(IBStream *state)
 
   std::unique_ptr<NormalizedState> normalizedState = nullptr;
 
-#ifdef VST_COMMON_DEBUG_LOGGING
+#ifdef JAMBA_DEBUG_LOGGING
   auto const &order = fGUIParameters->getPluginParameters().getRTSaveStateOrder();
   normalizedState = std::make_unique<NormalizedState>(order.getParamCount());
 #endif
@@ -110,7 +110,7 @@ tresult GUIController::setComponentState(IBStream *state)
   
   tresult res = fGUIParameters->readRTState(streamer, normalizedState.get());
 
-#ifdef VST_COMMON_DEBUG_LOGGING
+#ifdef JAMBA_DEBUG_LOGGING
   DLOG_F(INFO, "GUIController::readRTState - v=%d, %s", order.fVersion, normalizedState->toString(order.fOrder.data()).c_str());
 #endif
 
@@ -127,7 +127,7 @@ tresult GUIController::setState(IBStream *state)
 
   std::unique_ptr<NormalizedState> normalizedState = nullptr;
 
-#ifdef VST_COMMON_DEBUG_LOGGING
+#ifdef JAMBA_DEBUG_LOGGING
   auto const &order = fGUIParameters->getPluginParameters().getGUISaveStateOrder();
   normalizedState = std::make_unique<NormalizedState>(order.getParamCount());
 #endif
@@ -135,7 +135,7 @@ tresult GUIController::setState(IBStream *state)
   IBStreamer streamer(state, kLittleEndian);
   tresult res = fGUIParameters->readGUIState(streamer, normalizedState.get());
 
-#ifdef VST_COMMON_DEBUG_LOGGING
+#ifdef JAMBA_DEBUG_LOGGING
   DLOG_F(INFO, "GUIController::readGUIState - v=%d, %s", order.fVersion, normalizedState->toString(order.fOrder.data()).c_str());
 #endif
 
@@ -152,7 +152,7 @@ tresult GUIController::getState(IBStream *state)
 
   std::unique_ptr<NormalizedState> normalizedState = nullptr;
 
-#ifdef VST_COMMON_DEBUG_LOGGING
+#ifdef JAMBA_DEBUG_LOGGING
   auto const &order = fGUIParameters->getPluginParameters().getGUISaveStateOrder();
   normalizedState = std::make_unique<NormalizedState>(order.getParamCount());
 #endif
@@ -160,7 +160,7 @@ tresult GUIController::getState(IBStream *state)
   IBStreamer streamer(state, kLittleEndian);
   tresult res = fGUIParameters->writeGUIState(streamer, normalizedState.get());
 
-#ifdef VST_COMMON_DEBUG_LOGGING
+#ifdef JAMBA_DEBUG_LOGGING
   DLOG_F(INFO, "GUIController::writeGUIState - v=%d, %s", order.fVersion, normalizedState->toString(order.fOrder.data()).c_str());
 #endif
 

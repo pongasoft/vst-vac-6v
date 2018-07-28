@@ -67,7 +67,7 @@ void Parameters::addRawParamDef(std::shared_ptr<RawParamDef> iParamDef)
     ABORT_F("Parameter [%d] already registered", iParamDef->fParamID);
   }
 
-#ifdef VST_COMMON_DEBUG_LOGGING
+#ifdef JAMBA_DEBUG_LOGGING
   DLOG_F(INFO, "Parameters::addRawParamDef{%d, \"%s\", \"%s\", %f, %d, %d, %d, \"%s\", %d%s%s}",
          iParamDef->fParamID,
          String(iParamDef->fTitle).text8(),

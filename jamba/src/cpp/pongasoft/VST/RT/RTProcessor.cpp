@@ -28,7 +28,7 @@ tresult RTProcessor::setActive(TBool iState)
   // when the processor is activated, start the GUI thread
   if(fActive && fGUITimerIntervalMs > 0)
   {
-#ifdef VST_COMMON_DEBUG_LOGGING
+#ifdef JAMBA_DEBUG_LOGGING
     DLOG_F(INFO, "RTProcessor::setActive - Enabling GUI timer - interval [%d]", fGUITimerIntervalMs);
 #endif
     fGUITimer = AutoReleaseTimer::create(&fGUITimerCallback, fGUITimerIntervalMs);
@@ -69,7 +69,7 @@ tresult RTProcessor::processInputs(ProcessData &data)
 {
   if(data.symbolicSampleSize == kSample32)
   {
-#ifdef VST_COMMON_DEBUG_LOGGING
+#ifdef JAMBA_DEBUG_LOGGING
     if(fSymbolicSampleSize != data.symbolicSampleSize)
     {
       fSymbolicSampleSize = data.symbolicSampleSize;
@@ -81,7 +81,7 @@ tresult RTProcessor::processInputs(ProcessData &data)
 
   if(data.symbolicSampleSize == kSample64)
   {
-#ifdef VST_COMMON_DEBUG_LOGGING
+#ifdef JAMBA_DEBUG_LOGGING
     if(fSymbolicSampleSize != data.symbolicSampleSize)
     {
       fSymbolicSampleSize = data.symbolicSampleSize;

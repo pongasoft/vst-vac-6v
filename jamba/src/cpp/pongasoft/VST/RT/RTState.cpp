@@ -103,7 +103,7 @@ tresult RTState::readNewState(IBStreamer &iStreamer)
     normalizedState.set(i, fParameters.at(paramID)->getRawParamDef()->readNormalizedValue(iStreamer));
   }
 
-#ifdef VST_COMMON_DEBUG_LOGGING
+#ifdef JAMBA_DEBUG_LOGGING
   DLOG_F(INFO, "RTState::readNewState - v=%d, %s", fSaveStateOrder.fVersion, normalizedState.toString(fSaveStateOrder.fOrder.data()).c_str());
 #endif
 
@@ -130,7 +130,7 @@ tresult RTState::writeLatestState(IBStreamer &oStreamer)
     oStreamer.writeDouble(normalizedState.fValues[i]);
   }
 
-#ifdef VST_COMMON_DEBUG_LOGGING
+#ifdef JAMBA_DEBUG_LOGGING
   DLOG_F(INFO, "RTState::writeLatestState - v=%d, %s", fSaveStateOrder.fVersion, normalizedState.toString(fSaveStateOrder.fOrder.data()).c_str());
 #endif
 
@@ -204,7 +204,7 @@ tresult RTState::init()
   if(result == kResultOk)
   {
     computeLatestState();
-#ifdef VST_COMMON_DEBUG_LOGGING
+#ifdef JAMBA_DEBUG_LOGGING
     DLOG_F(INFO, "RT Init State - %s", fNormalizedStateRT.toString(fSaveStateOrder.fOrder.data()).c_str());
 #endif
   }
