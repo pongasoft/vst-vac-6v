@@ -5,6 +5,7 @@
 
 #include <map>
 #include <vector>
+#include <set>
 
 #include <public.sdk/source/vst/vstparameters.h>
 
@@ -136,7 +137,9 @@ private:
   // contains all the registered parameters (unique ID, will be checked on add)
   std::map<ParamID, std::shared_ptr<RawParamDef>> fParameters{};
 
-  std::vector<ParamID> fRegistrationOrder{};
+  // order in which the parameters will be registered in the plugin
+  std::vector<ParamID> fPluginOrder{};
+
   // TODO: Handle multiple versions with upgrade
   SaveStateOrder fRTSaveStateOrder{};
   SaveStateOrder fGUISaveStateOrder{};
@@ -232,14 +235,26 @@ void Parameters::setRTSaveStateOrder(uint16 iVersion, Args... args)
   std::vector<ParamID> ids{};
   buildParamIDs(ids, args...);
 
+  bool ok = true;
+
   for(auto id : ids)
   {
-    DCHECK_F(!fParameters.at(id)->fTransient,
+    if(fParameters.at(id)->fTransient)
+    {
+      ok = false;
+      DLOG_F(ERROR,
              "Param [%d] cannot be used for RTSaveStateOrder as it is defined transient",
              id);
-    DCHECK_F(!fParameters.at(id)->fUIOnly,
+    }
+
+    if(fParameters.at(id)->fUIOnly)
+    {
+      ok = false;
+      DLOG_F(ERROR,
              "Param [%d] cannot be used for RTSaveStateOrder as it is defined UIOnly",
              id);
+
+    }
   }
 
   for(auto p : fParameters)
@@ -254,6 +269,8 @@ void Parameters::setRTSaveStateOrder(uint16 iVersion, Args... args)
     }
   }
 
+  DCHECK_F(ok, "Issue with setRTSaveStateOrder... failing in development mode");
+
   fRTSaveStateOrder = {iVersion, ids};
 }
 
@@ -265,14 +282,27 @@ void Parameters::setGUISaveStateOrder(uint16 iVersion, Args... args)
 {
   std::vector<ParamID> ids{};
   buildParamIDs(ids, args...);
+
+  bool ok = true;
+
   for(auto id : ids)
   {
-    DCHECK_F(!fParameters.at(id)->fTransient,
+    if(fParameters.at(id)->fTransient)
+    {
+      ok = false;
+      DLOG_F(ERROR,
              "Param [%d] cannot be used for GUISaveStateOrder as it is defined transient",
              id);
-    DCHECK_F(fParameters.at(id)->fUIOnly,
+    }
+
+    if(!fParameters.at(id)->fUIOnly)
+    {
+      ok = false;
+      DLOG_F(ERROR,
              "Param [%d] cannot be used for GUISaveStateOrder as it is not defined UIOnly",
              id);
+
+    }
   }
 
   for(auto p : fParameters)
@@ -286,6 +316,8 @@ void Parameters::setGUISaveStateOrder(uint16 iVersion, Args... args)
       }
     }
   }
+
+  DCHECK_F(ok, "Issue with setGUISaveStateOrder... failing in development mode");
 
   fGUISaveStateOrder = {iVersion, ids};
 }

@@ -84,9 +84,6 @@ public:
     fValue{denormalize(fNormalizedValue)},
     fPreviousValue{fValue}
   {
-#ifdef VST_COMMON_DEBUG_LOGGING
-    DLOG_F(INFO, "RTParameter(%s)", String(iParamDef->fTitle).text8());
-#endif
   }
 
   // shortcut to normalize

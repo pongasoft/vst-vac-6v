@@ -38,10 +38,10 @@ private:
 //------------------------------------------------------------------------
 void Parameters::registerVstParameters(Vst::ParameterContainer &iParameterContainer) const
 {
-  for(const auto &p : fParameters)
+  for(auto paramID : fPluginOrder)
   {
     // YP Note: ParameterContainer is expecting a pointer and then assumes ownership
-    iParameterContainer.addParameter(new VstParameterImpl(p.second));
+    iParameterContainer.addParameter(new VstParameterImpl(fParameters.at(paramID)));
   }
 }
 
@@ -84,7 +84,7 @@ void Parameters::addRawParamDef(std::shared_ptr<RawParamDef> iParamDef)
 
   fParameters[iParamDef->fParamID] = iParamDef;
 
-  fRegistrationOrder.emplace_back(iParamDef->fParamID);
+  fPluginOrder.emplace_back(iParamDef->fParamID);
 
   if(!iParamDef->fTransient)
   {

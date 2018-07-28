@@ -102,7 +102,6 @@ public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
       CustomViewCreator(iViewName, iDisplayName)
     {
-      std::cout << "ToggleButtonView" << std::endl;
       registerIntAttribute("frames", &ToggleButtonView::getFrames, &ToggleButtonView::setFrames);
       registerColorAttribute("on-color", &ToggleButtonView::getOnColor, &ToggleButtonView::setOnColor);
       registerBitmapAttribute("button-image", &ToggleButtonView::getImage, &ToggleButtonView::setImage);
