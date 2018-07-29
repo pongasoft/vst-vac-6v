@@ -43,7 +43,7 @@ using namespace RT;
 class VAC6RTState : public RTState
 {
 public:
-  explicit VAC6RTState(VAC6Parameters &iParams) :
+  explicit VAC6RTState(VAC6Parameters const &iParams) :
     RTState(iParams),
     fZoomFactorX{add(iParams.fZoomFactorXParam)},
     fLeftChannelOn{add(iParams.fLeftChannelOnParam)},
