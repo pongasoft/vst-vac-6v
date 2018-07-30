@@ -10,7 +10,8 @@ namespace VAC6 {
 // VAC6Controller::VAC6Controller
 ///////////////////////////////////////////
 VAC6Controller::VAC6Controller() : GUIController("VAC6.uidesc"),
-                                   fPluginParameters{},
+                                   fParameters{},
+                                   fState{fParameters},
                                    fHistoryState{std::make_shared<HistoryState>()}
 {
   DLOG_F(INFO, "VAC6Controller::VAC6Controller()");

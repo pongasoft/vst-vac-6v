@@ -21,10 +21,10 @@ public:
   // Destructor
   ~VAC6Controller() override;
 
-  // getPluginParameters
-  Parameters const *getPluginParameters() const override { return &fPluginParameters; };
+  // getGUIState
+  GUIState *getGUIState() override { return &fState; }
 
-  /** From VST3EditorDelegate to be able to get a handle to some of the views */
+ /** From VST3EditorDelegate to be able to get a handle to some of the views */
   CView *verifyView(CView *view,
                     const UIAttributes &attributes,
                     const IUIDescription *description,
@@ -43,7 +43,8 @@ public:
   }
 
 private:
-  VAC6Parameters fPluginParameters;
+  VAC6Parameters fParameters;
+  VAC6GUIState fState;
 
   // the history state (shared by fMaxLevelState & fLCDDisplayState)
   std::shared_ptr<HistoryState> fHistoryState;

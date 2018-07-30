@@ -5,6 +5,7 @@
 
 #include <pongasoft/VST/Parameters.h>
 #include <pongasoft/VST/RT/RTState.h>
+#include <pongasoft/VST/GUI/GUIState.h>
 
 #include <pluginterfaces/vst/ivstaudioprocessor.h>
 
@@ -75,6 +76,16 @@ public:
   RTParam<BooleanParamConverter> fMaxLevelReset;
   RTParam<LCDInputXParamConverter> fLCDInputX;
   RTParam<LCDHistoryOffsetParamConverter> fLCDHistoryOffset;
+};
+
+using namespace GUI;
+
+class VAC6GUIState : public GUIState
+{
+public:
+  explicit VAC6GUIState(VAC6Parameters const &iParams) :
+    GUIState(iParams)
+  {};
 };
 
 }
