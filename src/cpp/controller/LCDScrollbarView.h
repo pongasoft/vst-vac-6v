@@ -15,7 +15,7 @@ using namespace Common;
 using namespace GUI;
 using namespace GUI::Views;
 
-class LCDScrollbarView : public PluginCustomView<VAC6Parameters>
+class LCDScrollbarView : public PluginCustomView<VAC6GUIState>
 {
 public:
   // Constructor

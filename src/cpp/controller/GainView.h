@@ -17,7 +17,7 @@ using namespace GUI::Params;
 
 /**
  * Combine the 2 gains to display the total amount of gain */
-class GainView : public PluginCustomView<VAC6Parameters>
+class GainView : public PluginCustomView<VAC6GUIState>
 {
 public:
   // constructor

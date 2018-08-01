@@ -20,7 +20,7 @@ class HistoryState;
 /**
  * Base class to LCD and MaxLevel
  */
-class HistoryView : public PluginCustomView<VAC6Parameters>
+class HistoryView : public PluginCustomView<VAC6GUIState>
 {
 public:
   explicit HistoryView(const CRect &size) : PluginCustomView(size)
