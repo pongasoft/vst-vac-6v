@@ -126,7 +126,7 @@ protected:
   void drawMaxLevelNoCheck(GUI::RelativeDrawContext &iContext, RelativePoint const &iPoint, CCoord iHalfSize, CColor const &iColor);
 
   // onParameterChange
-  void onParameterChange(ParamID iParamID, ParamValue iNormalizedValue) override;
+  void onParameterChange(ParamID iParamID) override;
 
   // onTimer
   void onTimer(Timer *timer) override;
@@ -144,14 +144,14 @@ protected:
   CColor fSoftClippingLevelColor{};
   FontPtr fFont{nullptr};
 
-  GUIBooleanParamUPtr fMaxLevelSinceResetMarker{nullptr};
-  GUIBooleanParamUPtr fMaxLevelInWindowMarker{nullptr};
-  GUIBooleanParamUPtr fLCDLiveViewParameter{nullptr};
+  GUIVstBooleanParam fMaxLevelSinceResetMarker{nullptr};
+  GUIVstBooleanParam fMaxLevelInWindowMarker{nullptr};
+  GUIVstBooleanParam fLCDLiveViewParameter{nullptr};
 
-  GUIParamUPtr<SoftClippingLevelParamConverter> fSoftClippingLevelParam{nullptr};
-  GUIParamUPtr<LCDZoomFactorXParamConverter> fLCDZoomFactorXParam{nullptr};
+  GUIVstParam<SoftClippingLevelParamConverter> fSoftClippingLevelParam{nullptr};
+  GUIVstParam<LCDZoomFactorXParamConverter> fLCDZoomFactorXParam{nullptr};
 
-  GUIParamEditorUPtr<LCDInputXParamConverter> fLCDInputXEditor{nullptr};
+  GUIVstParamEditor<LCDInputXParamConverter> fLCDInputXEditor{nullptr};
 
 public:
   class Creator : public CustomViewCreator<LCDDisplayView, HistoryView>

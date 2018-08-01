@@ -92,13 +92,13 @@ protected:
   CColor fHandleColor{kWhiteCColor};
   int32_t fScrollbarMinSize{17};
 
-  GUIBooleanParamUPtr fLCDLiveViewParameter{nullptr};
+  GUIVstBooleanParam fLCDLiveViewParameter{nullptr};
 
-  GUIPercentParamUPtr fLCDInputHistoryOffsetParameter{nullptr};
+  GUIVstPercentParam fLCDInputHistoryOffsetParameter{nullptr};
 
-  GUIParamUPtr<LCDZoomFactorXParamConverter> fLCDZoomFactorXParameter{nullptr};
+  GUIVstParam<LCDZoomFactorXParamConverter> fLCDZoomFactorXParameter{nullptr};
 
-  GUIParamEditorUPtr<PercentParamConverter> fLCDInputHistoryOffsetEditor{nullptr};
+  GUIVstParamEditor<PercentParamConverter> fLCDInputHistoryOffsetEditor{nullptr};
   std::unique_ptr<ZoomBox> fStartDragGestureZoomBox{nullptr};
   RelativeCoord fStarDragGestureX{-1.0};
 

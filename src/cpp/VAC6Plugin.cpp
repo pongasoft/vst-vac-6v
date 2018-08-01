@@ -15,7 +15,7 @@ VAC6Parameters::VAC6Parameters() : Parameters()
 
   // bypass
   fBypassParam =
-    build<BooleanParamConverter>(EVAC6ParamID::kBypass, STR16 ("Bypass"))
+    vst<BooleanParamConverter>(EVAC6ParamID::kBypass, STR16 ("Bypass"))
       .defaultValue(false)
       .flags(ParameterInfo::kCanAutomate | ParameterInfo::kIsBypass)
       .shortTitle(STR16 ("Bypass"))
@@ -23,8 +23,8 @@ VAC6Parameters::VAC6Parameters() : Parameters()
 
   // the knob that changes the soft clipping level
   fSoftClippingLevelParam =
-    build<SoftClippingLevelParamConverter>(EVAC6ParamID::kSoftClippingLevel,
-                                           STR16 ("Soft Clipping Level"))
+    vst<SoftClippingLevelParamConverter>(EVAC6ParamID::kSoftClippingLevel,
+                                         STR16 ("Soft Clipping Level"))
       .defaultValue(SoftClippingLevel{DEFAULT_SOFT_CLIPPING_LEVEL})
       .shortTitle(STR16 ("Sft Clp Lvl"))
       .precision(2)
@@ -33,7 +33,7 @@ VAC6Parameters::VAC6Parameters() : Parameters()
 
   // the zoom level knob
   fZoomFactorXParam =
-    build<LCDZoomFactorXParamConverter>(EVAC6ParamID::kLCDZoomFactorX, STR16 ("Zoom Level"))
+    vst<LCDZoomFactorXParamConverter>(EVAC6ParamID::kLCDZoomFactorX, STR16 ("Zoom Level"))
       .defaultValue(DEFAULT_ZOOM_FACTOR_X)
       .shortTitle(STR16 ("Zoom Lvl"))
       .precision(1)
@@ -41,7 +41,7 @@ VAC6Parameters::VAC6Parameters() : Parameters()
 
   // on/off toggle to show live view/pause
   fLCDLiveViewParam =
-    build<BooleanParamConverter>(EVAC6ParamID::kLCDLiveView, STR16 ("Live"))
+    vst<BooleanParamConverter>(EVAC6ParamID::kLCDLiveView, STR16 ("Live"))
       .defaultValue(true)
       .shortTitle(STR16 ("Live"))
       .transient()
@@ -49,7 +49,7 @@ VAC6Parameters::VAC6Parameters() : Parameters()
 
   // the Gain1 knob
   fGain1Param =
-    build<GainParamConverter>(EVAC6ParamID::kGain1, STR16 ("Gain 1"))
+    vst<GainParamConverter>(EVAC6ParamID::kGain1, STR16 ("Gain 1"))
       .defaultValue(DEFAULT_GAIN)
       .shortTitle(STR16 ("Gain1"))
       .precision(2)
@@ -57,7 +57,7 @@ VAC6Parameters::VAC6Parameters() : Parameters()
 
   // the Gain2 knob
   fGain2Param =
-    build<GainParamConverter>(EVAC6ParamID::kGain2, STR16 ("Gain 2"))
+    vst<GainParamConverter>(EVAC6ParamID::kGain2, STR16 ("Gain 2"))
       .defaultValue(DEFAULT_GAIN)
       .shortTitle(STR16 ("Gain2"))
       .precision(2)
@@ -65,21 +65,21 @@ VAC6Parameters::VAC6Parameters() : Parameters()
 
   // on/off toggle to show/hide left channel
   fLeftChannelOnParam =
-    build<BooleanParamConverter>(EVAC6ParamID::kLCDLeftChannel, STR16 ("Left Channel"))
+    vst<BooleanParamConverter>(EVAC6ParamID::kLCDLeftChannel, STR16 ("Left Channel"))
       .defaultValue(true)
       .shortTitle(STR16 ("L Chan"))
       .add();
 
   // on/off toggle to show/hide left channel
   fRightChannelOnParam =
-    build<BooleanParamConverter>(EVAC6ParamID::kLCDRightChannel, STR16 ("Right Channel"))
+    vst<BooleanParamConverter>(EVAC6ParamID::kLCDRightChannel, STR16 ("Right Channel"))
       .defaultValue(true)
       .shortTitle(STR16 ("R Chan"))
       .add();
 
   // the momentary button that resets the max level
   fMaxLevelResetParam =
-    build<BooleanParamConverter>(EVAC6ParamID::kMaxLevelReset, STR16 ("Max Level Reset"))
+    vst<BooleanParamConverter>(EVAC6ParamID::kMaxLevelReset, STR16 ("Max Level Reset"))
       .defaultValue(false)
       .shortTitle(STR16 ("Max Lvl Rst"))
       .transient()
@@ -87,7 +87,7 @@ VAC6Parameters::VAC6Parameters() : Parameters()
 
   // the toggle for the LCD marker representing since reset max level
   fSinceResetMarkerParam =
-    build<BooleanParamConverter>(EVAC6ParamID::kMaxLevelSinceResetMarker, STR16 ("Since Reset Marker"))
+    vst<BooleanParamConverter>(EVAC6ParamID::kMaxLevelSinceResetMarker, STR16 ("Since Reset Marker"))
       .defaultValue(true)
       .shortTitle(STR16 ("Rst Mkr"))
       .uiOnly()
@@ -95,7 +95,7 @@ VAC6Parameters::VAC6Parameters() : Parameters()
 
   // the toggle for the LCD marker representing in window max level
   fInWindowMarkerParam =
-    build<BooleanParamConverter>(EVAC6ParamID::kMaxLevelInWindowMarker, STR16 ("In Window Marker"))
+    vst<BooleanParamConverter>(EVAC6ParamID::kMaxLevelInWindowMarker, STR16 ("In Window Marker"))
       .defaultValue(true)
       .shortTitle(STR16 ("Wdw Mkr"))
       .uiOnly()
@@ -103,14 +103,14 @@ VAC6Parameters::VAC6Parameters() : Parameters()
 
   // the toggle for gain filtering
   fGainFilterParam =
-    build<BooleanParamConverter>(EVAC6ParamID::kGainFilter, STR16 ("Gain Filter"))
+    vst<BooleanParamConverter>(EVAC6ParamID::kGainFilter, STR16 ("Gain Filter"))
       .defaultValue(DEFAULT_GAIN_FILTER)
       .shortTitle(STR16 ("Gn. Ft."))
       .add();
 
   // selected position on the screen when paused
   fLCDInputXParam =
-    build<LCDInputXParamConverter>(EVAC6ParamID::kLCDInputX, STR16 ("Graph Select"))
+    vst<LCDInputXParamConverter>(EVAC6ParamID::kLCDInputX, STR16 ("Graph Select"))
       .stepCount(MAX_ARRAY_SIZE + 1) // [-1, MAX_ARRAY_SIZE] -1 when nothing selected
       .defaultValue(LCD_INPUT_X_NOTHING_SELECTED) // not selected (-1)
       .flags(0) // state is not saved
@@ -119,7 +119,7 @@ VAC6Parameters::VAC6Parameters() : Parameters()
 
   // the scroll position (in percent)
   fLCDHistoryOffsetParam =
-    build<LCDHistoryOffsetParamConverter>(EVAC6ParamID::kLCDHistoryOffset, STR16 ("Graph Scroll"))
+    vst<LCDHistoryOffsetParamConverter>(EVAC6ParamID::kLCDHistoryOffset, STR16 ("Graph Scroll"))
       .defaultValue(MAX_HISTORY_OFFSET) // all the way to the right
       .flags(0) // state is not saved
       .precision(0)

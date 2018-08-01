@@ -1,5 +1,3 @@
-#include <utility>
-
 #include "HistoryView.h"
 
 namespace pongasoft {
@@ -26,8 +24,8 @@ void HistoryView::registerParameters()
 {
   CustomView::registerParameters();
 
-  fSoftClippingLevelParameter = registerGUIParam(fParams->fSoftClippingLevelParam);
-  fLCDInputXParameter = registerGUIParam(fParams->fLCDInputXParam);
+  fSoftClippingLevelParameter = registerVstParam(fParams->fSoftClippingLevelParam);
+  fLCDInputXParameter = registerVstParam(fParams->fLCDInputXParam);
 }
 
 ///////////////////////////////////////////

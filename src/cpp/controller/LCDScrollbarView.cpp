@@ -17,9 +17,9 @@ LCDScrollbarView::LCDScrollbarView(const CRect &size) : PluginCustomView(size)
 ///////////////////////////////////////////
 void LCDScrollbarView::registerParameters()
 {
-  fLCDLiveViewParameter = registerGUIParam(fParams->fLCDLiveViewParam);
-  fLCDInputHistoryOffsetParameter = registerGUIParam(fParams->fLCDHistoryOffsetParam);
-  fLCDZoomFactorXParameter = registerGUIParam(fParams->fZoomFactorXParam);
+  fLCDLiveViewParameter = registerVstParam(fParams->fLCDLiveViewParam);
+  fLCDInputHistoryOffsetParameter = registerVstParam(fParams->fLCDHistoryOffsetParam);
+  fLCDZoomFactorXParameter = registerVstParam(fParams->fZoomFactorXParam);
 }
 
 ///////////////////////////////////////////

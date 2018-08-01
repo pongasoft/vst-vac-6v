@@ -19,24 +19,24 @@ public:
   VAC6Parameters();
 
   // saved
-  ParamDefSPtr<LCDZoomFactorXParamConverter> fZoomFactorXParam;
-  ParamDefSPtr<BooleanParamConverter> fLeftChannelOnParam;
-  ParamDefSPtr<BooleanParamConverter> fRightChannelOnParam;
-  ParamDefSPtr<GainParamConverter> fGain1Param;
-  ParamDefSPtr<GainParamConverter> fGain2Param;
-  ParamDefSPtr<BooleanParamConverter> fGainFilterParam;
-  ParamDefSPtr<BooleanParamConverter> fBypassParam;
+  VstParam<LCDZoomFactorXParamConverter> fZoomFactorXParam;
+  VstParam<BooleanParamConverter> fLeftChannelOnParam;
+  VstParam<BooleanParamConverter> fRightChannelOnParam;
+  VstParam<GainParamConverter> fGain1Param;
+  VstParam<GainParamConverter> fGain2Param;
+  VstParam<BooleanParamConverter> fGainFilterParam;
+  VstParam<BooleanParamConverter> fBypassParam;
 
   // transient
-  ParamDefSPtr<BooleanParamConverter> fLCDLiveViewParam;
-  ParamDefSPtr<BooleanParamConverter> fMaxLevelResetParam;
-  ParamDefSPtr<LCDInputXParamConverter> fLCDInputXParam;
-  ParamDefSPtr<LCDHistoryOffsetParamConverter> fLCDHistoryOffsetParam;
+  VstParam<BooleanParamConverter> fLCDLiveViewParam;
+  VstParam<BooleanParamConverter> fMaxLevelResetParam;
+  VstParam<LCDInputXParamConverter> fLCDInputXParam;
+  VstParam<LCDHistoryOffsetParamConverter> fLCDHistoryOffsetParam;
 
   // UI Only
-  ParamDefSPtr<SoftClippingLevelParamConverter> fSoftClippingLevelParam;
-  ParamDefSPtr<BooleanParamConverter> fSinceResetMarkerParam;
-  ParamDefSPtr<BooleanParamConverter> fInWindowMarkerParam;
+  VstParam<SoftClippingLevelParamConverter> fSoftClippingLevelParam;
+  VstParam<BooleanParamConverter> fSinceResetMarkerParam;
+  VstParam<BooleanParamConverter> fInWindowMarkerParam;
 };
 
 using namespace RT;
@@ -63,30 +63,25 @@ public:
 
 public:
   // saved state
-  RTParam<LCDZoomFactorXParamConverter> fZoomFactorX;
-  RTParam<BooleanParamConverter> fLeftChannelOn;
-  RTParam<BooleanParamConverter> fRightChannelOn;
-  RTParam<GainParamConverter> fGain1;
-  RTParam<GainParamConverter> fGain2;
-  RTParam<BooleanParamConverter> fGainFilter;
-  RTParam<BooleanParamConverter> fBypass;
+  RTVstParam<LCDZoomFactorXParamConverter> fZoomFactorX;
+  RTVstParam<BooleanParamConverter> fLeftChannelOn;
+  RTVstParam<BooleanParamConverter> fRightChannelOn;
+  RTVstParam<GainParamConverter> fGain1;
+  RTVstParam<GainParamConverter> fGain2;
+  RTVstParam<BooleanParamConverter> fGainFilter;
+  RTVstParam<BooleanParamConverter> fBypass;
 
   // transient state
-  RTParam<BooleanParamConverter> fLCDLiveView;
-  RTParam<BooleanParamConverter> fMaxLevelReset;
-  RTParam<LCDInputXParamConverter> fLCDInputX;
-  RTParam<LCDHistoryOffsetParamConverter> fLCDHistoryOffset;
+  RTVstParam<BooleanParamConverter> fLCDLiveView;
+  RTVstParam<BooleanParamConverter> fMaxLevelReset;
+  RTVstParam<LCDInputXParamConverter> fLCDInputX;
+  RTVstParam<LCDHistoryOffsetParamConverter> fLCDHistoryOffset;
 };
 
 using namespace GUI;
 
-class VAC6GUIState : public GUIState
-{
-public:
-  explicit VAC6GUIState(VAC6Parameters const &iParams) :
-    GUIState(iParams)
-  {};
-};
+// no non vst parameters to handle => no need to inherit
+using VAC6GUIState = GUIPluginState<VAC6Parameters>;
 
 }
 }

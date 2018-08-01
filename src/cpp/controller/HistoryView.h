@@ -88,8 +88,8 @@ protected:
   CColor fLevelStateSoftClippingColor{};
   CColor fLevelStateHardClippingColor{};
 
-  GUIParamUPtr<SoftClippingLevelParamConverter> fSoftClippingLevelParameter;
-  GUIParamUPtr<LCDInputXParamConverter> fLCDInputXParameter{nullptr};
+  GUIVstParam<SoftClippingLevelParamConverter> fSoftClippingLevelParameter;
+  GUIVstParam<LCDInputXParamConverter> fLCDInputXParameter{nullptr};
 
 public:
   class Creator : public CustomViewCreator<HistoryView, CustomView>

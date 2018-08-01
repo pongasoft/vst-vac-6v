@@ -45,9 +45,9 @@ protected:
   CColor fFontColor{kWhiteCColor};
   FontPtr fFont{nullptr};
 
-  GUIParamUPtr<GainParamConverter> fGain1Parameter{nullptr};
-  GUIParamUPtr<GainParamConverter> fGain2Parameter{nullptr};
-  GUIBooleanParamUPtr fBypassParameter{nullptr};
+  GUIVstParam<GainParamConverter> fGain1Parameter{nullptr};
+  GUIVstParam<GainParamConverter> fGain2Parameter{nullptr};
+  GUIVstBooleanParam fBypassParameter{nullptr};
 
 public:
   // Creator class

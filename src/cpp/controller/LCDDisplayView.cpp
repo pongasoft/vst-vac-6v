@@ -87,7 +87,7 @@ void LCDDisplayState::startTimer()
 ///////////////////////////////////////////
 // LCDDisplayView::onParameterChange
 ///////////////////////////////////////////
-void LCDDisplayView::onParameterChange(ParamID iParamID, ParamValue iNormalizedValue)
+void LCDDisplayView::onParameterChange(ParamID iParamID)
 {
   if(iParamID == fLCDZoomFactorXParam->getParamID())
   {
@@ -104,7 +104,7 @@ void LCDDisplayView::onParameterChange(ParamID iParamID, ParamValue iNormalizedV
     startTimer();
   }
 
-  CustomView::onParameterChange(iParamID, iNormalizedValue);
+  CustomView::onParameterChange(iParamID);
 }
 
 ///////////////////////////////////////////
@@ -362,11 +362,11 @@ CMouseEventResult LCDDisplayView::onMouseCancel()
 void LCDDisplayView::registerParameters()
 {
   HistoryView::registerParameters();
-  fMaxLevelSinceResetMarker = registerGUIParam(fParams->fSinceResetMarkerParam);
-  fMaxLevelInWindowMarker = registerGUIParam(fParams->fInWindowMarkerParam);
-  fLCDLiveViewParameter = registerGUIParam(fParams->fLCDLiveViewParam);
-  fLCDZoomFactorXParam = registerGUIParam(fParams->fZoomFactorXParam);
-  fSoftClippingLevelParam = registerGUIParam(fParams->fSoftClippingLevelParam);
+  fMaxLevelSinceResetMarker = registerVstParam(fParams->fSinceResetMarkerParam);
+  fMaxLevelInWindowMarker = registerVstParam(fParams->fInWindowMarkerParam);
+  fLCDLiveViewParameter = registerVstParam(fParams->fLCDLiveViewParam);
+  fLCDZoomFactorXParam = registerVstParam(fParams->fZoomFactorXParam);
+  fSoftClippingLevelParam = registerVstParam(fParams->fSoftClippingLevelParam);
 }
 
 #if EDITOR_MODE
