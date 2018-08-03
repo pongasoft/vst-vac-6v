@@ -45,8 +45,8 @@ protected:
   CColor fFontColor{kWhiteCColor};
   FontPtr fFont{nullptr};
 
-  GUIVstParam<GainParamConverter> fGain1Parameter{nullptr};
-  GUIVstParam<GainParamConverter> fGain2Parameter{nullptr};
+  GUIVstParam<Gain> fGain1Parameter{nullptr};
+  GUIVstParam<Gain> fGain2Parameter{nullptr};
   GUIVstBooleanParam fBypassParameter{nullptr};
 
 public:

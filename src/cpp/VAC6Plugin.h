@@ -19,24 +19,24 @@ public:
   VAC6Parameters();
 
   // saved
-  VstParam<LCDZoomFactorXParamConverter> fZoomFactorXParam;
-  VstParam<BooleanParamConverter> fLeftChannelOnParam;
-  VstParam<BooleanParamConverter> fRightChannelOnParam;
-  VstParam<GainParamConverter> fGain1Param;
-  VstParam<GainParamConverter> fGain2Param;
-  VstParam<BooleanParamConverter> fGainFilterParam;
-  VstParam<BooleanParamConverter> fBypassParam;
+  VstParam<Percent> fZoomFactorXParam;
+  VstParam<bool> fLeftChannelOnParam;
+  VstParam<bool> fRightChannelOnParam;
+  VstParam<Gain> fGain1Param;
+  VstParam<Gain> fGain2Param;
+  VstParam<bool> fGainFilterParam;
+  VstParam<bool> fBypassParam;
 
   // transient
-  VstParam<BooleanParamConverter> fLCDLiveViewParam;
-  VstParam<BooleanParamConverter> fMaxLevelResetParam;
-  VstParam<LCDInputXParamConverter> fLCDInputXParam;
-  VstParam<LCDHistoryOffsetParamConverter> fLCDHistoryOffsetParam;
+  VstParam<bool> fLCDLiveViewParam;
+  VstParam<bool> fMaxLevelResetParam;
+  VstParam<int> fLCDInputXParam;
+  VstParam<Percent> fLCDHistoryOffsetParam;
 
   // UI Only
-  VstParam<SoftClippingLevelParamConverter> fSoftClippingLevelParam;
-  VstParam<BooleanParamConverter> fSinceResetMarkerParam;
-  VstParam<BooleanParamConverter> fInWindowMarkerParam;
+  VstParam<SoftClippingLevel> fSoftClippingLevelParam;
+  VstParam<bool> fSinceResetMarkerParam;
+  VstParam<bool> fInWindowMarkerParam;
 };
 
 using namespace RT;
@@ -63,19 +63,19 @@ public:
 
 public:
   // saved state
-  RTVstParam<LCDZoomFactorXParamConverter> fZoomFactorX;
-  RTVstParam<BooleanParamConverter> fLeftChannelOn;
-  RTVstParam<BooleanParamConverter> fRightChannelOn;
-  RTVstParam<GainParamConverter> fGain1;
-  RTVstParam<GainParamConverter> fGain2;
-  RTVstParam<BooleanParamConverter> fGainFilter;
-  RTVstParam<BooleanParamConverter> fBypass;
+  RTVstParam<Percent> fZoomFactorX;
+  RTVstParam<bool> fLeftChannelOn;
+  RTVstParam<bool> fRightChannelOn;
+  RTVstParam<Gain> fGain1;
+  RTVstParam<Gain> fGain2;
+  RTVstParam<bool> fGainFilter;
+  RTVstParam<bool> fBypass;
 
   // transient state
-  RTVstParam<BooleanParamConverter> fLCDLiveView;
-  RTVstParam<BooleanParamConverter> fMaxLevelReset;
-  RTVstParam<LCDInputXParamConverter> fLCDInputX;
-  RTVstParam<LCDHistoryOffsetParamConverter> fLCDHistoryOffset;
+  RTVstParam<bool> fLCDLiveView;
+  RTVstParam<bool> fMaxLevelReset;
+  RTVstParam<int> fLCDInputX;
+  RTVstParam<Percent> fLCDHistoryOffset;
 };
 
 using namespace GUI;

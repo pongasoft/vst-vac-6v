@@ -148,10 +148,10 @@ protected:
   GUIVstBooleanParam fMaxLevelInWindowMarker{nullptr};
   GUIVstBooleanParam fLCDLiveViewParameter{nullptr};
 
-  GUIVstParam<SoftClippingLevelParamConverter> fSoftClippingLevelParam{nullptr};
-  GUIVstParam<LCDZoomFactorXParamConverter> fLCDZoomFactorXParam{nullptr};
+  GUIVstParam<SoftClippingLevel> fSoftClippingLevelParam{nullptr};
+  GUIVstParam<Percent> fLCDZoomFactorXParam{nullptr};
 
-  GUIVstParamEditor<LCDInputXParamConverter> fLCDInputXEditor{nullptr};
+  GUIVstParamEditor<int> fLCDInputXEditor{nullptr};
 
 public:
   class Creator : public CustomViewCreator<LCDDisplayView, HistoryView>

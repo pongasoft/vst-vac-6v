@@ -96,9 +96,9 @@ protected:
 
   GUIVstPercentParam fLCDInputHistoryOffsetParameter{nullptr};
 
-  GUIVstParam<LCDZoomFactorXParamConverter> fLCDZoomFactorXParameter{nullptr};
+  GUIVstParam<Percent> fLCDZoomFactorXParameter{nullptr};
 
-  GUIVstParamEditor<PercentParamConverter> fLCDInputHistoryOffsetEditor{nullptr};
+  GUIVstParamEditor<Percent> fLCDInputHistoryOffsetEditor{nullptr};
   std::unique_ptr<ZoomBox> fStartDragGestureZoomBox{nullptr};
   RelativeCoord fStarDragGestureX{-1.0};
 
