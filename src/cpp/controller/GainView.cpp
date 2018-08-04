@@ -25,7 +25,7 @@ void GainView::draw(CDrawContext *iContext)
   auto rdc = GUI::RelativeDrawContext{this, iContext};
 
   StringDrawContext sdc{};
-  sdc.fHoriTxtAlign = kCenterText;
+  sdc.fHorizTxtAlign = kCenterText;
   sdc.fTextInset = {2, 2};
   sdc.fFontColor = getFontColor();
   sdc.fFont = fFont;

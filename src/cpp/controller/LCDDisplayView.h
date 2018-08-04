@@ -91,7 +91,7 @@ public:
 
   // get/setFont
   FontPtr getFont() const { return fFont; }
-  void setFont(FontPtr iFont) { fFont = std::move(iFont); }
+  void setFont(FontPtr iFont) { fFont = iFont; }
 
 public:
 
@@ -142,7 +142,7 @@ public:
 
 protected:
   CColor fSoftClippingLevelColor{};
-  FontPtr fFont{nullptr};
+  FontSPtr fFont{nullptr};
 
   GUIVstBooleanParam fMaxLevelSinceResetMarker{nullptr};
   GUIVstBooleanParam fMaxLevelInWindowMarker{nullptr};

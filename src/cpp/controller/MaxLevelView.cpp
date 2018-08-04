@@ -32,7 +32,7 @@ void MaxLevelView::draw(CDrawContext *iContext)
   auto rdc = GUI::RelativeDrawContext{this, iContext};
 
   StringDrawContext sdc{};
-  sdc.fHoriTxtAlign = kCenterText;
+  sdc.fHorizTxtAlign = kCenterText;
   sdc.fTextInset = {2, 2};
   sdc.fFontColor = fontColor;
   sdc.fFont = fFont;

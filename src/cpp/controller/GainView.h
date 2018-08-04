@@ -29,7 +29,7 @@ public:
 
   // get/setFont
   FontPtr getFont() const { return fFont; }
-  void setFont(FontPtr iFont) { fFont = std::move(iFont); }
+  void setFont(FontPtr iFont) { fFont = iFont; }
 
 public:
   // draw => does the actual drawing job
@@ -43,7 +43,7 @@ public:
 
 protected:
   CColor fFontColor{kWhiteCColor};
-  FontPtr fFont{nullptr};
+  FontSPtr fFont{nullptr};
 
   GUIVstParam<Gain> fGain1Parameter{nullptr};
   GUIVstParam<Gain> fGain2Parameter{nullptr};

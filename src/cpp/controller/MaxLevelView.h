@@ -38,7 +38,7 @@ public:
 
   // get/setFont
   FontPtr getFont() const { return fFont; }
-  void setFont(FontPtr iFont) { fFont = std::move(iFont); }
+  void setFont(FontPtr iFont) { fFont = iFont; }
 
   // get/setType
   MaxLevelView::Type getType() const { return fType; }
@@ -54,7 +54,7 @@ public:
 
 protected:
   CColor fNoDataColor{};
-  FontPtr fFont{nullptr};
+  FontSPtr fFont{nullptr};
   MaxLevelView::Type fType{MaxLevelView::Type::kForSelection};
 
 public:
