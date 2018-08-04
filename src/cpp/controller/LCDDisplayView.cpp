@@ -421,7 +421,7 @@ void LCDDisplayView::onEditorModeChanged()
 
 #endif
 
-LCDDisplayView::Creator __gLCDDisplayViewCreator("pongasoft::LCDDisplay", "pongasoft - LCD Display");
+LCDDisplayView::Creator __gLCDDisplayViewCreator("VAC6V::LCDDisplay", "VAC6V - LCD Display");
 
 }
 }

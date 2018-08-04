@@ -63,7 +63,7 @@ MaxLevel MaxLevelView::getMaxLevel() const
 }
 
 
-MaxLevelView::Creator __gMaxLevelViewCreator("pongasoft::MaxLevel", "pongasoft - Max Level");
+MaxLevelView::Creator __gMaxLevelViewCreator("VAC6V::MaxLevel", "VAC6V - Max Level");
 }
 }
 }

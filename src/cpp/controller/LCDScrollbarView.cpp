@@ -168,7 +168,7 @@ CMouseEventResult LCDScrollbarView::onMouseCancel()
   return kMouseEventNotHandled;
 }
 
-LCDScrollbarView::Creator __gLCDScrollbarViewCreator("pongasoft::LCDScrollbar", "pongasoft - LCD Scrollbar");
+LCDScrollbarView::Creator __gLCDScrollbarViewCreator("VAC6V::LCDScrollbar", "VAC6V - LCD Scrollbar");
 
 }
 }

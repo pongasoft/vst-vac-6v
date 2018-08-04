@@ -39,7 +39,7 @@ void GainView::draw(CDrawContext *iContext)
 
 }
 
-GainView::Creator __gGainViewCreator("pongasoft::Gain", "pongasoft - Gain");
+GainView::Creator __gGainViewCreator("VAC6V::Gain", "VAC6V - Gain");
 
 }
 }

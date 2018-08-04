@@ -20,7 +20,6 @@ include_directories(${CMAKE_BINARY_DIR}/generated/)
 
 if (SMTG_CREATE_VST2_VERSION)
 	set(vst2_sources
-			${JAMBA_vst2_sources}
 			${CPP_SOURCES}/VAC6VST2.cpp
 			)
 endif()
@@ -60,9 +59,9 @@ if(MAC OR WIN)
 endif()
 
 set(target pongasoft_VAC6V)
-smtg_add_vst3plugin(${target} ${VST3_SDK_ROOT} ${vst_sources} ${JAMBA_sources_h} ${JAMBA_sources_cpp})
+smtg_add_vst3plugin(${target} ${VST3_SDK_ROOT} ${vst_sources})
 target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
-target_link_libraries(${target} PRIVATE base sdk vstgui_support)
+target_link_libraries(${target} PRIVATE base sdk vstgui_support jamba)
 
 smtg_add_vst3_resource(${target} "resource/Background.png")
 smtg_add_vst3_resource(${target} "resource/Background_2x.png")
