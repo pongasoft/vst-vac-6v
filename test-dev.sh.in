@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-cmake --build . --target ${PROJECT_TEST_NAME}
-ctest

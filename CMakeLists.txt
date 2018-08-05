@@ -4,6 +4,9 @@ cmake_minimum_required (VERSION 3.9)
 option(SMTG_CREATE_VST2_VERSION "Use VST2" ON)
 option(SMTG_CREATE_VST3_LINK "" OFF)
 
+set(JAMBA_GIT_REPO "/Volumes/Development/github/org.pongasoft/jamba" CACHE STRING "Jamba git repository url")
+set(JAMBA_GIT_TAG 1211eac680b01c093a1a6eb85bf493322cf833dc CACHE STRING "Jamba git tag")
+
 set(PLUGIN_MAJOR_VERSION 1)
 set(PLUGIN_MINOR_VERSION 0)
 set(PLUGIN_PATCH_VERSION 0)
@@ -11,7 +14,11 @@ set(PLUGIN_VERSION "${PLUGIN_MAJOR_VERSION}.${PLUGIN_MINOR_VERSION}.${PLUGIN_PAT
 
 project(VST_VAC6)
 
-include(jamba/jamba.cmake)
+if(NOT JAMBA_ROOT_DIR)
+	include(jamba.cmake)
+endif()
+
+include(${JAMBA_ROOT_DIR}/jamba.cmake)
 
 set(CPP_SOURCES src/cpp)
 
@@ -107,6 +114,4 @@ jamba_add_test(${PROJECT_NAME}_test "${TEST_SRC_FILES}" "${test_sources}" "")
 ###################################################
 # Dev help
 ###################################################
-configure_file(${CMAKE_CURRENT_LIST_DIR}/build-dev.sh.in ${CMAKE_BINARY_DIR}/build-dev.sh)
-configure_file(${CMAKE_CURRENT_LIST_DIR}/install-dev.sh.in ${CMAKE_BINARY_DIR}/install-dev.sh)
-configure_file(${CMAKE_CURRENT_LIST_DIR}/test-dev.sh.in ${CMAKE_BINARY_DIR}/test-dev.sh)
+jamba_dev_scripts(${target})
