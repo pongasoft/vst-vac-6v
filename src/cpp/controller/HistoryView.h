@@ -2,7 +2,6 @@
 
 #include <pongasoft/VST/Messaging.h>
 #include <pongasoft/VST/GUI/Views/CustomView.h>
-#include <pongasoft/VST/GUI/GUIViewState.h>
 #include "../VAC6Model.h"
 #include "../VAC6Plugin.h"
 
@@ -28,41 +27,17 @@ public:
 
   HistoryView(const HistoryView &c) = delete;
 
-  // getLevelStateOkColor
-  const CColor &getLevelStateOkColor() const
-  {
-    return fLevelStateOkColor;
-  }
+  // get/setLevelStateOkColor
+  const CColor &getLevelStateOkColor() const { return fLevelStateOkColor;}
+  void setLevelStateOkColor(const CColor &iColor) { fLevelStateOkColor = iColor; }
 
-  // setLevelStateOkColor
-  void setLevelStateOkColor(const CColor &iLevelStateOkColor)
-  {
-    fLevelStateOkColor = iLevelStateOkColor;
-  }
+  // get/setLevelStateSoftClippingColor
+  const CColor &getLevelStateSoftClippingColor() const { return fLevelStateSoftClippingColor; }
+  void setLevelStateSoftClippingColor(const CColor &iColor) { fLevelStateSoftClippingColor = iColor; }
 
-  // getLevelStateSoftClippingColor
-  const CColor &getLevelStateSoftClippingColor() const
-  {
-    return fLevelStateSoftClippingColor;
-  }
-
-  // setLevelStateSoftClippingColor
-  void setLevelStateSoftClippingColor(const CColor &iLevelStateSoftClippingColor)
-  {
-    fLevelStateSoftClippingColor = iLevelStateSoftClippingColor;
-  }
-
-  // getLevelStateHardClippingColor
-  const CColor &getLevelStateHardClippingColor() const
-  {
-    return fLevelStateHardClippingColor;
-  }
-
-  // setLevelStateHardClippingColor
-  void setLevelStateHardClippingColor(const CColor &iLevelStateHardClippingColor)
-  {
-    fLevelStateHardClippingColor = iLevelStateHardClippingColor;
-  }
+  // get/setLevelStateHardClippingColor
+  const CColor &getLevelStateHardClippingColor() const { return fLevelStateHardClippingColor; }
+  void setLevelStateHardClippingColor(const CColor &iColor) { fLevelStateHardClippingColor = iColor; }
 
   // registerParameters
   void registerParameters() override;
@@ -71,13 +46,6 @@ public:
 
   MaxLevel getMaxLevelSinceReset() const;
   MaxLevel getMaxLevelInWindow() const;
-
-  // setHistoryState
-  virtual void setHistoryState(std::shared_ptr<HistoryState> iHistoryState);
-
-protected:
-
-  std::shared_ptr<HistoryState> fHistoryState;
 
 protected:
 
@@ -90,6 +58,7 @@ protected:
 
   GUIVstParam<SoftClippingLevel> fSoftClippingLevelParameter;
   GUIVstParam<int> fLCDInputXParameter{nullptr};
+  GUISerParam<HistoryData> fHistoryDataParam{};
 
 public:
   class Creator : public CustomViewCreator<HistoryView, CustomView>
@@ -109,31 +78,6 @@ public:
                              &HistoryView::setLevelStateHardClippingColor);
     }
   };
-};
-
-/**
- * Base class for HistoryState
- */
-class HistoryState : public GUI::GUIViewState
-{
-public:
-  HistoryState() : fLCDData{}
-  {
-    DLOG_F(INFO, "HistoryState()");
-  }
-
-  ~HistoryState() override
-  {
-    DLOG_F(INFO, "~HistoryState()");
-  }
-
-  virtual void onMessage(Message const &message);
-
-  MaxLevel getMaxLevelForSelection(int iLCDInputX) const;
-
-  LCDData fLCDData;
-  MaxLevel fMaxLevelInWindow{};
-  MaxLevel fMaxLevelSinceReset{};
 };
 
 }

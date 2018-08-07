@@ -31,7 +31,9 @@ enum EVAC6ParamID : Steinberg::Vst::ParamID
 
   kGain1 = 4000,
   kGain2 = 4010,
-  kGainFilter = 4020
+  kGainFilter = 4020,
+
+  kHistoryData = 5000 // internal parameter used to communicate large amount of data between RT and GUI
 };
 
 // tags associated to custom views (not associated to params)
@@ -47,7 +49,7 @@ enum EVAC6CustomViewTag : Steinberg::Vst::ParamID
 
 enum EVAC6MessageID
 {
-  kMaxLevel_MID = 100,
+  kHistoryData_MID = 100,
   kLCDData_MID = 200
 };
 

@@ -20,9 +20,6 @@ void MaxLevelView::draw(CDrawContext *iContext)
 {
   HistoryView::draw(iContext);
 
-  if(!fHistoryState)
-    return;
-
   auto maxLevel = getMaxLevel();
 
   CColor fontColor = maxLevel.isUndefined() ?
@@ -48,13 +45,13 @@ MaxLevel MaxLevelView::getMaxLevel() const
   switch(fType)
   {
     case Type::kForSelection:
-      return fHistoryState->getMaxLevelForSelection(fLCDInputXParameter->getValue());
+      return fHistoryDataParam->getMaxLevelForSelection(fLCDInputXParameter->getValue());
 
     case Type::kSinceReset:
-      return fHistoryState->fMaxLevelSinceReset;
+      return fHistoryDataParam->fMaxLevelSinceReset;
 
     case Type::kInWindow:
-      return fHistoryState->fMaxLevelInWindow;
+      return fHistoryDataParam->fMaxLevelInWindow;
 
     default:
       DLOG_F(WARNING, "should not be reached");

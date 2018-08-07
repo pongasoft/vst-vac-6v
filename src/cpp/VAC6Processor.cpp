@@ -3,6 +3,9 @@
 
 #include <pongasoft/VST/Messaging.h>
 
+#include "version.h"
+#include "jamba_version.h"
+
 #include "VAC6Processor.h"
 #include "VAC6CIDs.h"
 
@@ -87,9 +90,9 @@ VAC6Processor::VAC6Processor() :
   fLeftChannelProcessor{nullptr},
   fRightChannelProcessor{nullptr},
   fRateLimiter{},
-  fLCDDataUpdate{}
+  fHistoryDataUpdate{}
 {
-  DLOG_F(INFO, "VAC6Processor::VAC6Processor()");
+  DLOG_F(INFO, "VAC6Processor() - jamba: %s - plugin: v%s", JAMBA_GIT_VERSION_STR, FULL_VERSION_STR);
 }
 
 ///////////////////////////////////////////
@@ -97,7 +100,7 @@ VAC6Processor::VAC6Processor() :
 ///////////////////////////////////////////
 VAC6Processor::~VAC6Processor()
 {
-  DLOG_F(INFO, "VAC6Processor::~VAC6Processor()");
+  DLOG_F(INFO, "~VAC6Processor()");
 
   delete fRightChannelProcessor;
   delete fLeftChannelProcessor;
@@ -308,7 +311,9 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   // is it time to update the UI?
   if(isNewPause || fRateLimiter.shouldUpdate(static_cast<uint32>(data.numSamples)))
   {
-    LCDData lcdData{};
+    HistoryData historyData{};
+
+    LCDData &lcdData = historyData.fLCDData;
 
     // left
     if(fState.fLeftChannelOn)
@@ -327,7 +332,7 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
     }
     lcdData.fRightChannel.fOn = fState.fRightChannelOn;
 
-    fLCDDataUpdate.push(lcdData);
+    fHistoryDataUpdate.push(historyData);
   }
 
   return kResultOk;
@@ -338,25 +343,19 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
 ///////////////////////////////////////////
 void VAC6Processor::onGUITimer()
 {
-  LCDData lcdData{};
-  if(fLCDDataUpdate.pop(lcdData))
+  HistoryData historyData{};
+  if(fHistoryDataUpdate.pop(historyData))
   {
     if(auto message = owned(allocateMessage()))
     {
       Message m{message};
 
-      m.setMessageID(kLCDData_MID);
-
-      if(lcdData.fLeftChannel.fOn)
-        m.setBinary(LCDDATA_LEFT_SAMPLES_ATTR, lcdData.fLeftChannel.fSamples, MAX_ARRAY_SIZE);
-      m.setFloat(LCDDATA_LEFT_MAX_LEVEL_SINCE_RESET_ATTR, lcdData.fLeftChannel.fMaxLevelSinceReset);
-
-      if(lcdData.fRightChannel.fOn)
-        m.setBinary(LCDDATA_RIGHT_SAMPLES_ATTR, lcdData.fRightChannel.fSamples, MAX_ARRAY_SIZE);
-      m.setFloat(LCDDATA_RIGHT_MAX_LEVEL_SINCE_RESET_ATTR, lcdData.fRightChannel.fMaxLevelSinceReset);
+      m.setMessageID(kHistoryData_MID);
+      m.setSerParam(fParameters.fHistoryDataParam, historyData);
 
       sendMessage(message);
     }
+
   }
 }
 

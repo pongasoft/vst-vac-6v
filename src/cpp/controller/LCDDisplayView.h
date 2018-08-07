@@ -5,7 +5,6 @@
 #include <pongasoft/Utils/Lerp.h>
 #include <pongasoft/VST/GUI/Views/CustomView.h>
 #include <pongasoft/VST/GUI/DrawContext.h>
-#include <pongasoft/VST/GUI/GUIViewState.h>
 #include <memory>
 #include "../VAC6Model.h"
 #include "HistoryView.h"
@@ -133,9 +132,6 @@ protected:
 
 #if EDITOR_MODE
 public:
-
-  void setHistoryState(std::shared_ptr<HistoryState> iHistoryState) override;
-
   // onEditorModeChanged
   void onEditorModeChanged() override;
 #endif

@@ -85,7 +85,7 @@ private:
   VAC6AudioChannelProcessor *fRightChannelProcessor;
 
   SampleRateBasedClock::RateLimiter fRateLimiter;
-  Concurrent::WithSpinLock::SingleElementQueue<LCDData> fLCDDataUpdate;
+  Concurrent::WithSpinLock::SingleElementQueue<HistoryData> fHistoryDataUpdate;
 };
 
 }

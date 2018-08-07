@@ -126,6 +126,13 @@ VAC6Parameters::VAC6Parameters() : Parameters()
       .transient()
       .add();
 
+  // history data
+  fHistoryDataParam =
+    ser<HistoryDataParamSerializer>(EVAC6ParamID::kHistoryData, STR16("HistoryData"))
+      .transient()
+      .uiOnly()
+      .add();
+
   setRTSaveStateOrder(PROCESSOR_STATE_VERSION,
                       fZoomFactorXParam,
                       fLeftChannelOnParam,

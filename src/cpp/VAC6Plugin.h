@@ -37,6 +37,9 @@ public:
   VstParam<SoftClippingLevel> fSoftClippingLevelParam;
   VstParam<bool> fSinceResetMarkerParam;
   VstParam<bool> fInWindowMarkerParam;
+
+  // used to communicate data from the processing to the UI
+  SerParam<HistoryData> fHistoryDataParam;
 };
 
 using namespace RT;
@@ -80,8 +83,17 @@ public:
 
 using namespace GUI;
 
-// no non vst parameters to handle => no need to inherit
-using VAC6GUIState = GUIPluginState<VAC6Parameters>;
+class VAC6GUIState : public GUIPluginState<VAC6Parameters>
+{
+public:
+  explicit VAC6GUIState(VAC6Parameters const &iParams) :
+    GUIPluginState(iParams),
+    fHistoryData{add(iParams.fHistoryDataParam)}
+  {};
+
+public:
+  GUISerParam<HistoryData> fHistoryData;
+};
 
 }
 }

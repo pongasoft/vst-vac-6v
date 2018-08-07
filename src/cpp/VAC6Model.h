@@ -3,8 +3,10 @@
 #include <pluginterfaces/vst/vsttypes.h>
 #include <pluginterfaces/vst/ivstattributes.h>
 #include <pongasoft/VST/ParamConverters.h>
+#include <pongasoft/VST/ParamSerializers.h>
 #include <cmath>
 #include <sstream>
+#include <pongasoft/VST/GUI/Params/GUISerParameter.h>
 #include "VAC6Constants.h"
 #include "ZoomWindow.h"
 
@@ -316,11 +318,6 @@ struct MaxLevel
 ///////////////////////////////////
 // LCDData
 ///////////////////////////////////
-constexpr IAttributeList::AttrID LCDDATA_LEFT_SAMPLES_ATTR = "LSA";
-constexpr IAttributeList::AttrID LCDDATA_LEFT_MAX_LEVEL_SINCE_RESET_ATTR = "LML";
-constexpr IAttributeList::AttrID LCDDATA_RIGHT_SAMPLES_ATTR = "RSA";
-constexpr IAttributeList::AttrID LCDDATA_RIGHT_MAX_LEVEL_SINCE_RESET_ATTR = "RML";
-
 struct LCDData
 {
   struct Channel
@@ -335,6 +332,78 @@ struct LCDData
 
   Channel fLeftChannel;
   Channel fRightChannel;
+};
+
+struct HistoryData
+{
+  LCDData fLCDData{};
+  MaxLevel fMaxLevelInWindow{};
+  MaxLevel fMaxLevelSinceReset{};
+
+  MaxLevel getMaxLevelForSelection(int iLCDInputX) const;
+  void computeMaxLevels();
+};
+
+class LCDDataChannelParamSerializer
+{
+public:
+  using ParamType = LCDData::Channel;
+
+  inline static tresult readFromStream(IBStreamer &iStreamer, ParamType &oValue)
+  {
+    tresult res = IBStreamHelper::readBool(iStreamer, oValue.fOn);
+    if(res == kResultOk)
+    {
+      if(oValue.fOn)
+        res |= !iStreamer.readDoubleArray(oValue.fSamples, MAX_ARRAY_SIZE);
+      res |= IBStreamHelper::readDouble(iStreamer, oValue.fMaxLevelSinceReset);
+    }
+    return res;
+  }
+
+  inline static tresult writeToStream(const ParamType &iValue, IBStreamer &oStreamer)
+  {
+    oStreamer.writeBool(iValue.fOn);
+    if(iValue.fOn)
+      oStreamer.writeDoubleArray(iValue.fSamples, MAX_ARRAY_SIZE);
+    oStreamer.writeDouble(iValue.fMaxLevelSinceReset);
+    return kResultOk;
+  }
+};
+
+class LCDDataParamSerializer
+{
+public:
+  using ParamType = LCDData;
+
+  inline static tresult readFromStream(IBStreamer &iStreamer, ParamType &oValue)
+  {
+    tresult res = kResultOk;
+    res |= LCDDataChannelParamSerializer::readFromStream(iStreamer, oValue.fLeftChannel);
+    res |= LCDDataChannelParamSerializer::readFromStream(iStreamer, oValue.fRightChannel);
+    return res;
+  }
+
+  inline static tresult writeToStream(const ParamType &iValue, IBStreamer &oStreamer)
+  {
+    tresult res = kResultOk;
+    res |= LCDDataChannelParamSerializer::writeToStream(iValue.fLeftChannel, oStreamer);
+    res |= LCDDataChannelParamSerializer::writeToStream(iValue.fRightChannel, oStreamer);
+    return res;
+  }
+};
+
+class HistoryDataParamSerializer
+{
+public:
+  using ParamType = HistoryData;
+
+  static tresult readFromStream(IBStreamer &iStreamer, ParamType &oValue);
+
+  inline static tresult writeToStream(const ParamType &iValue, IBStreamer &oStreamer)
+  {
+    return LCDDataParamSerializer::writeToStream(iValue.fLCDData, oStreamer);
+  }
 };
 }
 }

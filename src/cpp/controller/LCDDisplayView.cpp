@@ -154,16 +154,13 @@ void LCDDisplayView::draw(CDrawContext *iContext)
 {
   HistoryView::draw(iContext);
 
-  if(!fHistoryState)
-    return;
-
   auto rdc = GUI::RelativeDrawContext{this, iContext};
 
   auto height = getViewSize().getHeight();
   auto width = getViewSize().getWidth();
   RelativeCoord left = 0;
 
-  LCDData &lcdData = fHistoryState->fLCDData;
+  LCDData const &lcdData = fHistoryDataParam->fLCDData;
 
   bool leftChannelOn = lcdData.fLeftChannel.fOn;
   bool rightChannelOn = lcdData.fRightChannel.fOn;
@@ -372,22 +369,14 @@ void LCDDisplayView::registerParameters()
 #if EDITOR_MODE
 
 ///////////////////////////////////////////
-// LCDDisplayView::setHistoryState
-///////////////////////////////////////////
-void LCDDisplayView::setHistoryState(std::shared_ptr<HistoryState> iHistoryState)
-{
-  HistoryView::setHistoryState(iHistoryState);
-  onEditorModeChanged();
-}
-
-///////////////////////////////////////////
 // LCDDisplayView::onEditorModeChanged
 ///////////////////////////////////////////
 void LCDDisplayView::onEditorModeChanged()
 {
-  if(fHistoryState && getEditorMode())
+  if(getEditorMode())
   {
-    LCDData &lcdData = fHistoryState->fLCDData;
+    HistoryData historyData{};
+    LCDData &lcdData = historyData.fLCDData;
     lcdData.fLeftChannel.fOn = true;
     lcdData.fRightChannel.fOn = true;
 
@@ -409,13 +398,9 @@ void LCDDisplayView::onEditorModeChanged()
     lcdData.fLeftChannel.fMaxLevelSinceReset = lcdData.fLeftChannel.fSamples[10];
     lcdData.fRightChannel.fMaxLevelSinceReset = lcdData.fRightChannel.fSamples[10];
 
-    fHistoryState->fMaxLevelInWindow =
-      MaxLevel::computeMaxLevel(lcdData.fLeftChannel.computeInWindowMaxLevel(),
-                                lcdData.fRightChannel.computeInWindowMaxLevel());
-    fHistoryState->fMaxLevelSinceReset =
-      MaxLevel::computeMaxLevel(lcdData.fLeftChannel.computeSinceResetMaxLevel(),
-                                lcdData.fRightChannel.computeSinceResetMaxLevel());
+    historyData.computeMaxLevels();
 
+    fHistoryDataParam.setValue(historyData);
   }
 }
 

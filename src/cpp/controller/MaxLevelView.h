@@ -1,6 +1,5 @@
 #pragma once
 
-#include <pongasoft/VST/GUI/GUIViewState.h>
 #include <pongasoft/VST/Messaging.h>
 #include "HistoryView.h"
 
