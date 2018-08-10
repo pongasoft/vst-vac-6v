@@ -6,7 +6,7 @@
 #include <pongasoft/VST/ParamSerializers.h>
 #include <cmath>
 #include <sstream>
-#include <pongasoft/VST/GUI/Params/GUISerParameter.h>
+#include <pongasoft/VST/GUI/Params/GUIJmbParameter.h>
 #include "VAC6Constants.h"
 #include "ZoomWindow.h"
 

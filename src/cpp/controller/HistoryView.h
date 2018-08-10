@@ -58,7 +58,7 @@ protected:
 
   GUIVstParam<SoftClippingLevel> fSoftClippingLevelParameter;
   GUIVstParam<int> fLCDInputXParameter{nullptr};
-  GUISerParam<HistoryData> fHistoryDataParam{};
+  GUIJmbParam<HistoryData> fHistoryDataParam{};
 
 public:
   class Creator : public CustomViewCreator<HistoryView, CustomView>

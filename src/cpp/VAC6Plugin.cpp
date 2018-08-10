@@ -28,7 +28,7 @@ VAC6Parameters::VAC6Parameters() : Parameters()
       .defaultValue(SoftClippingLevel{DEFAULT_SOFT_CLIPPING_LEVEL})
       .shortTitle(STR16 ("Sft Clp Lvl"))
       .precision(2)
-      .uiOnly()
+      .guiOwned()
       .add();
 
   // the zoom level knob
@@ -90,7 +90,7 @@ VAC6Parameters::VAC6Parameters() : Parameters()
     vst<BooleanParamConverter>(EVAC6ParamID::kMaxLevelSinceResetMarker, STR16 ("Since Reset Marker"))
       .defaultValue(true)
       .shortTitle(STR16 ("Rst Mkr"))
-      .uiOnly()
+      .guiOwned()
       .add();
 
   // the toggle for the LCD marker representing in window max level
@@ -98,7 +98,7 @@ VAC6Parameters::VAC6Parameters() : Parameters()
     vst<BooleanParamConverter>(EVAC6ParamID::kMaxLevelInWindowMarker, STR16 ("In Window Marker"))
       .defaultValue(true)
       .shortTitle(STR16 ("Wdw Mkr"))
-      .uiOnly()
+      .guiOwned()
       .add();
 
   // the toggle for gain filtering
@@ -128,9 +128,10 @@ VAC6Parameters::VAC6Parameters() : Parameters()
 
   // history data
   fHistoryDataParam =
-    ser<HistoryDataParamSerializer>(EVAC6ParamID::kHistoryData, STR16("HistoryData"))
+    jmb<HistoryDataParamSerializer>(EVAC6ParamID::kHistoryData, STR16("HistoryData"))
       .transient()
-      .uiOnly()
+      .rtOwned()
+      .shared()
       .add();
 
   setRTSaveStateOrder(PROCESSOR_STATE_VERSION,

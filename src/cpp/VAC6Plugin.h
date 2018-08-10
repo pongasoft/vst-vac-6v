@@ -39,7 +39,7 @@ public:
   VstParam<bool> fInWindowMarkerParam;
 
   // used to communicate data from the processing to the UI
-  SerParam<HistoryData> fHistoryDataParam;
+  JmbParam<HistoryData> fHistoryDataParam;
 };
 
 using namespace RT;
@@ -60,7 +60,9 @@ public:
     fLCDLiveView{add(iParams.fLCDLiveViewParam)},
     fMaxLevelReset{add(iParams.fMaxLevelResetParam)},
     fLCDInputX{add(iParams.fLCDInputXParam)},
-    fLCDHistoryOffset{add(iParams.fLCDHistoryOffsetParam)}
+    fLCDHistoryOffset{add(iParams.fLCDHistoryOffsetParam)},
+
+    fHistoryData{addJmbOut(iParams.fHistoryDataParam)}
   {
   }
 
@@ -79,6 +81,9 @@ public:
   RTVstParam<bool> fMaxLevelReset;
   RTVstParam<int> fLCDInputX;
   RTVstParam<Percent> fLCDHistoryOffset;
+
+  // messaging
+  RTJmbOutParam<HistoryData> fHistoryData;
 };
 
 using namespace GUI;
@@ -92,7 +97,8 @@ public:
   {};
 
 public:
-  GUISerParam<HistoryData> fHistoryData;
+  // messaging
+  GUIJmbParam<HistoryData> fHistoryData;
 };
 
 }

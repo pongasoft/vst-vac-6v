@@ -147,8 +147,6 @@ tresult VAC6Processor::setupProcessing(ProcessSetup &setup)
   if(result != kResultOk)
     return result;
 
-  enableGUITimer(UI_FRAME_RATE_MS);
-
   fClock.setSampleRate(setup.sampleRate);
 
   fRateLimiter = fClock.getRateLimiter(UI_FRAME_RATE_MS);
@@ -332,31 +330,10 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
     }
     lcdData.fRightChannel.fOn = fState.fRightChannelOn;
 
-    fHistoryDataUpdate.push(historyData);
+    fState.fHistoryData.enqueueUpdate(historyData);
   }
 
   return kResultOk;
-}
-
-///////////////////////////////////////////
-// VAC6Processor::onGUITimer
-///////////////////////////////////////////
-void VAC6Processor::onGUITimer()
-{
-  HistoryData historyData{};
-  if(fHistoryDataUpdate.pop(historyData))
-  {
-    if(auto message = owned(allocateMessage()))
-    {
-      Message m{message};
-
-      m.setMessageID(kHistoryData_MID);
-      m.setSerParam(fParameters.fHistoryDataParam, historyData);
-
-      sendMessage(message);
-    }
-
-  }
 }
 
 }

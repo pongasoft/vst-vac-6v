@@ -26,7 +26,7 @@ void HistoryView::registerParameters()
 
   fSoftClippingLevelParameter = registerVstParam(fParams->fSoftClippingLevelParam);
   fLCDInputXParameter = registerVstParam(fParams->fLCDInputXParam);
-  fHistoryDataParam = registerSerParam(fState->fHistoryData);
+  fHistoryDataParam = registerJmbParam(fState->fHistoryData);
 }
 
 ///////////////////////////////////////////

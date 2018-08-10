@@ -47,12 +47,6 @@ enum EVAC6CustomViewTag : Steinberg::Vst::ParamID
   kGain = 6,
 };
 
-enum EVAC6MessageID
-{
-  kHistoryData_MID = 100,
-  kLCDData_MID = 200
-};
-
 //------------------------------------------------------------------------
 } // namespace VST
 } // namespace pongasoft

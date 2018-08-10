@@ -67,9 +67,6 @@ protected:
   // processInputs64Bits
   tresult processInputs64Bits(ProcessData &data) override { return genericProcessInputs<Sample64>(data); }
 
-  // onGUITimer
-  void onGUITimer() override;
-
 private:
   VAC6Parameters fParameters;
   VAC6RTState fState;
