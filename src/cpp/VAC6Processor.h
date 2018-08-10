@@ -2,7 +2,6 @@
 
 #include <base/source/timer.h>
 #include <public.sdk/source/vst/vstaudioeffect.h>
-#include <pongasoft/Utils/Concurrent/Concurrent.h>
 #include <pongasoft/Utils/Collection/CircularBuffer.h>
 #include <pongasoft/VST/SampleRateBasedClock.h>
 #include <pongasoft/VST/AudioBuffer.h>
@@ -82,7 +81,6 @@ private:
   VAC6AudioChannelProcessor *fRightChannelProcessor;
 
   SampleRateBasedClock::RateLimiter fRateLimiter;
-  Concurrent::WithSpinLock::SingleElementQueue<HistoryData> fHistoryDataUpdate;
 };
 
 }

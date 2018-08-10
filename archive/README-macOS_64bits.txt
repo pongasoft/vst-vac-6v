@@ -16,4 +16,4 @@ For VST3, copy VAC-6V.vst3 under
 
 Usage
 =====
-Check the documentation at https://pongasoft.com/vst/VAC6V.html
+Check the documentation at https://pongasoft.com/vst/VAC-6V.html

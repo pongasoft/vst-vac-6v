@@ -14,4 +14,4 @@ For VST3, copy VAC-6V.vst3 under
 
 Usage
 =====
-Check the documentation at https://pongasoft.com/vst/ABSwitch.html
+Check the documentation at https://pongasoft.com/vst/VAC-6V.html

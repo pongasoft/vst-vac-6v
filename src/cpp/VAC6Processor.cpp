@@ -89,8 +89,7 @@ VAC6Processor::VAC6Processor() :
   fZoomWindow{nullptr},
   fLeftChannelProcessor{nullptr},
   fRightChannelProcessor{nullptr},
-  fRateLimiter{},
-  fHistoryDataUpdate{}
+  fRateLimiter{}
 {
   DLOG_F(INFO, "VAC6Processor() - jamba: %s - plugin: v%s", JAMBA_GIT_VERSION_STR, FULL_VERSION_STR);
 }
