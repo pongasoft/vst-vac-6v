@@ -6,6 +6,7 @@
 #include <pongasoft/VST/Parameters.h>
 #include <pongasoft/VST/RT/RTState.h>
 #include <pongasoft/VST/GUI/GUIState.h>
+#include <pongasoft/VST/Debug/ParamLine.h>
 
 #include <pluginterfaces/vst/ivstaudioprocessor.h>
 
@@ -66,6 +67,23 @@ public:
   {
   }
 
+#ifndef NDEBUG
+protected:
+  // afterReadNewState
+  void afterReadNewState(NormalizedState *iState) override
+  {
+    DLOG_F(INFO, "RTState::read - %s", Debug::ParamLine::from(this, true).toString(*iState).c_str());
+    //Debug::ParamTable::from(this, true).showCellSeparation().print(*iState, "RTState::read ---> ");
+  }
+
+  // beforeWriteNewState
+  void beforeWriteNewState(NormalizedState *iState) override
+  {
+    DLOG_F(INFO, "RTState::write - %s", Debug::ParamLine::from(this, true).toString(*iState).c_str());
+    //Debug::ParamTable::from(this, true).showCellSeparation().print(*iState, "RTState::write ---> ");
+  }
+#endif
+
 public:
   // saved state
   RTVstParam<Percent> fZoomFactorX;
@@ -95,6 +113,35 @@ public:
     GUIPluginState(iParams),
     fHistoryData{add(iParams.fHistoryDataParam)}
   {};
+
+#ifndef NDEBUG
+protected:
+  // readGUIState
+  tresult readGUIState(IBStreamer &iStreamer) override
+  {
+    tresult res = GUIState::readGUIState(iStreamer);
+    if(res == kResultOk)
+    {
+      // swap the commented line to display either on a line or in a table
+      DLOG_F(INFO, "GUIState::read - %s", Debug::ParamLine::from(this, true).toString().c_str());
+      //Debug::ParamTable::from(this, true).showCellSeparation().print("GUIState::read ---> ");
+    }
+    return res;
+  }
+
+  // writeGUIState
+  tresult writeGUIState(IBStreamer &oStreamer) const override
+  {
+    tresult res = GUIState::writeGUIState(oStreamer);
+    if(res == kResultOk)
+    {
+      // swap the commented line to display either on a line or in a table
+      DLOG_F(INFO, "GUIState::write - %s", Debug::ParamLine::from(this, true).toString().c_str());
+      //Debug::ParamTable::from(this, true).showCellSeparation().print("GUIState::write ---> ");
+    }
+    return res;
+  }
+#endif
 
 public:
   // messaging

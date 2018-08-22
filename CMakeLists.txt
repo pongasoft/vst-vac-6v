@@ -15,7 +15,7 @@ set(PLUGIN_VERSION "${PLUGIN_MAJOR_VERSION}.${PLUGIN_MINOR_VERSION}.${PLUGIN_PAT
 project(VST_VAC6)
 
 # for working on the framework at the same time...
-#set(JAMBA_ROOT_DIR ../jamba)
+set(JAMBA_ROOT_DIR ../jamba)
 
 if(NOT JAMBA_ROOT_DIR)
 	include(jamba.cmake)
@@ -112,7 +112,7 @@ set(test_sources ${test_sources}
 		${CPP_SOURCES}/ZoomWindow.cpp
 		)
 
-jamba_add_test(${PROJECT_NAME}_test "${TEST_SRC_FILES}" "${test_sources}" "")
+jamba_add_test(${target}_test "${TEST_SRC_FILES}" "${test_sources}" "")
 
 ###################################################
 # Dev help

@@ -2,6 +2,8 @@
 #include <public.sdk/source/vst/vstaudioprocessoralgo.h>
 
 #include <pongasoft/VST/Messaging.h>
+#include <pongasoft/VST/Debug/ParamDisplay.h>
+#include <pongasoft/VST/Debug/ParamTable.h>
 
 #include "version.h"
 #include "jamba_version.h"
@@ -92,6 +94,10 @@ VAC6Processor::VAC6Processor() :
   fRateLimiter{}
 {
   DLOG_F(INFO, "VAC6Processor() - jamba: %s - plugin: v%s", JAMBA_GIT_VERSION_STR, FULL_VERSION_STR);
+
+#ifndef NDEBUG
+  DLOG_F(INFO, "Parameters ---> \n%s", Debug::ParamTable::from(fParameters).full().toString().c_str());
+#endif
 }
 
 ///////////////////////////////////////////
@@ -122,6 +128,13 @@ tresult PLUGIN_API VAC6Processor::initialize(FUnknown *context)
 
   addAudioInput(STR16 ("Stereo In"), SpeakerArr::kStereo);
   addAudioOutput(STR16 ("Stereo Out"), SpeakerArr::kStereo);
+
+#ifndef NDEBUG
+  using Key = Debug::ParamDisplay::Key;
+  DLOG_F(INFO, "RT Save State - Version=%d --->\n%s",
+         fParameters.getRTSaveStateOrder().fVersion,
+         Debug::ParamTable::from(getRTState(), true).keys({Key::kID, Key::kTitle}).full().toString().c_str());
+#endif
 
   return result;
 }
@@ -308,7 +321,7 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   // is it time to update the UI?
   if(isNewPause || fRateLimiter.shouldUpdate(static_cast<uint32>(data.numSamples)))
   {
-    HistoryData historyData{};
+    HistoryData &historyData = fState.fHistoryData;
 
     LCDData &lcdData = historyData.fLCDData;
 
@@ -329,7 +342,7 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
     }
     lcdData.fRightChannel.fOn = fState.fRightChannelOn;
 
-    fState.fHistoryData.enqueueUpdate(historyData);
+    fState.fHistoryData.broadcast();
   }
 
   return kResultOk;

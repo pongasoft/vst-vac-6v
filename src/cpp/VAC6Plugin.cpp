@@ -111,7 +111,6 @@ VAC6Parameters::VAC6Parameters() : Parameters()
   // selected position on the screen when paused
   fLCDInputXParam =
     vst<LCDInputXParamConverter>(EVAC6ParamID::kLCDInputX, STR16 ("Graph Select"))
-      .stepCount(MAX_ARRAY_SIZE + 1) // [-1, MAX_ARRAY_SIZE] -1 when nothing selected
       .defaultValue(LCD_INPUT_X_NOTHING_SELECTED) // not selected (-1)
       .flags(0) // state is not saved
       .transient()

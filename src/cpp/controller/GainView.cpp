@@ -30,11 +30,11 @@ void GainView::draw(CDrawContext *iContext)
   sdc.fFontColor = getFontColor();
   sdc.fFont = fFont;
 
-  Gain gain = fBypassParameter->getValue() ? Gain{} : Gain{fGain1Parameter->getValue().getValue() * fGain2Parameter->getValue().getValue()};
+  Gain gain = fBypassParameter.getValue() ? Gain{} : Gain{fGain1Parameter.getValue().getValue() * fGain2Parameter.getValue().getValue()};
 
   rdc.drawString(toDbString(gain.getValue()), sdc);
 
-  if(fBypassParameter->getValue())
+  if(fBypassParameter)
     rdc.fillRect(0,0, getWidth(), getHeight(), CColor{128,128,128,100});
 
 }

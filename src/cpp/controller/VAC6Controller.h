@@ -14,6 +14,10 @@ namespace VAC6 {
 class VAC6Controller : public GUI::GUIController
 {
 public:
+  // Factory method
+  static FUnknown *createInstance(void * /*context*/) { return (IEditController *) new VAC6Controller(); }
+
+public:
   // Constructor
   VAC6Controller();
 
@@ -23,14 +27,9 @@ public:
   // getGUIState
   GUIState *getGUIState() override { return &fState; }
 
-  //--- ---------------------------------------------------------------------
-  // create function required for Plug-in factory,
-  // it will be called to create new instances of this controller
-  //--- ---------------------------------------------------------------------
-  static FUnknown *createInstance(void * /*context*/)
-  {
-    return (IEditController *) new VAC6Controller();
-  }
+
+protected:
+  tresult initialize(FUnknown *context) override;
 
 private:
   VAC6Parameters fParameters;

@@ -30,10 +30,10 @@ LCDScrollbarView::ZoomBox LCDScrollbarView::computeZoomBox() const
 
   CCoord width = getViewSize().getWidth();
 
-  box.fHalfWidth = (width - ((width - getScrollbarMinSize()) * fLCDZoomFactorXParameter->getValue())) / 2.0;
+  box.fHalfWidth = (width - ((width - getScrollbarMinSize()) * fLCDZoomFactorXParameter)) / 2.0;
   box.fMinCenter = 0 + box.fHalfWidth;
   box.fMaxCenter = width - box.fHalfWidth;
-  box.fCenter = box.computeCenter(fLCDInputHistoryOffsetParameter->getValue());
+  box.fCenter = box.computeCenter(fLCDInputHistoryOffsetParameter);
 
   return box;
 }
@@ -67,9 +67,9 @@ CMouseEventResult LCDScrollbarView::onMouseDown(CPoint &where, const CButtonStat
   RelativeView rv(this);
   RelativeCoord x = rv.fromAbsolutePoint(where).x;
 
-  if(fLCDLiveViewParameter->getValue())
+  if(fLCDLiveViewParameter)
   {
-    fLCDLiveViewParameter->setValue(false);
+    fLCDLiveViewParameter.setValue(false);
   }
 
   auto box = computeZoomBox();
@@ -91,7 +91,7 @@ CMouseEventResult LCDScrollbarView::onMouseDown(CPoint &where, const CButtonStat
     else
     {
       // beginning of drag gesture...
-      fLCDInputHistoryOffsetEditor = fLCDInputHistoryOffsetParameter->edit(box.computePercent());
+      fLCDInputHistoryOffsetEditor = fLCDInputHistoryOffsetParameter.edit(box.computePercent());
       fStartDragGestureZoomBox = std::make_unique<ZoomBox>(box);
       fStarDragGestureX = x;
       return kMouseEventHandled;
@@ -102,14 +102,14 @@ CMouseEventResult LCDScrollbarView::onMouseDown(CPoint &where, const CButtonStat
   if(x >= box.getLeft() && x <= box.getRight())
   {
     // beginning of drag gesture...
-    fLCDInputHistoryOffsetEditor = fLCDInputHistoryOffsetParameter->edit(box.computePercent());
+    fLCDInputHistoryOffsetEditor = fLCDInputHistoryOffsetParameter.edit(box.computePercent());
     fStartDragGestureZoomBox = std::make_unique<ZoomBox>(box);
     fStarDragGestureX = x;
     return kMouseEventHandled;
   }
 
   // no drag gesture
-  fLCDInputHistoryOffsetParameter->setValue(box.computePercent());
+  fLCDInputHistoryOffsetParameter.setValue(box.computePercent());
 
   return kMouseEventHandled;
 }

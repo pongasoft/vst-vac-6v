@@ -89,18 +89,18 @@ void LCDDisplayState::startTimer()
 ///////////////////////////////////////////
 void LCDDisplayView::onParameterChange(ParamID iParamID)
 {
-  if(iParamID == fLCDZoomFactorXParam->getParamID())
+  if(iParamID == fLCDZoomFactorXParam.getParamID())
   {
     String text = "Zoom: ";
-    text += fLCDZoomFactorXParam->toString();
+    text += fLCDZoomFactorXParam.toString();
     fLCDZoomFactorXMessage = std::make_unique<LCDMessage>(UTF8String(text), Clock::getCurrentTimeMillis());
     startTimer();
   }
 
-  if(iParamID == fSoftClippingLevelParam->getParamID())
+  if(iParamID == fSoftClippingLevelParam.getParamID())
   {
     fLCDSoftClippingLevelMessage =
-      std::make_unique<LCDMessage>(UTF8String(fSoftClippingLevelParam->toString()), Clock::getCurrentTimeMillis());
+      std::make_unique<LCDMessage>(UTF8String(fSoftClippingLevelParam.toString()), Clock::getCurrentTimeMillis());
     startTimer();
   }
 
@@ -168,7 +168,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
   if(leftChannelOn || rightChannelOn)
   {
 
-    MaxLevel maxLevelForSelection{-1, fLCDInputXParameter->getValue()};
+    MaxLevel maxLevelForSelection{-1, fLCDInputXParameter};
     RelativePoint maxLevelForSelectionPoint = {static_cast<RelativeCoord>(maxLevelForSelection.fIndex), -1};
 
     auto maxLevelSinceReset = getMaxLevelSinceReset();
@@ -200,7 +200,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
         top = Utils::clamp<RelativeCoord>(height - displayValue, -0.5, height);
 
         // color of the sample depends on its level
-        CColor const &color = computeColor(fSoftClippingLevelParameter->getValue(), sample);
+        CColor const &color = computeColor(fSoftClippingLevelParameter, sample);
 
         rdc.drawLine(left, top, left, height, color);
 
@@ -221,18 +221,18 @@ void LCDDisplayView::draw(CDrawContext *iContext)
       left++;
     }
 
-    if(fMaxLevelInWindowMarker->getValue())
+    if(fMaxLevelInWindowMarker)
     {
       // on top of each other => make bigger
       CCoord size = 3.0;
-      if(maxLevelInWindowPoint.x == maxLevelSinceResetPoint.x && fMaxLevelSinceResetMarker->getValue())
+      if(maxLevelInWindowPoint.x == maxLevelSinceResetPoint.x && fMaxLevelSinceResetMarker)
       {
         size = 5.0;
       }
       drawMaxLevel(rdc, maxLevelInWindowPoint, size, MAX_LEVEL_IN_WINDOW_COLOR);
     }
 
-    if(fMaxLevelSinceResetMarker->getValue())
+    if(fMaxLevelSinceResetMarker)
     {
       drawMaxLevel(rdc, maxLevelSinceResetPoint, 3.0, MAX_LEVEL_SINCE_RESET_COLOR);
     }
@@ -248,7 +248,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
   }
 
   // display the soft clipping level line (which is controlled by a knob)
-  auto softClippingDisplayValue = toDisplayValue(fSoftClippingLevelParameter->getValue().getValueInSample(), height);
+  auto softClippingDisplayValue = toDisplayValue(fSoftClippingLevelParameter.getValue().getValueInSample(), height);
   auto top = height - softClippingDisplayValue;
 
   // draw the soft clipping line
@@ -299,12 +299,12 @@ int LCDDisplayView::computeLCDInputX(CPoint &where) const
 ///////////////////////////////////////////
 CMouseEventResult LCDDisplayView::onMouseDown(CPoint &where, const CButtonState &buttons)
 {
-  if(fLCDLiveViewParameter->getValue())
+  if(fLCDLiveViewParameter)
   {
-    fLCDLiveViewParameter->setValue(false);
+    fLCDLiveViewParameter.setValue(false);
   }
 
-  fLCDInputXEditor = fLCDInputXParameter->edit(computeLCDInputX(where));
+  fLCDInputXEditor = fLCDInputXParameter.edit(computeLCDInputX(where));
 
   return kMouseEventHandled;
 }

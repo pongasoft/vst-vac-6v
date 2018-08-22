@@ -43,63 +43,71 @@ In order to build both VST2 and VST3 at the same time, you need to run the follo
 Building this project for macOS
 -------------------------------
 
-- Create a folder for the build and `cd` to it (for simplicity I am creating it at the root of the source tree, but can obviously be *outside* the source tree entirely):
+- For simplicity I am creating the build at the root of the source tree, but can obviously be *outside* the source tree entirely by running the script from anywhere
 
-        mkdir -p build/Debug
+        ./configure.sh Debug
         cd build/Debug
 
-- Generate the Makefile(s): provide the path to the *source* of this project (which contains `CMakeLists.txt`):
+- In order to build the plugin run:
 
-        cmake -DCMAKE_BUILD_TYPE=Debug ../..
+        ./build.sh
 
-   Note that you may see a few warnings from `googletest` that I was unable to remove... but feel free to ignore (or if you find a way to remove them, please let me know!)
+- In order to test the plugin (unit tests) run:
 
-- Now build the plugin (all its dependencies will be built as well):
+        ./test.sh
 
-        cmake --build .
+- In order to validate the plugin (uses validator) run:
 
-- Testing that it is a valid VST3 plugin (already run part of the build, but can be run separately):
+        ./validate.sh
 
-        ./bin/validator VST3/pongasoft_VAC6V.vst3
+- In order to edit the plugin UI (uses editor) run:
 
-- Deploying the plugin and testing in a real DAW
+        ./edit.sh
 
-    -  For VST2 (like Maschine and Reason) you copy and *rename* it:
+- In order to install the plugin locally run (~/Library/Audio/Plug-Ins/VST for VST2 and ~/Library/Audio/Plug-Ins/VST3 for VST3):
 
-            mkdir -p ~/Library/Audio/Plug-Ins/VST
-            cp -r VST3/pongasoft_VAC6V.vst3 ~/Library/Audio/Plug-Ins/VST/pongasoft_VAC6V.vst
-
-    -  For VST3:
-
-            mkdir -p ~/Library/Audio/Plug-Ins/VST3
-            cp -r VST3/pongasoft_VAC6V.vst3 ~/Library/Audio/Plug-Ins/VST3
-
-- You can also run the unit tests part of this project:
-
-        cmake --build . --target VST_VAC6_test
-        ctest
+        ./install.sh
 
 Because this project uses `cmake` you can also generate an Xcode project by using the proper generator (`-G Xcode`). You can also load the project directly in CLion.
 
 Building this project for Windows
 ---------------------------------
-- Create a folder for the build and `cd` to it (for simplicity I am creating it at the root of the source tree, but can obviously be *outside* the source tree entirely):
 
-      mkdir build
-      cd build
+- For simplicity I am creating the build at the root of the source tree, but can obviously be *outside* the source tree entirely by running the script from anywhere
 
-- Generate the Makefile(s): provide the path to the *source* of this project (which contains `CMakeLists.txt`):
+        ./configure.bat
+        cd build
 
-      cmake -G"Visual Studio 15 2017 Win64" -DCMAKE_CXX_FLAGS=/D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING ../
+- In order to build the plugin run:
 
-- Now build the plugin (all its dependencies will be built as well) (note that unlike macOS the type of build is specified during the build not during the generation of the project) (use `Debug` for development version, `Release` for production version):
+        For Debug => ./build.bat
+        For Release => ./build.bat Release
 
-      cmake --build . --config Debug
+- In order to test the plugin (unit tests) run:
 
-- You can also run the unit tests part of this project:
+        For Debug => ./test.bat
+        For Release => ./test.bat Release
 
-        cmake --build . --config Debug --target VST_VAC6_test
-        ctest -C Debug
+- In order to validate the plugin (uses validator) run:
+
+        For Debug => ./validate.bat
+        For Release => ./validate.bat Release
+
+- In order to edit the plugin UI (uses editor) run:
+
+        ./edit.sh
+
+
+- In order to install the plugin:
+
+  For VST2, copy VST3/VAC-6V.vst3 and RENAME into VAC-6V.dll under
+  - C:\ProgramFiles\VstPlugins
+  - or any DAW specific path (64bits)
+  - MAKE SURE TO RENAME the file otherwise it will not work
+
+  For VST3, copy VAC-6V.vst3 under
+  - C:\Program Files\Common Files\VST3 (may require admin access)
+  - or any DAW specific path (64bits)
 
 Building this project for macOS and Windows 10
 ----------------------------------------------

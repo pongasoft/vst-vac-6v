@@ -121,7 +121,7 @@ std::string toDbString(TSample iSample, int iPrecision)
 // LCDZoomFactorXParamConverter::toString
 //------------------------------------------------------------------------
 std::string LCDZoomFactorXParamConverter::toString(const LCDZoomFactorXParamConverter::ParamType &iValue,
-                                                   int32 iPrecision)
+                                                   int32 iPrecision) const
 {
   auto lerpInSeconds = Utils::Lerp<double>(HISTORY_SIZE_IN_SECONDS,
                                            ACCUMULATOR_BATCH_SIZE_IN_MS * MAX_ARRAY_SIZE / 1000.0);
@@ -165,7 +165,7 @@ void HistoryData::computeMaxLevels()
 //------------------------------------------------------------------------
 // HistoryData::readFromStream
 //------------------------------------------------------------------------
-tresult HistoryDataParamSerializer::readFromStream(IBStreamer &iStreamer, HistoryData &oValue)
+tresult HistoryDataParamSerializer::readFromStream(IBStreamer &iStreamer, HistoryData &oValue) const
 {
   {
     tresult res = LCDDataParamSerializer::readFromStream(iStreamer, oValue.fLCDData);

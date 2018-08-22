@@ -50,30 +50,15 @@ using LCDHistoryOffsetParamConverter = PercentParamConverter;
 // zoom varies from 30s to 1.28s (5ms * 256=1.28s) and we want default to be 15s
 constexpr double DEFAULT_ZOOM_FACTOR_X = 0.52228412256267409131;
 
-class LCDZoomFactorXParamConverter
+class LCDZoomFactorXParamConverter : public PercentParamConverter
 {
-private:
-  using PPC = PercentParamConverter;
-
 public:
-  using ParamType = PPC::ParamType;
+  std::string toString(ParamType const &iValue, int32 iPrecision) const override;
 
-  inline static ParamValue normalize(ParamType const &iValue)
-  {
-    return PPC::normalize(iValue);
-  }
-
-  inline static ParamType denormalize(ParamValue iNormalizedValue)
-  {
-    return PPC::denormalize(iNormalizedValue);
-  }
-
-  static std::string toString(ParamType const &iValue, int32 iPrecision);
-
-  inline static void toString(ParamType const &iValue, String128 iString, int32 iPrecision)
+  inline void toString(ParamType const &iValue, String128 iString, int32 iPrecision) const override
   {
     auto s = toString(iValue, iPrecision);
-    Steinberg::UString wrapper(iString, str16BufferSize (String128));
+    Steinberg::UString wrapper(iString, str16BufferSize(String128));
     wrapper.fromAscii(s.c_str());
   }
 };
@@ -85,26 +70,18 @@ public:
 
 constexpr int LCD_INPUT_X_NOTHING_SELECTED = -1;
 
-class LCDInputXParamConverter
+// [-1, MAX_ARRAY_SIZE] -1 when nothing selected
+class LCDInputXParamConverter : public DiscreteValueParamConverter<MAX_LCD_INPUT_X + 1>
 {
-private:
-  using DVC = DiscreteValueParamConverter<MAX_LCD_INPUT_X + 1>;
 public:
-  using ParamType = DVC::ParamType;
-
-  static inline ParamValue normalize(int const &iDiscreteValue)
+  inline ParamValue normalize(int const &iDiscreteValue) const override
   {
-    return DVC::normalize(iDiscreteValue + 1);
+    return DiscreteValueParamConverter::normalize(iDiscreteValue + 1);
   }
 
-  static inline int denormalize(ParamValue iNormalizedValue)
+  inline int denormalize(ParamValue iNormalizedValue) const override
   {
-    return DVC::denormalize(iNormalizedValue) - 1;
-  }
-
-  inline static void toString(ParamType const &iValue, String128 iString, int32 iPrecision)
-  {
-    DVC::toString(iValue, iString, iPrecision);
+    return DiscreteValueParamConverter::denormalize(iNormalizedValue) - 1;
   }
 };
 
@@ -164,23 +141,21 @@ private:
 ///////////////////////////////////
 // SoftClippingLevelParamConverter
 ///////////////////////////////////
-class SoftClippingLevelParamConverter
+class SoftClippingLevelParamConverter : public IParamConverter<SoftClippingLevel>
 {
 public:
-  using ParamType = SoftClippingLevel;
-
-  static inline ParamValue normalize(ParamType const &iValue)
+  inline ParamValue normalize(ParamType const &iValue) const override
   {
     return iValue.getNormalizedValue();
   }
 
-  static inline ParamType denormalize(ParamValue iNormalizedValue)
+  inline ParamType denormalize(ParamValue iNormalizedValue) const override
   {
     double sclIndB = -MIN_SOFT_CLIPPING_LEVEL_DB * iNormalizedValue + MIN_SOFT_CLIPPING_LEVEL_DB;
     return SoftClippingLevel {dbToSample<TSample>(sclIndB)};
   }
 
-  inline static void toString(ParamType const &iValue, String128 iString, int32 iPrecision)
+  inline void toString(ParamType const &iValue, String128 iString, int32 iPrecision) const override
   {
     auto s = toDbString(iValue.getValueInSample());
     Steinberg::UString wrapper(iString, str16BufferSize (String128));
@@ -197,7 +172,7 @@ public:
   static constexpr double Unity = 1.0;
   static constexpr double Factor = 0.7;
 
-  constexpr explicit Gain(double iValue = Unity) : fValue{iValue} {}
+  constexpr explicit Gain(double iValue = Unity) noexcept : fValue{iValue} {}
 
   inline double getValue() const { return fValue; }
   inline double getValueInDb() const { return sampleToDb(fValue); }
@@ -213,15 +188,13 @@ private:
 
 constexpr Gain DEFAULT_GAIN = Gain{};
 
-class GainParamConverter
+class GainParamConverter : public IParamConverter<Gain>
 {
 public:
-  using ParamType = Gain;
-
   /**
    * Gain uses an x^3 curve with 0.7 (Param Value) being unity gain
    */
-  static Gain denormalize(ParamValue value)
+  Gain denormalize(ParamValue value) const override
   {
     if(std::fabs(value - Gain::Factor) < 1e-5)
       return Gain{};
@@ -232,13 +205,13 @@ public:
   }
 
   // normalize
-  static ParamValue normalize(Gain const &iGain)
+  ParamValue normalize(Gain const &iGain) const override
   {
     return iGain.getNormalizedValue();
   }
 
   // toString
-  inline static void toString(ParamType const &iValue, String128 iString, int32 iPrecision)
+  inline void toString(ParamType const &iValue, String128 iString, int32 iPrecision) const override
   {
     auto s = toDbString(iValue.getValue(), iPrecision);
     Steinberg::UString wrapper(iString, str16BufferSize (String128));
@@ -393,14 +366,14 @@ public:
   }
 };
 
-class HistoryDataParamSerializer
+class HistoryDataParamSerializer : public IParamSerializer<HistoryData>
 {
 public:
   using ParamType = HistoryData;
 
-  static tresult readFromStream(IBStreamer &iStreamer, ParamType &oValue);
+  tresult readFromStream(IBStreamer &iStreamer, ParamType &oValue) const override;
 
-  inline static tresult writeToStream(const ParamType &iValue, IBStreamer &oStreamer)
+  inline tresult writeToStream(const ParamType &iValue, IBStreamer &oStreamer) const override
   {
     return LCDDataParamSerializer::writeToStream(iValue.fLCDData, oStreamer);
   }

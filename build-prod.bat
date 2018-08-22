@@ -8,9 +8,30 @@ Echo SRC_DIR=%SRC_DIR%
 mkdir %BUILD_DIR%
 cd %BUILD_DIR%
 
-cmake -G"Visual Studio 15 2017 Win64" -DCMAKE_CXX_FLAGS=/D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING %SRC_DIR%
-cmake --build . --config Release --target VST_VAC6_test
-cmake --build . --config Release --target jamba_test
-ctest -C Release
+Echo =============================================================
+Echo ==                                                         ==
+Echo ==              Generating Makefiles...                    ==
+Echo ==              -----------------------                    ==
+Echo =============================================================
+cmake -G"Visual Studio 15 2017 Win64" %SRC_DIR%
 
+Echo =============================================================
+Echo ==                                                         ==
+Echo ==              Running Tests..........                    ==
+Echo ==              -----------------------                    ==
+Echo =============================================================
+%SRC_DIR%\test.bat Release
+
+Echo =============================================================
+Echo ==                                                         ==
+Echo ==              Validating Plugin......                    ==
+Echo ==              -----------------------                    ==
+Echo =============================================================
+%SRC_DIR%\validate.bat Release
+
+Echo =============================================================
+Echo ==                                                         ==
+Echo ==              Building archive.......                    ==
+Echo ==              -----------------------                    ==
+Echo =============================================================
 cmake --build . --config Release --target archive
