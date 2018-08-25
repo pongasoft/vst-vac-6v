@@ -321,28 +321,28 @@ tresult VAC6Processor::genericProcessInputs(ProcessData &data)
   // is it time to update the UI?
   if(isNewPause || fRateLimiter.shouldUpdate(static_cast<uint32>(data.numSamples)))
   {
-    HistoryData &historyData = fState.fHistoryData;
+    fState.fHistoryData.broadcast([this](HistoryData *oHistoryData) {
 
-    LCDData &lcdData = historyData.fLCDData;
+      LCDData &lcdData = oHistoryData->fLCDData;
 
-    // left
-    if(fState.fLeftChannelOn)
-    {
-      fLeftChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fLeftChannel.fSamples);
-      lcdData.fLeftChannel.fMaxLevelSinceReset = fLeftChannelProcessor->getMaxLevelSinceReset();
-    }
-    lcdData.fLeftChannel.fOn = fState.fLeftChannelOn;
+      // left
+      if(fState.fLeftChannelOn)
+      {
+        fLeftChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fLeftChannel.fSamples);
+        lcdData.fLeftChannel.fMaxLevelSinceReset = fLeftChannelProcessor->getMaxLevelSinceReset();
+      }
+      lcdData.fLeftChannel.fOn = fState.fLeftChannelOn;
 
 
-    // right
-    if(fState.fRightChannelOn)
-    {
-      fRightChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fRightChannel.fSamples);
-      lcdData.fRightChannel.fMaxLevelSinceReset = fRightChannelProcessor->getMaxLevelSinceReset();
-    }
-    lcdData.fRightChannel.fOn = fState.fRightChannelOn;
+      // right
+      if(fState.fRightChannelOn)
+      {
+        fRightChannelProcessor->computeZoomSamples(MAX_ARRAY_SIZE, lcdData.fRightChannel.fSamples);
+        lcdData.fRightChannel.fMaxLevelSinceReset = fRightChannelProcessor->getMaxLevelSinceReset();
+      }
+      lcdData.fRightChannel.fOn = fState.fRightChannelOn;
 
-    fState.fHistoryData.broadcast();
+    });
   }
 
   return kResultOk;
