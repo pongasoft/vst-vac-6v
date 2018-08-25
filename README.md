@@ -13,32 +13,7 @@ Status for `master` (unreleased)
 
 Configuration and requirements
 ------------------------------
-This project is known to work on macOS High Siera 10.13.3 with Xcode 9.2 installed. It also has been tested on Windows 10 64 bits and Visual Studio Build tools (2017). It requires `cmake` version 3.9 at the minimum. Because it uses `cmake` it should work on other platforms but it has not been tested.
-
-Downloading the SDK
--------------------
-You need to download the VST3 SDK version 3.6.9 from [steinberg](https://download.steinberg.net/sdk_downloads/vstsdk369_01_03_2018_build_132.zip) (shasum 256 => `7c6c2a5f0bcbf8a7a0d6a42b782f0d3c00ec8eafa4226bbf2f5554e8cd764964`). Note that 3.6.10 was released in June 2018 but at this time, this project uses 3.6.9.
-
-Installing the SDK
--------------------
-Unpack the SDK to the following location (note how I renamed it with the version number)
-
-* `/Users/Shared/Steinberg/VST_SDK.369` for macOS
-* `C:\Users\Public\Documents\Steinberg\VST_SDK.369` for windows.
-
-You can also store in a different location and use the `VST3_SDK_ROOT` variable when using cmake to define its location.
-
-Configuring the SDK
--------------------
-In order to build both VST2 and VST3 at the same time, you need to run the following commands
-
-    # for macOS
-    cd /Users/Shared/Steinberg/VST_SDK.369
-    ./copy_vst2_to_vst3_sdk.sh
-
-    # for Windows
-    cd C:\Users\Public\Documents\Steinberg\VST_SDK.369
-    copy_vst2_to_vst3_sdk.bat
+Check the Jamba [README](https://github.com/pongasoft/jamba/blob/master/README.md) file for instructions on how to install and configure the VST3 SDK.
 
 Building this project for macOS
 -------------------------------
