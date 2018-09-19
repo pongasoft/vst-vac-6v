@@ -3,21 +3,7 @@
 
 #define APSTUDIO_READONLY_SYMBOLS
 
-VAC6.uidesc                     DATA  "VAC6.uidesc"
-Background.png		            PNG  "Background.png"
-Background_2x.png		        PNG  "Background_2x.png"
-Button_Bypass_2frames.png        PNG "Button_Bypass_2frames.png"
-Button_Bypass_2frames_2x.png     PNG "Button_Bypass_2frames_2x.png"
-Button_InWindow_2frames.png      PNG "Button_InWindow_2frames.png"
-Button_InWindow_2frames_2x.png   PNG "Button_InWindow_2frames_2x.png"
-Button_Live_4frames.png          PNG "Button_Live_4frames.png"
-Button_Live_4frames_2x.png       PNG "Button_Live_4frames_2x.png"
-Button_SinceReset_2frames.png    PNG "Button_SinceReset_2frames.png"
-Button_SinceReset_2frames_2x.png PNG "Button_SinceReset_2frames_2x.png"
-Button_small_2frames.png         PNG "Button_small_2frames.png"
-Button_small_2frames_2x.png      PNG "Button_small_2frames_2x.png"
-Knob_mini_63frames.png           PNG "Knob_mini_63frames.png"
-Knob_mini_63frames_2x.png        PNG "Knob_mini_63frames_2x.png"
+#include "vst3_resources.rc"
 
 /////////////////////////////////////////////////////////////////////////////
 // Version
