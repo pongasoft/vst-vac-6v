@@ -3,12 +3,14 @@ VST2/3 VAC-6V - Volume Analyzer & Controller
 
 This project started as a VST implementation of the VAC-6 rack extension. It is now the official latest version of this plugin under the new name VAC-6V (V stands for VST). You can check the [VAC-6V](https://pongasoft.com/vst/VAC-6V.html) documentation directly.
 
-Status for `master` (unreleased)
---------------------------------
-* Extracted and use of [jamba](https://github.com/pongasoft/jamba) framework
+Release Notes
+-------------
 
-2018-07-15 - Status for tag `v1.0.0`
-------------------------------------
+### 2018-10-06 - `v1.1.0`
+* added Audio Unit support (macOS)
+* use of [Jamba](https://github.com/pongasoft/jamba) framework
+
+### 2018-07-15 - `v1.0.0`
 * first public release / free / open source
 
 Configuration and requirements
