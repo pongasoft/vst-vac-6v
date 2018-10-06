@@ -1,8 +1,10 @@
 cmake_minimum_required (VERSION 3.12)
 
-# build VST 2 by default
-option(SMTG_CREATE_VST2_VERSION "Use VST2" ON)
-option(SMTG_CREATE_VST3_LINK "" OFF)
+# build VST 2?
+option(JAMBA_ENABLE_VST2 "Use VST2" ON)
+
+# build Audio Unit?
+option(JAMBA_ENABLE_AUDIO_UNIT "Enable Audio Unit" ON)
 
 set(PLUGIN_MAJOR_VERSION 1)
 set(PLUGIN_MINOR_VERSION 0)
@@ -67,6 +69,9 @@ jamba_add_vst3plugin(${target} "${vst_sources}")
 target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
 target_link_libraries(${target} PRIVATE base sdk vstgui_support jamba)
 
+###################################################
+# Resources
+###################################################
 jamba_add_vst3_resource(${target} PNG "Background.png")
 jamba_add_vst3_resource(${target} PNG "Background_2x.png")
 jamba_add_vst3_resource(${target} PNG "Button_Bypass_2frames.png")
@@ -83,12 +88,8 @@ jamba_add_vst3_resource(${target} PNG "Knob_mini_63frames.png")
 jamba_add_vst3_resource(${target} PNG "Knob_mini_63frames_2x.png")
 jamba_add_vst3_resource(${target} DATA "VAC6.uidesc")
 
-if(MAC)
-  smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/mac/Info.plist" PREPROCESS)
-elseif(WIN)
-  jamba_gen_vst3_resource_rc("${CMAKE_BINARY_DIR}/generated/vst3_resources.rc")
-  target_sources(${target} PRIVATE resource/VAC6V.rc)
-endif()
+# this must be called after you are done calling jamba_add_vst3_resource for all resources
+jamba_gen_vst3_resources(${target} "VAC6V")
 
 ###################################################
 # Create archive (.tgz)

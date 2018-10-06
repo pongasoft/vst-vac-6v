@@ -15,79 +15,32 @@ Configuration and requirements
 ------------------------------
 Check the Jamba [README](https://github.com/pongasoft/jamba/blob/master/README.md) file for instructions on how to install and configure the VST3 SDK.
 
-Building this project for macOS
--------------------------------
+Build this project
+------------------
+
+The following steps describes (for each platform) how to build the plugin.
+
+### macOS
 
 - For simplicity I am creating the build at the root of the source tree, but can obviously be *outside* the source tree entirely by running the script from anywhere
 
-        ./configure.sh Debug
-        cd build/Debug
-
-- In order to build the plugin run:
-
-        ./build.sh
-
-- In order to test the plugin (unit tests) run:
-
-        ./test.sh
-
-- In order to validate the plugin (uses validator) run:
-
-        ./validate.sh
-
-- In order to edit the plugin UI (uses editor) run:
-
-        ./edit.sh
-
-- In order to install the plugin locally run (~/Library/Audio/Plug-Ins/VST for VST2 and ~/Library/Audio/Plug-Ins/VST3 for VST3):
-
-        ./install.sh
-
-Because this project uses `cmake` you can also generate an Xcode project by using the proper generator (`-G Xcode`). You can also load the project directly in CLion.
-
-Building this project for Windows
----------------------------------
-
-- For simplicity I am creating the build at the root of the source tree, but can obviously be *outside* the source tree entirely by running the script from anywhere
-
-        ./configure.bat
+        ./configure.sh
         cd build
 
-- In order to build the plugin run:
+- In order to build, test, validate, etc... simply use the `jamba.sh` script (use `-h` for details):
 
-        For Debug => ./build.bat
-        For Release => ./build.bat Release
+         ./jamba.sh -h
 
-- In order to test the plugin (unit tests) run:
+### Windows
 
-        For Debug => ./test.bat
-        For Release => ./test.bat Release
+- For simplicity I am creating the build at the root of the source tree, but can obviously be *outside* the source tree entirely by running the script from anywhere. Note that PowerShell is highly recommended.
 
-- In order to validate the plugin (uses validator) run:
+        .\configure.bat
+        cd build
 
-        For Debug => ./validate.bat
-        For Release => ./validate.bat Release
+- In order to build, test, validate, etc... simply use the `jamba.bat` script (use `-h` for details):
 
-- In order to edit the plugin UI (uses editor) run:
-
-        ./edit.sh
-
-
-- In order to install the plugin:
-
-  For VST2, copy VST3/VAC-6V.vst3 and RENAME into VAC-6V.dll under
-  - C:\ProgramFiles\VstPlugins
-  - or any DAW specific path (64bits)
-  - MAKE SURE TO RENAME the file otherwise it will not work
-
-  For VST3, copy VAC-6V.vst3 under
-  - C:\Program Files\Common Files\VST3 (may require admin access)
-  - or any DAW specific path (64bits)
-
-Building this project for macOS and Windows 10
-----------------------------------------------
-
-A convenient script (`build-prod.sh` for macOS and `build-prod.bat` for Windows) will invoke the proper commands to build and zip the entire project for production release. This can be run in any directory and will create a `build` folder.
+         .\jamba.bat -h
 
 Misc
 ----
