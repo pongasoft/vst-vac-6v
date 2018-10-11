@@ -37,12 +37,13 @@ bool VAC6AudioChannelProcessor::genericProcessChannel(ZoomWindow const *iZoomWin
   bool silent = true;
 
   auto numSamples = iIn.getNumSamples();
+
   auto inPtr = iIn.getBuffer();
   auto outPtr = iOut.getBuffer();
 
-  for(int i = 0; i < numSamples; ++i, inPtr++, outPtr++)
+  for(int i = 0; i < numSamples; ++i)
   {
-    TSample sample = *inPtr;
+    TSample sample = inPtr ? *inPtr++ : 0;
 
     if(iGain != Gain::Unity)
       sample *= iGain;
@@ -70,7 +71,8 @@ bool VAC6AudioChannelProcessor::genericProcessChannel(ZoomWindow const *iZoomWin
     if(silent && !pongasoft::VST::isSilent(sample))
       silent = false;
 
-    *outPtr = sample;
+    if(outPtr)
+      *outPtr++ = sample;
   }
 
   iOut.setSilenceFlag(silent);
