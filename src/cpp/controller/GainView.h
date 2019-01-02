@@ -21,7 +21,7 @@ class GainView : public PluginCustomView<VAC6GUIState>
 {
 public:
   // constructor
-  explicit GainView(const CRect &iSize) : PluginCustomView{iSize} {};
+  explicit GainView(const CRect &iSize) : PluginCustomView<VAC6GUIState>{iSize} {};
 
   // get/setFontColor
   CColor const &getFontColor() const { return fFontColor; }

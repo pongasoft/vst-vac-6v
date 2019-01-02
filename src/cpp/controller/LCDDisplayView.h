@@ -2,7 +2,6 @@
 
 #include <pongasoft/VST/Messaging.h>
 #include <pongasoft/VST/Timer.h>
-#include <pongasoft/Utils/Lerp.h>
 #include <pongasoft/VST/GUI/Views/CustomView.h>
 #include <pongasoft/VST/GUI/DrawContext.h>
 #include <memory>

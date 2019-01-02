@@ -123,12 +123,15 @@ std::string toDbString(TSample iSample, int iPrecision)
 std::string LCDZoomFactorXParamConverter::toString(const LCDZoomFactorXParamConverter::ParamType &iValue,
                                                    int32 iPrecision) const
 {
-  auto lerpInSeconds = Utils::Lerp<double>(HISTORY_SIZE_IN_SECONDS,
-                                           ACCUMULATOR_BATCH_SIZE_IN_MS * MAX_ARRAY_SIZE / 1000.0);
+  auto zoomInSeconds =
+    Utils::mapValueDP(iValue,
+                      0.0, 1.0,
+                      static_cast<double>(HISTORY_SIZE_IN_SECONDS), ACCUMULATOR_BATCH_SIZE_IN_MS * MAX_ARRAY_SIZE / 1000.0);
+
   std::ostringstream s;
   s.precision(iPrecision);
   s.setf(std::ios::fixed);
-  s << lerpInSeconds.computeY(iValue) << "s";
+  s << zoomInSeconds << "s";
   return s.str();
 }
 

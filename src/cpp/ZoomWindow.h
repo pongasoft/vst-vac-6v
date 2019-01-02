@@ -368,12 +368,12 @@ private:
    * Zoom associated to this window */
   TZoom fZoom;
 
-  inline Utils::Lerp<double> getWindowOffsetLerp() const
+  inline Utils::DPLerpY<int> getWindowOffsetLerp() const
   {
-    return {static_cast<double>(fMinWindowOffset), static_cast<double>(MAX_WINDOW_OFFSET)};
+    return {fMinWindowOffset, MAX_WINDOW_OFFSET};
   }
 
-  inline Utils::Lerp<double> getZoomFactorLerp() const
+  inline Utils::DPLerp getZoomFactorLerp() const
   {
     return {fMaxZoomFactor, 1.0};
   }

@@ -6,6 +6,10 @@ This project started as a VST implementation of the VAC-6 rack extension. It is 
 Release Notes
 -------------
 
+### 2019-01-02 - `v1.2.0`
+* Slight tweaks to the scrollbar
+* Use of [Jamba](https://github.com/pongasoft/jamba) framework 3.0.0
+
 ### 2018-10-06 - `v1.1.0`
 * added Audio Unit support (macOS)
 * use of [Jamba](https://github.com/pongasoft/jamba) framework

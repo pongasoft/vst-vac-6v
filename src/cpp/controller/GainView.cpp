@@ -10,9 +10,9 @@ namespace VAC6 {
 ///////////////////////////////////////////
 void GainView::registerParameters()
 {
-  fGain1Parameter = registerVstParam(fParams->fGain1Param);
-  fGain2Parameter = registerVstParam(fParams->fGain2Param);
-  fBypassParameter = registerVstParam(fParams->fBypassParam);
+  fGain1Parameter = registerParam(fParams->fGain1Param);
+  fGain2Parameter = registerParam(fParams->fGain2Param);
+  fBypassParameter = registerParam(fParams->fBypassParam);
 }
 
 ///////////////////////////////////////////

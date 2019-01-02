@@ -27,9 +27,7 @@ bool LCDDisplayState::LCDMessage::update(long iTime)
   {
     // we bring now to "0" compare to startOfFade
     iTime -= startOfFade;
-    auto lerp = Utils::Lerp<float>(0, 255, fFadeDuration, 0);
-    float alpha = lerp.computeY(iTime);
-    fColor.alpha = static_cast<uint8_t>(alpha);
+    fColor.alpha = Utils::mapValueSPXY<long, uint8_t>(iTime, 0, fFadeDuration, 255, 0);
   }
 
   return false;
@@ -359,11 +357,11 @@ CMouseEventResult LCDDisplayView::onMouseCancel()
 void LCDDisplayView::registerParameters()
 {
   HistoryView::registerParameters();
-  fMaxLevelSinceResetMarker = registerVstParam(fParams->fSinceResetMarkerParam);
-  fMaxLevelInWindowMarker = registerVstParam(fParams->fInWindowMarkerParam);
-  fLCDLiveViewParameter = registerVstParam(fParams->fLCDLiveViewParam);
-  fLCDZoomFactorXParam = registerVstParam(fParams->fZoomFactorXParam);
-  fSoftClippingLevelParam = registerVstParam(fParams->fSoftClippingLevelParam);
+  fMaxLevelSinceResetMarker = registerParam(fParams->fSinceResetMarkerParam);
+  fMaxLevelInWindowMarker = registerParam(fParams->fInWindowMarkerParam);
+  fLCDLiveViewParameter = registerParam(fParams->fLCDLiveViewParam);
+  fLCDZoomFactorXParam = registerParam(fParams->fZoomFactorXParam);
+  fSoftClippingLevelParam = registerParam(fParams->fSoftClippingLevelParam);
 }
 
 #if EDITOR_MODE
@@ -380,7 +378,7 @@ void LCDDisplayView::onEditorModeChanged()
     lcdData.fLeftChannel.fOn = true;
     lcdData.fRightChannel.fOn = true;
 
-    auto dbLerp = Utils::Lerp<double>(0, -65.0, MAX_ARRAY_SIZE - 1, +0.5);
+    auto dbLerp = Utils::mapRangeDPX<int>(0, MAX_ARRAY_SIZE - 1, -65.0, +0.5);
 
     for(int i = 0; i < MAX_ARRAY_SIZE; i++)
     {

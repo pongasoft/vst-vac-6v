@@ -22,7 +22,7 @@ class HistoryState;
 class HistoryView : public PluginCustomView<VAC6GUIState>
 {
 public:
-  explicit HistoryView(const CRect &size) : PluginCustomView(size)
+  explicit HistoryView(const CRect &size) : PluginCustomView<VAC6GUIState>(size)
   {};
 
   HistoryView(const HistoryView &c) = delete;
