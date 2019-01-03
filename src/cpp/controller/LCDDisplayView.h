@@ -34,11 +34,11 @@ class LCDDisplayState : public ITimerCallback
                CColor const &iColor = kWhiteCColor,
                long iVisibleDuration = MESSAGE_VISIBLE_DURATION_MS,
                long iFadeDuration = MESSAGE_FADE_DURATION_MS) :
-      fText(std::move(iText)),
+      fVisibleDuration{iVisibleDuration},
+      fFadeDuration{iFadeDuration},
       fTime{iTime},
       fColor{iColor},
-      fVisibleDuration{iVisibleDuration},
-      fFadeDuration{iFadeDuration}
+      fText(std::move(iText))
     {
     }
 

@@ -14,8 +14,8 @@ namespace Common {
 
 ZoomWindow::ZoomWindow(int iVisibleWindowSize, int iBufferSize) :
   fVisibleWindowSize(iVisibleWindowSize),
-  fWindowOffset(MAX_WINDOW_OFFSET),
-  fBufferSize(iBufferSize)
+  fBufferSize(iBufferSize),
+  fWindowOffset(MAX_WINDOW_OFFSET)
 {
   DCHECK_GT_F(iVisibleWindowSize, 0);
 
