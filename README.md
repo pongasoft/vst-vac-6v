@@ -50,7 +50,6 @@ The following steps describes (for each platform) how to build the plugin.
 
 Misc
 ----
-- This project uses [loguru](https://github.com/emilk/loguru) for logging (included under `src/cpp/logging`)
 - The background image is coming from user [jojo-ojoj @ deviant art](http://fav.me/d7dn7bl)
 
 Licensing
