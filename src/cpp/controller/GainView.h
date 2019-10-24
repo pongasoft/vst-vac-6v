@@ -4,9 +4,7 @@
 #include "../VAC6Model.h"
 #include "../VAC6Plugin.h"
 
-namespace pongasoft {
-namespace VST {
-namespace VAC6 {
+namespace pongasoft::VST::VAC6 {
 
 using namespace VSTGUI;
 using namespace Common;
@@ -17,11 +15,11 @@ using namespace GUI::Params;
 
 /**
  * Combine the 2 gains to display the total amount of gain */
-class GainView : public PluginCustomView<VAC6GUIState>
+class GainView : public StateAwareCustomView<VAC6GUIState>
 {
 public:
   // constructor
-  explicit GainView(const CRect &iSize) : PluginCustomView<VAC6GUIState>{iSize} {};
+  explicit GainView(const CRect &iSize) : StateAwareCustomView<VAC6GUIState>{iSize} {};
 
   // get/setFontColor
   CColor const &getFontColor() const { return fFontColor; }
@@ -51,7 +49,7 @@ protected:
 
 public:
   // Creator class
-  class Creator : public CustomViewCreator<GainView, CustomView>
+  class Creator : public CustomViewCreator<GainView, StateAwareCustomView<VAC6GUIState>>
   {
   public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
@@ -67,6 +65,4 @@ public:
   };
 };
 
-}
-}
 }

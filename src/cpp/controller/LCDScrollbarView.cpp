@@ -11,7 +11,7 @@ namespace VAC6 {
 void LCDScrollbarView::registerParameters()
 {
   fLCDLiveViewParameter = registerParam(fParams->fLCDLiveViewParam);
-  PluginView::registerParameters();
+  StateAwareView::registerParameters();
 }
 
 ///////////////////////////////////////////
@@ -24,7 +24,7 @@ CMouseEventResult LCDScrollbarView::onMouseDown(CPoint &where, const CButtonStat
     fLCDLiveViewParameter.setValue(false);
   }
 
-  return PluginView::onMouseDown(where, buttons);
+  return StateAwareView::onMouseDown(where, buttons);
 }
 
 LCDScrollbarView::Creator __gLCDScrollbarViewCreator("VAC6V::LCDScrollbar", "VAC6V - LCD Scrollbar");

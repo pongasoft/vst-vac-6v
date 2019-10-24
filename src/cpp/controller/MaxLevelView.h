@@ -3,15 +3,11 @@
 #include <pongasoft/VST/Messaging.h>
 #include "HistoryView.h"
 
-namespace pongasoft {
-namespace VST {
-namespace VAC6 {
+namespace pongasoft::VST::VAC6 {
 
 using namespace VSTGUI;
 using namespace Common;
 using namespace GUI;
-
-class MaxLevelState;
 
 ///////////////////////////////////////////
 // MaxLevelView
@@ -76,6 +72,4 @@ public:
   };
 };
 
-}
-}
 }

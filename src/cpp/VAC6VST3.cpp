@@ -12,8 +12,11 @@
 
 using namespace Steinberg::Vst;
 
-
+#ifndef NDEBUG
+#define stringPluginName "VAC-6V_Debug"
+#else
 #define stringPluginName "VAC-6V"
+#endif
 
 //------------------------------------------------------------------------
 //  Module init/exit

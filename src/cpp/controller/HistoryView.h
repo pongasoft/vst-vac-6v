@@ -5,24 +5,20 @@
 #include "../VAC6Model.h"
 #include "../VAC6Plugin.h"
 
-namespace pongasoft {
-namespace VST {
-namespace VAC6 {
+namespace pongasoft::VST::VAC6 {
 
 using namespace GUI::Views;
 using namespace GUI::Params;
 
 using namespace Common;
 
-class HistoryState;
-
 /**
  * Base class to LCD and MaxLevel
  */
-class HistoryView : public PluginCustomView<VAC6GUIState>
+class HistoryView : public StateAwareCustomView<VAC6GUIState>
 {
 public:
-  explicit HistoryView(const CRect &size) : PluginCustomView<VAC6GUIState>(size)
+  explicit HistoryView(const CRect &size) : StateAwareCustomView<VAC6GUIState>(size)
   {};
 
   HistoryView(const HistoryView &c) = delete;
@@ -61,7 +57,7 @@ protected:
   GUIJmbParam<HistoryData> fHistoryDataParam{};
 
 public:
-  class Creator : public CustomViewCreator<HistoryView, CustomView>
+  class Creator : public CustomViewCreator<HistoryView, StateAwareCustomView<VAC6GUIState>>
   {
   public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
@@ -80,6 +76,4 @@ public:
   };
 };
 
-}
-}
 }
