@@ -71,7 +71,7 @@ public:
 constexpr int LCD_INPUT_X_NOTHING_SELECTED = -1;
 
 // [-1, MAX_ARRAY_SIZE] -1 when nothing selected
-class LCDInputXParamConverter : public DiscreteValueParamConverter<MAX_LCD_INPUT_X + 1>
+class LCDInputXParamConverter : public DiscreteValueParamConverter<MAX_LCD_INPUT_X + 1, int>
 {
 public:
   inline ParamValue normalize(int const &iDiscreteValue) const override
