@@ -6,6 +6,10 @@ This project started as a VST implementation of the VAC-6 rack extension. It is 
 Release Notes
 -------------
 
+### Unreleased (master)
+* Upgraded to [Jamba](https://github.com/pongasoft/jamba) framework 4.1.0 / C++17
+* Fix compilation issue with Windows 10
+
 ### 2019-01-03 - `v1.2.0`
 * Tweaks to the scrollbar (now includes zoom handles)
 * Use of [Jamba](https://github.com/pongasoft/jamba) framework 3.0.0

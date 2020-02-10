@@ -34,7 +34,7 @@ void GainView::draw(CDrawContext *iContext)
 
   rdc.drawString(toDbString(gain.getValue()), sdc);
 
-  if(fBypassParameter)
+  if(*fBypassParameter)
     rdc.fillRect(0,0, getWidth(), getHeight(), CColor{128,128,128,100});
 
 }

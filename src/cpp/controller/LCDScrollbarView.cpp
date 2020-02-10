@@ -19,7 +19,7 @@ void LCDScrollbarView::registerParameters()
 ///////////////////////////////////////////
 CMouseEventResult LCDScrollbarView::onMouseDown(CPoint &where, const CButtonState &buttons)
 {
-  if(fLCDLiveViewParameter)
+  if(*fLCDLiveViewParameter)
   {
     fLCDLiveViewParameter.setValue(false);
   }

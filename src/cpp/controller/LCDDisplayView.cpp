@@ -166,7 +166,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
   if(leftChannelOn || rightChannelOn)
   {
 
-    MaxLevel maxLevelForSelection{-1, fLCDInputXParameter};
+    MaxLevel maxLevelForSelection{-1, *fLCDInputXParameter};
     RelativePoint maxLevelForSelectionPoint = {static_cast<RelativeCoord>(maxLevelForSelection.fIndex), -1};
 
     auto maxLevelSinceReset = getMaxLevelSinceReset();
@@ -198,7 +198,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
         top = Utils::clamp<RelativeCoord>(height - displayValue, -0.5, height);
 
         // color of the sample depends on its level
-        CColor const &color = computeColor(fSoftClippingLevelParameter, sample);
+        CColor const &color = computeColor(*fSoftClippingLevelParameter, sample);
 
         rdc.drawLine(left, top, left, height, color);
 
@@ -219,18 +219,18 @@ void LCDDisplayView::draw(CDrawContext *iContext)
       left++;
     }
 
-    if(fMaxLevelInWindowMarker)
+    if(*fMaxLevelInWindowMarker)
     {
       // on top of each other => make bigger
       CCoord size = 3.0;
-      if(maxLevelInWindowPoint.x == maxLevelSinceResetPoint.x && fMaxLevelSinceResetMarker)
+      if(maxLevelInWindowPoint.x == maxLevelSinceResetPoint.x && *fMaxLevelSinceResetMarker)
       {
         size = 5.0;
       }
       drawMaxLevel(rdc, maxLevelInWindowPoint, size, MAX_LEVEL_IN_WINDOW_COLOR);
     }
 
-    if(fMaxLevelSinceResetMarker)
+    if(*fMaxLevelSinceResetMarker)
     {
       drawMaxLevel(rdc, maxLevelSinceResetPoint, 3.0, MAX_LEVEL_SINCE_RESET_COLOR);
     }
@@ -297,7 +297,7 @@ int LCDDisplayView::computeLCDInputX(CPoint &where) const
 ///////////////////////////////////////////
 CMouseEventResult LCDDisplayView::onMouseDown(CPoint &where, const CButtonState &buttons)
 {
-  if(fLCDLiveViewParameter)
+  if(*fLCDLiveViewParameter)
   {
     fLCDLiveViewParameter.setValue(false);
   }

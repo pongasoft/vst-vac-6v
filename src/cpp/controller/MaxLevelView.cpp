@@ -24,7 +24,7 @@ void MaxLevelView::draw(CDrawContext *iContext)
 
   CColor fontColor = maxLevel.isUndefined() ?
                      getNoDataColor() :
-                     computeColor(fSoftClippingLevelParameter, maxLevel.fValue);
+                     computeColor(*fSoftClippingLevelParameter, maxLevel.fValue);
 
   auto rdc = GUI::RelativeDrawContext{this, iContext};
 
@@ -45,7 +45,7 @@ MaxLevel MaxLevelView::getMaxLevel() const
   switch(fType)
   {
     case Type::kForSelection:
-      return fHistoryDataParam->getMaxLevelForSelection(fLCDInputXParameter);
+      return fHistoryDataParam->getMaxLevelForSelection(*fLCDInputXParameter);
 
     case Type::kSinceReset:
       return fHistoryDataParam->fMaxLevelSinceReset;
