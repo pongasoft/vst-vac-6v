@@ -7,8 +7,9 @@ Release Notes
 -------------
 
 ### Unreleased (master)
-* Upgraded to [Jamba](https://github.com/pongasoft/jamba) framework 4.1.0 / C++17
-* Fix compilation issue with Windows 10
+- 2019-10-24 - Upgraded to [Jamba](https://github.com/pongasoft/jamba) framework 4.1.0 / C++17
+- 2019-10-26 - Fix compilation issue with Windows 10
+- 2020-09-03 - Upgraded to [Jamba](https://github.com/pongasoft/jamba) 5.0.0 / VST3 SDK 3.7.0
 
 ### 2019-01-03 - `v1.2.0`
 * Tweaks to the scrollbar (now includes zoom handles)
@@ -28,29 +29,32 @@ Check the Jamba [README](https://github.com/pongasoft/jamba/blob/master/README.m
 Build this project
 ------------------
 
-The following steps describes (for each platform) how to build the plugin.
+The following steps describes how to build the plugin: 
+
+1. Invoke the `configure.py` python script to configure the project
+2. Run the `jamba.sh` (resp. `jamba.bat`) command line to build, test validate...
 
 ### macOS
 
-- For simplicity I am creating the build at the root of the source tree, but can obviously be *outside* the source tree entirely by running the script from anywhere
+For simplicity I am creating the build at the root of the source tree, but can obviously be *outside* the source tree entirely by running the script from anywhere
 
-        ./configure.sh
-        cd build
-
-- In order to build, test, validate, etc... simply use the `jamba.sh` script (use `-h` for details):
-
-         ./jamba.sh -h
+```
+> ./configure.py -h # to see the help
+> ./configure.py
+> cd build
+> ./jamba.sh -h
+```
 
 ### Windows
 
-- For simplicity I am creating the build at the root of the source tree, but can obviously be *outside* the source tree entirely by running the script from anywhere. Note that PowerShell is highly recommended.
+For simplicity I am creating the build at the root of the source tree, but can obviously be *outside* the source tree entirely by running the script from anywhere. Note that PowerShell is highly recommended.
 
-        .\configure.bat
-        cd build
-
-- In order to build, test, validate, etc... simply use the `jamba.bat` script (use `-h` for details):
-
-         .\jamba.bat -h
+```
+> python configure.py -h # to see the help
+> python configure.py
+> cd build
+> .\jamba.bat -h
+```
 
 Misc
 ----

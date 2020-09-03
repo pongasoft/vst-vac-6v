@@ -89,7 +89,7 @@ void LCDDisplayView::onParameterChange(ParamID iParamID)
 {
   if(iParamID == fLCDZoomFactorXParam.getParamID())
   {
-    String text = "Zoom: ";
+    Steinberg::String text = "Zoom: ";
     text += fLCDZoomFactorXParam.toString();
     fLCDZoomFactorXMessage = std::make_unique<LCDMessage>(UTF8String(text), Clock::getCurrentTimeMillis());
     startTimer();
@@ -257,7 +257,7 @@ void LCDDisplayView::draw(CDrawContext *iContext)
   if(fLCDSoftClippingLevelMessage)
   {
     StringDrawContext sdc{};
-    sdc.fStyle |= kShadowText;
+    sdc.addStyle(StringDrawContext::Style::kShadowText);
     sdc.fHorizTxtAlign = kLeftText;
     sdc.fTextInset = {2, 2};
     sdc.fFontColor = fLCDSoftClippingLevelMessage->fColor;

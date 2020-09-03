@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.12)
+cmake_minimum_required (VERSION 3.17)
 
 # build VST 2?
 option(JAMBA_ENABLE_VST2 "Use VST2" ON)
@@ -6,31 +6,39 @@ option(JAMBA_ENABLE_VST2 "Use VST2" ON)
 # build Audio Unit?
 option(JAMBA_ENABLE_AUDIO_UNIT "Enable Audio Unit" ON)
 
+# Download VST SDK if not installed?
+option(JAMBA_DOWNLOAD_VSTSDK "Download VST SDK if not installed" ON)
+
 set(PLUGIN_MAJOR_VERSION 1)
 set(PLUGIN_MINOR_VERSION 2)
 set(PLUGIN_PATCH_VERSION 0)
 set(PLUGIN_VERSION "${PLUGIN_MAJOR_VERSION}.${PLUGIN_MINOR_VERSION}.${PLUGIN_PATCH_VERSION}")
 
-project(VST_VAC6)
+project(vst-vac-6v)
 
-# To disable download/update, you can set those 2 variables to local folders
-unset(JAMBA_ROOT_DIR)
-#set(JAMBA_ROOT_DIR ../../pongasoft/jamba)
-unset(GOOGLETEST_ROOT_DIR)
+# To use local jamba install, uncomment the following line (no download)
+set(JAMBA_ROOT_DIR "")
+#set(JAMBA_ROOT_DIR "../../pongasoft/jamba")
+
+# To use local googletest install, uncomment the following line (no download) and modify the path accordingly
+set(GOOGLETEST_ROOT_DIR "")
 #set(GOOGLETEST_ROOT_DIR ../../google/googletest)
 
 include(jamba.cmake)
 
 set(CPP_SOURCES src/cpp)
 
-configure_file(${CPP_SOURCES}/version.h.in ${CMAKE_BINARY_DIR}/generated/version.h)
-include_directories(${CMAKE_BINARY_DIR}/generated/)
+# Generating the version.h header file which contains the plugin version (to make sure it is in sync with the version
+# defined here)
+set(VERSION_DIR "${CMAKE_BINARY_DIR}/generated")
+configure_file(${CPP_SOURCES}/version.h.in "${VERSION_DIR}/version.h")
 
-if (SMTG_CREATE_VST2_VERSION)
-	set(vst2_sources
-			${CPP_SOURCES}/VAC6VST2.cpp
-			)
-endif()
+# Source files for VST2
+if (JAMBA_ENABLE_VST2)
+  set(vst2_sources
+      "${CPP_SOURCES}/VAC6VST2.cpp"
+      )
+endif ()
 
 set(vst_sources
 		${CPP_SOURCES}/controller/GainView.h
@@ -61,55 +69,46 @@ set(vst_sources
 		${CPP_SOURCES}/ZoomWindow.cpp
 		)
 
-# VST2 is only defined for macOS and Windows
-if(MAC OR WIN)
-	set(vst_sources ${vst_sources} ${vst2_sources})
-endif()
+# Location of resources
+set(RES_DIR "${CMAKE_CURRENT_LIST_DIR}/resource")
 
-set(target pongasoft_VAC6V)
-jamba_add_vst3plugin(${target} "${vst_sources}")
-target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
-target_link_libraries(${target} PRIVATE base sdk vstgui_support jamba)
+# List of resources (images)
+set(vst_resources
+    "${RES_DIR}/Background.png"
+    "${RES_DIR}/Background_2x.png"
+    "${RES_DIR}/Button_Bypass_2frames.png"
+    "${RES_DIR}/Button_Bypass_2frames_2x.png"
+    "${RES_DIR}/Button_InWindow_2frames.png"
+    "${RES_DIR}/Button_InWindow_2frames_2x.png"
+    "${RES_DIR}/Button_Live_4frames.png"
+    "${RES_DIR}/Button_Live_4frames_2x.png"
+    "${RES_DIR}/Button_SinceReset_2frames.png"
+    "${RES_DIR}/Button_SinceReset_2frames_2x.png"
+    "${RES_DIR}/Button_small_2frames.png"
+    "${RES_DIR}/Button_small_2frames_2x.png"
+    "${RES_DIR}/Knob_mini_63frames.png"
+    "${RES_DIR}/Knob_mini_63frames_2x.png"
+)
 
-###################################################
-# Resources
-###################################################
-jamba_add_vst3_resource(${target} PNG "Background.png")
-jamba_add_vst3_resource(${target} PNG "Background_2x.png")
-jamba_add_vst3_resource(${target} PNG "Button_Bypass_2frames.png")
-jamba_add_vst3_resource(${target} PNG "Button_Bypass_2frames_2x.png")
-jamba_add_vst3_resource(${target} PNG "Button_InWindow_2frames.png")
-jamba_add_vst3_resource(${target} PNG "Button_InWindow_2frames_2x.png")
-jamba_add_vst3_resource(${target} PNG "Button_Live_4frames.png")
-jamba_add_vst3_resource(${target} PNG "Button_Live_4frames_2x.png")
-jamba_add_vst3_resource(${target} PNG "Button_SinceReset_2frames.png")
-jamba_add_vst3_resource(${target} PNG "Button_SinceReset_2frames_2x.png")
-jamba_add_vst3_resource(${target} PNG "Button_small_2frames.png")
-jamba_add_vst3_resource(${target} PNG "Button_small_2frames_2x.png")
-jamba_add_vst3_resource(${target} PNG "Knob_mini_63frames.png")
-jamba_add_vst3_resource(${target} PNG "Knob_mini_63frames_2x.png")
-jamba_add_vst3_resource(${target} DATA "VAC6.uidesc")
+# Location of the test cases
+set(TEST_DIR "${CMAKE_CURRENT_LIST_DIR}/test/cpp")
 
-# this must be called after you are done calling jamba_add_vst3_resource for all resources
-jamba_gen_vst3_resources(${target} "VAC6V")
+# List of test cases
+set(test_case_sources
+    "${TEST_DIR}/test-ZoomWindow.cpp"
+  )
 
-###################################################
-# Create archive (.tgz)
-###################################################
-jamba_create_archive(${target} VAC-6V)
-
-####################################################
-## Testing
-####################################################
-file(GLOB_RECURSE TEST_SRC_FILES RELATIVE ${PROJECT_SOURCE_DIR} test/cpp/*cpp)
-set(test_sources ${test_sources}
-		${LOGURU_IMPL}
-		${CPP_SOURCES}/ZoomWindow.cpp
-		)
-
-jamba_add_test(${target}_test "${TEST_SRC_FILES}" "${test_sources}" "")
-
-###################################################
-# Dev help
-###################################################
-jamba_dev_scripts(${target})
+# Finally invoke jamba_add_vst_plugin
+jamba_add_vst_plugin(
+    TARGET                   "pongasoft_VAC6V" # name of CMake target for the plugin
+    RELEASE_FILENAME         "VAC-6V" # filename for the plugin (VAC-6V.vst3)
+    TARGETS_PREFIX           "jmb_" # prefix used by all targets directly linked to this plugin
+    VST_SOURCES              "${vst_sources}" "${vst2_sources}" # the source files that compose the plugin
+    INCLUDE_DIRECTORIES      "${VERSION_DIR}" # we add the version folder to the list of includes
+    UIDESC                   "${RES_DIR}/VAC6.uidesc" # the main xml file for the GUI
+    RESOURCES                "${vst_resources}" # the resources for the GUI (png files)
+    TEST_CASE_SOURCES        "${test_case_sources}"
+    TEST_SOURCES             "${CPP_SOURCES}/ZoomWindow.cpp"
+    TEST_INCLUDE_DIRECTORIES "${CPP_SOURCES}"
+    TEST_LINK_LIBRARIES      "jamba"
+)

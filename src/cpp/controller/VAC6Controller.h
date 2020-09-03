@@ -14,6 +14,11 @@ namespace VAC6 {
 class VAC6Controller : public GUI::GUIController
 {
 public:
+  //------------------------------------------------------------------------
+  // UUID() method used to create the controller
+  //------------------------------------------------------------------------
+  static inline ::Steinberg::FUID UUID() { return VAC6ControllerUID; };
+
   // Factory method
   static FUnknown *createInstance(void * /*context*/) { return (IEditController *) new VAC6Controller(); }
 

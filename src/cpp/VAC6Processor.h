@@ -28,6 +28,11 @@ using namespace pongasoft::Utils;
 class VAC6Processor : public RT::RTProcessor
 {
 public:
+  //------------------------------------------------------------------------
+  // UUID() method used to create the processor
+  //------------------------------------------------------------------------
+  static inline ::Steinberg::FUID UUID() { return VAC6ProcessorUID; };
+
   //--- ---------------------------------------------------------------------
   // create function required for Plug-in factory,
   // it will be called to create new instances of this Plug-in
