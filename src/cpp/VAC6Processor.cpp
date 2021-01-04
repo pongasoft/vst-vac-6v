@@ -95,7 +95,11 @@ VAC6Processor::VAC6Processor() :
   fRightChannelProcessor{nullptr},
   fRateLimiter{}
 {
-  DLOG_F(INFO, "VAC6Processor() - jamba: %s - plugin: v%s", JAMBA_GIT_VERSION_STR, FULL_VERSION_STR);
+  DLOG_F(INFO, "[%s] VAC6Processor() - jamba: %s - plugin: v%s (%s)",
+         stringPluginName,
+         JAMBA_GIT_VERSION_STR,
+         FULL_VERSION_STR,
+         BUILD_ARCHIVE_ARCHITECTURE);
 
 #ifndef NDEBUG
   DLOG_F(INFO, "Parameters ---> \n%s", Debug::ParamTable::from(fParameters).full().toString().c_str());

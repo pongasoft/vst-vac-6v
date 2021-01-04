@@ -12,14 +12,19 @@
 // Version with build number
 #define FULL_VERSION_STR "@PLUGIN_VERSION@"
 
+// Architecture
+#define BUILD_ARCHIVE_ARCHITECTURE "@JAMBA_ARCHIVE_ARCHITECTURE@"
+
 // Audio Unit version (as an hex int)
 #define AU_VERSION_INT 0x@AU_PLUGIN_VERSION_HEX@
 
 #define stringOriginalFilename	"VAC-6V.vst3"
-#ifdef PLATFORM_64
-#define stringFileDescription	"VAC-6V VST plugin by pongasoft (64Bit)"
-#else
-#define stringFileDescription	"VAC-6V VST plugin by pongasoft"
-#endif
+#define stringFileDescription	"VAC-6V VST plugin by pongasoft (@JAMBA_ARCHIVE_ARCHITECTURE@)"
 #define stringCompanyName		"pongasoft\0"
-#define stringLegalCopyright	"© 2018 pongasoft LLC"
+#define stringLegalCopyright	"© 2018-2021 pongasoft LLC"
+
+#ifndef NDEBUG
+#define stringPluginName "VAC-6V_Debug"
+#else
+#define stringPluginName "VAC-6V"
+#endif

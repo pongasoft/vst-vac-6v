@@ -6,10 +6,9 @@ This project started as a VST implementation of the VAC-6 rack extension. It is 
 Release Notes
 -------------
 
-### Unreleased (master)
-- 2019-10-24 - Upgraded to [Jamba](https://github.com/pongasoft/jamba) framework 4.1.0 / C++17
-- 2019-10-26 - Fix compilation issue with Windows 10
-- 2020-09-03 - Upgraded to [Jamba](https://github.com/pongasoft/jamba) 5.0.0 / VST3 SDK 3.7.0
+### 2021-01-04 - `v1.2.1`
+* Upgraded to [Jamba](https://github.com/pongasoft/jamba) 5.1.2 / VST3 SDK 3.7.0
+* Added support for Apple Chipset / universal build on macOS
 
 ### 2019-01-03 - `v1.2.0`
 * Tweaks to the scrollbar (now includes zoom handles)
