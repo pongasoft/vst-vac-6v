@@ -12,7 +12,7 @@ Release Notes
 * Removed support for VST2
 
 > [!NOTE]
-> This version is not released because there are no new feature or bug fixes, and since
+> This version is not released because there are no new features or bug fixes, and since
 > it removes support for VST2, it is not released at the moment.
 > `master` has been updated to the latest version of Jamba / VST3 SDK so that it compiles with
 > more recent versions of macOS / Windows.

@@ -18,7 +18,7 @@ jobs:
 
       - name: Configure Project
         working-directory: ${{github.workspace}}
-        run: python ${{github.workspace}}\jamba-test-plugin\configure.py -G "Visual Studio 17 2022" -- -DJAMBA_DOWNLOAD_VSTSDK=ON -A x64
+        run: python ${{github.workspace}}\configure.py -G "Visual Studio 17 2022" -- -DJAMBA_DOWNLOAD_VSTSDK=ON -A x64
 
       - name: Run test/validate/archive (Release)
         working-directory: ${{github.workspace}}/build
