@@ -6,6 +6,18 @@ This project started as a VST implementation of the VAC-6 rack extension. It is 
 Release Notes
 -------------
 
+### Unreleased - `master`
+
+* Upgraded to [Jamba](https://github.com/pongasoft/jamba) 7.1.3 / VST3 SDK 3.7.12
+* Removed support for VST2
+
+> [!NOTE]
+> This version is not released because there are no new feature or bug fixes, and since
+> it removes support for VST2, it is not released at the moment.
+> `master` has been updated to the latest version of Jamba / VST3 SDK so that it compiles with
+> more recent versions of macOS / Windows.
+
+
 ### 2021-01-04 - `v1.2.1`
 * Upgraded to [Jamba](https://github.com/pongasoft/jamba) 5.1.2 / VST3 SDK 3.7.0
 * Added support for Apple Chipset / universal build on macOS
@@ -28,14 +40,14 @@ Check the Jamba [README](https://github.com/pongasoft/jamba/blob/master/README.m
 Build this project
 ------------------
 
-The following steps describes how to build the plugin: 
+The following steps describe how to build the plugin: 
 
 1. Invoke the `configure.py` python script to configure the project
 2. Run the `jamba.sh` (resp. `jamba.bat`) command line to build, test validate...
 
 ### macOS
 
-For simplicity I am creating the build at the root of the source tree, but can obviously be *outside* the source tree entirely by running the script from anywhere
+For simplicity, I am creating the build at the root of the source tree, but can obviously be *outside* the source tree entirely by running the script from anywhere
 
 ```
 > ./configure.py -h # to see the help

@@ -1,8 +1,5 @@
 cmake_minimum_required (VERSION 3.17)
 
-# build VST 2?
-option(JAMBA_ENABLE_VST2 "Use VST2" ON)
-
 # build Audio Unit?
 option(JAMBA_ENABLE_AUDIO_UNIT "Enable Audio Unit" ON)
 
@@ -27,7 +24,7 @@ set(PLUGIN_MINOR_VERSION 2)
 set(PLUGIN_PATCH_VERSION 1)
 set(PLUGIN_VERSION "${PLUGIN_MAJOR_VERSION}.${PLUGIN_MINOR_VERSION}.${PLUGIN_PATCH_VERSION}")
 
-project(vst-vac-6v)
+project("vst-vac-6v" VERSION "${PLUGIN_VERSION}")
 
 # To use local googletest install, uncomment the following line (no download) and modify the path accordingly
 set(GOOGLETEST_ROOT_DIR "")
